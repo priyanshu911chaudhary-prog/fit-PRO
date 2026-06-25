@@ -2,7 +2,7 @@ import {User} from "../models/user.model.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/async-handler.js";
-import {sendEmail,emailVerificationTemplate} from "../utils/sendEmail.js";
+import {sendEmail,emailVerificationTemplate,passwordResetTemplate} from "../utils/sendEmail.js";
 import crypto from "crypto";
 import {OAuth2Client} from "google-auth-library";
 import jwt from "jsonwebtoken";
@@ -349,10 +349,127 @@ const completeUserProfile = asyncHandler(async (req, res) => {
     );
 });
 
+const logoutUser = asyncHandler(async (req, res) => {
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $unset: {
+                refreshToken: 1
+            }
+        },
+        {
+            new: true
+        }
+    );
+
+    const options = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict"
+    };
+
+    return res
+        .status(200)
+        .clearCookie("accessToken", options)
+        .clearCookie("refreshToken", options)
+        .json(new ApiResponse(200, "User logged out successfully", {}));
+});
+
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+    const { oldPassword, newPassword } = req.body;
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    const isPasswordCorrect = await user.comparePassword(oldPassword);
+    if (!isPasswordCorrect) {
+        throw new ApiError(400, "Invalid old password");
+    }
+
+    user.password = newPassword;
+    await user.save({ validateBeforeSave: false });
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, "Password changed successfully", {}));
+});
+
+const forgotPassword = asyncHandler(async (req, res) => {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+        // Return success even if not found to prevent email enumeration
+        return res.status(200).json(new ApiResponse(200, "If an account with that email exists, a password reset link has been sent.", {}));
+    }
+
+    if (user.authProvider !== "local") {
+        throw new ApiError(400, "This account is managed by an external provider (Google/Microsoft).");
+    }
+
+    const { unhasedToken, hashedToken, tokenExpiry } = user.generateTemporaryToken();
+
+    user.forgotPasswordToken = hashedToken;
+    user.forgotPasswordTokenExpiry = tokenExpiry;
+    await user.save({ validateBeforeSave: false });
+
+    const resetLink = `${process.env.CORS_ORIGIN}/reset-password/${unhasedToken}`;
+
+    await sendEmail({
+        email: user.email,
+        subject: "Reset Your Password",
+        mailgenContent: passwordResetTemplate(user.fullName, resetLink)
+    });
+
+    return res.status(200).json(new ApiResponse(200, "If an account with that email exists, a password reset link has been sent.", {}));
+});
+
+const resetPassword = asyncHandler(async (req, res) => {
+    const { resetToken } = req.params;
+    const { newPassword } = req.body;
+
+    if (!resetToken) {
+        throw new ApiError(400, "Reset token is missing");
+    }
+
+    const hashedToken = crypto
+        .createHash("sha256")
+        .update(resetToken)
+        .digest("hex");
+
+    const user = await User.findOne({
+        forgotPasswordToken: hashedToken,
+    });
+
+    if (!user) {
+        throw new ApiError(400, "Reset token is invalid or has expired");
+    }
+
+    const currentTime = new Date();
+    const expiryTime = new Date(user.forgotPasswordTokenExpiry);
+
+    if (expiryTime < currentTime) {
+        throw new ApiError(400, "Your reset token has expired. Please request a new one.");
+    }
+
+    user.password = newPassword;
+    user.forgotPasswordToken = undefined;
+    user.forgotPasswordTokenExpiry = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    return res.status(200).json(new ApiResponse(200, "Password reset successfully. You can now log in with your new password.", {}));
+});
+
 export {
     registerUser,
     googleLogin,
     microsoftLogin,
     loginUser,
-    verifyEmail
+    verifyEmail,
+    logoutUser,
+    changeCurrentPassword,
+    forgotPassword,
+    resetPassword
 };

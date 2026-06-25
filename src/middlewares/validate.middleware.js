@@ -1,16 +1,25 @@
-
-import ApiError from "../utils/ApiError.js";
+import ApiError from "../utils/ApiError.js"; // Double check your capitalization here (ApiError vs apiError)
 
 export const validate = (schema) => async (req, res, next) => {
     try {
-        // parseAsync checks the body against the Zod schema
-        await schema.parseAsync(req.body);
+        // parseAsync automatically strips out any data not defined in the schema
+        // and coerces types (like turning string dates into Date objects)
+        req.body = await schema.parseAsync(req.body);
         next();
     } catch (error) {
-        // Zod returns an array of issues. We map over them to extract just the human-readable messages.
-        const extractedErrors = error.errors.map((err) => err.message);
+        // Zod stores its validation failures in an array called 'errors'
+        if (error.errors && Array.isArray(error.errors)) {
+            const errorMessages = error.errors.map((issue) => {
+                // If it's a nested field, this adds the path (e.g., 'address.zipcode: Invalid')
+                const path = issue.path.length > 0 ? `${issue.path.join('.')}: ` : "";
+                return `${path}${issue.message}`;
+            });
+            
+            // Pass it to your global error.middleware.js
+            return next(new ApiError(400, "Validation Failed", errorMessages));
+        }
         
-        // Pass the error to your global error handler using your ApiError class
-        next(new ApiError(400, "Validation Failed", extractedErrors));
+        // If it's a generic server error, pass it down
+        next(error);
     }
 };

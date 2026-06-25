@@ -1,7 +1,5 @@
 import ApiError from "../utils/ApiError.js";
 
-// EXPRESS RULE: Error handlers MUST have exactly 4 parameters: (err, req, res, next)
-// Even if you don't use 'next' inside the function, it must be in the signature.
 export const errorHandler = (err, req, res, next) => {
     let error = err;
 

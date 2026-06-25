@@ -314,6 +314,40 @@ const verifyEmail = asyncHandler(async (req, res) => {
     );
 });
 
+const completeUserProfile = asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+
+    const {
+        age,
+        gender,
+        height,
+        weight,
+        fitnessGoal,
+        activityLevel,
+        dietaryPreference
+    } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    // Update user profile
+    user.age = age;
+    user.gender = gender;
+    user.height = height;
+    user.weight = weight;
+    user.fitnessGoal = fitnessGoal;
+    user.activityLevel = activityLevel;
+    user.dietaryPreference = dietaryPreference;
+    user.isProfileComplete = true;
+
+    await user.save();
+
+    return res.status(200).json(
+        new ApiResponse(200, "User profile updated successfully.", { user })
+    );
+});
 
 export {
     registerUser,

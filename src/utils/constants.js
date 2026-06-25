@@ -23,6 +23,19 @@ export const UserActivityLevelEnum = {
     SUPER_ACTIVE:"super_active"
 }
 
+export const UserDietaryPreferenceEnum = {
+    VEGETARIAN:"vegetarian",
+    VEGAN:"vegan",
+    PESCATARIAN:"pescatarian",
+    KETOGENIC:"ketogenic",
+    PALEO:"paleo",
+    MEDITERRANEAN:"mediterranean",
+    LOW_CARB:"low_carb",
+    LOW_FAT:"low_fat",
+    NONE:"none"
+}
+
 export const AvailableUserGenders = Object.values(UserGenderEnum);
 export const AvailableUserGoals = Object.values(UserGoalEnum);
 export const AvailableUserActivityLevels = Object.values(UserActivityLevelEnum);
+export const AvailableUserDietaryPreferences = Object.values(UserDietaryPreferenceEnum);

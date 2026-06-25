@@ -75,3 +75,12 @@ export const AvailableUserWeightPreferences = Object.values(UserWeightPreference
 export const AvailableExerciseCategories = Object.values(ExerciseCategoryEnum);
 export const AvailableMuscleGroups = Object.values(MuscleGroupEnum);
 export const AvailableEquipment = Object.values(EquipmentEnum);
+
+export const MealTypeEnum = {
+    BREAKFAST: "breakfast",
+    LUNCH: "lunch",
+    DINNER: "dinner",
+    SNACK: "snack"
+};
+
+export const AvailableMealTypes = Object.values(MealTypeEnum);

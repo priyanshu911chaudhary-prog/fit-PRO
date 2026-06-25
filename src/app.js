@@ -42,11 +42,13 @@ app.use(cors({
 import authRouter from "./routes/auth.route.js";
 import profileRouter from "./routes/profile.route.js";
 import bmiRouter from "./routes/bmi.route.js";
+import dashboardRouter from "./routes/dashboard.route.js";
 import {errorHandler} from "./middlewares/error.middleware.js";
 
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/profile", profileRouter);
 app.use("/api/v1/bmi", bmiRouter);
+app.use("/api/v1/dashboard", dashboardRouter);
 
 app.use(errorHandler);
 export default app;

@@ -35,7 +35,15 @@ export const UserDietaryPreferenceEnum = {
     NONE:"none"
 }
 
+export const UserWeightPreferenceEnum = {
+    UNDERWEIGHT: "underweight",
+    NORMAL: "normal",
+    OVERWEIGHT: "overweight",
+    OBESE: "obese"
+}
+
 export const AvailableUserGenders = Object.values(UserGenderEnum);
 export const AvailableUserGoals = Object.values(UserGoalEnum);
 export const AvailableUserActivityLevels = Object.values(UserActivityLevelEnum);
 export const AvailableUserDietaryPreferences = Object.values(UserDietaryPreferenceEnum);
+export const AvailableUserWeightPreferences = Object.values(UserWeightPreferenceEnum);

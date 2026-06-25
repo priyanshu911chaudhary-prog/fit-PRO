@@ -7,7 +7,8 @@ import {registerUser,
     logoutUser,
     changeCurrentPassword,
     forgotPassword,
-    resetPassword} from '../controllers/auth.controller.js';
+    resetPassword,
+    refreshAccessToken} from '../controllers/auth.controller.js';
 import {validate} from '../middlewares/validate.middleware.js';
 import {registerSchema,loginSchema,changePasswordSchema,forgotPasswordSchema,resetPasswordSchema} from '../validators/auth.validator.js';
 import {verifyJWT} from '../middlewares/auth.middleware.js';
@@ -23,6 +24,9 @@ authRouter.route("/verify-email/:verificationToken")
 
 authRouter.route("/login")
     .post(validate(loginSchema),loginUser);
+
+authRouter.route("/refresh-token")
+    .post(refreshAccessToken);
 
 authRouter.route("/google-login")
     .post(googleLogin);

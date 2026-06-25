@@ -31,17 +31,36 @@ const logMeal = asyncHandler(async (req, res) => {
 
 const getMealHistory = asyncHandler(async (req, res) => {
     const userId = req.user._id;
+    const { page = 1, limit = 10, startDate, endDate } = req.query;
 
-    // Fetch the log AND populate the nested food details
-    const logs = await MealLog.find({ user: userId })
+    const query = { user: userId };
+    if (startDate && endDate) {
+        query.createdAt = {
+            $gte: new Date(startDate),
+            $lte: new Date(endDate)
+        };
+    }
+
+    const skip = (page - 1) * limit;
+
+    const logs = await MealLog.find(query)
         .populate({
-            path: "meals.foodItemId", // Path to the nested field
-            select: "name calories protein carbs fat mealType" // Only get what you need
+            path: "meals.foodItemId", 
+            select: "name calories protein carbs fat mealType" 
         })
-        .sort({ createdAt: -1 });
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit));
+
+    const totalLogs = await MealLog.countDocuments(query);
 
     return res.status(200).json(
-        new ApiResponse(200, "Meal history fetched", logs)
+        new ApiResponse(200, "Meal history fetched", {
+            logs,
+            currentPage: parseInt(page),
+            totalPages: Math.ceil(totalLogs / limit),
+            totalLogs
+        })
     );
 });
 

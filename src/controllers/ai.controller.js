@@ -3,8 +3,12 @@ import {
   mapAIExercisesToIds,
   generateMealPlan,
   mapAIMealsToIds,
+  generateAICoachResponse
 } from "../services/ai.service.js";
 import { Profile } from "../models/profile.model.js";
+import { Bmi } from "../models/bmi.model.js";
+import { WorkoutLog } from "../models/WorkoutLog.model.js";
+import { MealLog } from "../models/MealLog.model.js";
 import logger from "../utils/logger.js";
 import asyncHandler from "../utils/async-handler.js";
 import ApiResponse from "../utils/apiResponse.js";
@@ -112,4 +116,39 @@ export const getSavedMealPlans = asyncHandler(async (req, res) => {
     return res.status(200).json(
         new ApiResponse(200, "Saved meal plans fetched successfully", plans)
     );
+});
+
+export const postAIChat = asyncHandler(async (req, res) => {
+    const { message } = req.body;
+    const userId = req.user._id;
+
+    if (!message) {
+        throw new ApiError(400, "Message is required");
+    }
+
+    try {
+        // Fetch context concurrently
+        const [profile, bmi, recentWorkouts, recentMeals] = await Promise.all([
+            Profile.findOne({ user: userId }),
+            Bmi.findOne({ user: userId }).sort({ createdAt: -1 }),
+            WorkoutLog.find({ user: userId }).sort({ createdAt: -1 }).limit(3),
+            MealLog.find({ user: userId }).sort({ createdAt: -1 }).limit(3)
+        ]);
+
+        const context = {
+            profile: profile || {},
+            bmi: bmi || {},
+            recentWorkouts: recentWorkouts || [],
+            recentMeals: recentMeals || []
+        };
+
+        const aiResponse = await generateAICoachResponse(message, context);
+
+        return res.status(200).json(
+            new ApiResponse(200, "AI Coach responded", { reply: aiResponse })
+        );
+    } catch (error) {
+        logger.error(`AI Chat failed: ${error.message}`);
+        throw new ApiError(500, "Failed to get AI Coach response");
+    }
 });

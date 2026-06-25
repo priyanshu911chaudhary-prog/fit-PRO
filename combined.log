@@ -30,3 +30,32 @@
 {"level":"info","message":"AI Meal Plan generated and saved for user: 6a3bc4197d1fab9f90b4fb0b","timestamp":"2026-06-25T13:39:44.939Z"}
 {"level":"info","message":"AI Meal Generation initiated for user: 6a3bc4197d1fab9f90b4fb0b","timestamp":"2026-06-25T13:41:59.017Z"}
 {"level":"info","message":"AI Meal Plan generated and saved for user: 6a3bc4197d1fab9f90b4fb0b","timestamp":"2026-06-25T13:42:53.383Z"}
+{"level":"info","message":"::1 - - [25/Jun/2026:14:36:16 +0000] \"POST /api/v1/ai/chat HTTP/1.1\" 401 53 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-06-25T14:36:16.341Z"}
+{"level":"info","message":"::1 - - [25/Jun/2026:14:36:26 +0000] \"POST /api/v1/auth/refresh-token HTTP/1.1\" 200 550 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-06-25T14:36:26.690Z"}
+{"level":"info","message":"::1 - - [25/Jun/2026:14:36:36 +0000] \"POST /api/v1/ai/chat HTTP/1.1\" 200 789 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-06-25T14:36:36.284Z"}
+{"level":"info","message":"::1 - - [25/Jun/2026:14:37:32 +0000] \"GET /api/v1/dashboard HTTP/1.1\" 401 53 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-06-25T14:37:32.327Z"}
+{"level":"info","message":"::1 - - [25/Jun/2026:14:37:54 +0000] \"GET /api/v1/dashboard HTTP/1.1\" 401 53 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-06-25T14:37:54.239Z"}
+{"level":"info","message":"::1 - - [25/Jun/2026:14:38:00 +0000] \"POST /api/v1/auth/refresh-token HTTP/1.1\" 200 550 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-06-25T14:38:00.030Z"}
+{"level":"info","message":"::1 - - [25/Jun/2026:14:38:04 +0000] \"GET /api/v1/dashboard HTTP/1.1\" 404 155 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-06-25T14:38:04.381Z"}
+{"level":"info","message":"::1 - - [25/Jun/2026:14:38:28 +0000] \"GET /api/v1/dashboard/stats HTTP/1.1\" 200 415 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-06-25T14:38:28.182Z"}
+{"level":"info","message":"::1 - - [25/Jun/2026:14:39:32 +0000] \"GET /api/v1/water HTTP/1.1\" 401 53 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-06-25T14:39:32.399Z"}
+{"level":"info","message":"::1 - - [25/Jun/2026:14:39:44 +0000] \"POST /api/v1/auth/refresh-token HTTP/1.1\" 200 550 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-06-25T14:39:44.224Z"}
+{"level":"info","message":"::1 - - [25/Jun/2026:14:39:46 +0000] \"GET /api/v1/water HTTP/1.1\" 404 151 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-06-25T14:39:46.701Z"}
+{"level":"info","message":"::1 - - [25/Jun/2026:14:40:03 +0000] \"POST /api/v1/water HTTP/1.1\" 201 289 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-06-25T14:40:03.052Z"}
+{"level":"info","message":"::1 - - [25/Jun/2026:14:40:54 +0000] \"GET /api/v1/water/today HTTP/1.1\" 401 53 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-06-25T14:40:54.501Z"}
+{"level":"info","message":"::1 - - [25/Jun/2026:14:40:59 +0000] \"POST /api/v1/auth/refresh-token HTTP/1.1\" 200 550 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-06-25T14:40:59.410Z"}
+{"level":"info","message":"::1 - - [25/Jun/2026:14:41:03 +0000] \"GET /api/v1/water/today HTTP/1.1\" 200 323 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-06-25T14:41:03.763Z"}
+{"level":"info","message":"::1 - - [25/Jun/2026:14:43:33 +0000] \"GET /api/v1/water/today HTTP/1.1\" 401 53 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-06-25T14:43:33.997Z"}
+{"level":"info","message":"::1 - - [25/Jun/2026:14:44:07 +0000] \"POST /api/v1/auth/logout HTTP/1.1\" 401 53 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-06-25T14:44:07.824Z"}
+{"level":"info","message":"::1 - - [25/Jun/2026:14:44:14 +0000] \"POST /api/v1/auth/login HTTP/1.1\" 200 832 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-06-25T14:44:14.628Z"}
+{"level":"info","message":"::1 - - [25/Jun/2026:14:44:22 +0000] \"GET /api/v1/water/today HTTP/1.1\" 200 323 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-06-25T14:44:22.057Z"}
+{"level":"info","message":"::1 - - [25/Jun/2026:14:47:00 +0000] \"GET /api/v1/meal/history?page=1&limit=2 HTTP/1.1\" 200 590 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-06-25T14:47:00.535Z"}
+{"level":"info","message":"::1 - - [25/Jun/2026:14:47:31 +0000] \"GET /api/v1/workout/history?page=1&limit=2 HTTP/1.1\" 200 442 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-06-25T14:47:31.133Z"}
+{"level":"info","message":"::1 - - [25/Jun/2026:14:49:15 +0000] \"POST /api/v1/ai/chat HTTP/1.1\" 200 803 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-06-25T14:49:15.399Z"}
+{"level":"info","message":"::1 - - [25/Jun/2026:14:50:14 +0000] \"GET /api-docs HTTP/1.1\" 301 158 \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36\"","timestamp":"2026-06-25T14:50:14.280Z"}
+{"level":"info","message":"::1 - - [25/Jun/2026:14:50:14 +0000] \"GET /api-docs/ HTTP/1.1\" 200 3106 \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36\"","timestamp":"2026-06-25T14:50:14.293Z"}
+{"level":"info","message":"::1 - - [25/Jun/2026:14:50:14 +0000] \"GET /api-docs/swagger-ui-init.js HTTP/1.1\" 200 14709 \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36\"","timestamp":"2026-06-25T14:50:14.405Z"}
+{"level":"info","message":"::1 - - [25/Jun/2026:14:50:14 +0000] \"GET /api-docs/swagger-ui.css HTTP/1.1\" 200 178977 \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36\"","timestamp":"2026-06-25T14:50:14.411Z"}
+{"level":"info","message":"::1 - - [25/Jun/2026:14:50:14 +0000] \"GET /api-docs/swagger-ui-standalone-preset.js HTTP/1.1\" 200 256694 \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36\"","timestamp":"2026-06-25T14:50:14.413Z"}
+{"level":"info","message":"::1 - - [25/Jun/2026:14:50:14 +0000] \"GET /api-docs/swagger-ui-bundle.js HTTP/1.1\" 200 1537593 \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36\"","timestamp":"2026-06-25T14:50:14.515Z"}
+{"level":"info","message":"::1 - - [25/Jun/2026:14:50:15 +0000] \"GET /api-docs/favicon-32x32.png HTTP/1.1\" 200 628 \"-\" \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36\"","timestamp":"2026-06-25T14:50:15.467Z"}

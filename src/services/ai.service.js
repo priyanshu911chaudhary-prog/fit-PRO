@@ -112,4 +112,30 @@ export const mapAIMealsToIds = async (aiMeals) => {
     }
 
     return mappedMeals;
+};
+
+export const generateAICoachResponse = async (userMessage, context) => {
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+    const prompt = `
+    You are a professional, motivating AI fitness and nutrition coach.
+    You are chatting with a user who has the following context:
+    - Profile Goal: ${context.profile?.fitnessGoal || "Unknown"}
+    - Dietary Preference: ${context.profile?.dietaryPreference || "Unknown"}
+    - Activity Level: ${context.profile?.activityLevel || "Unknown"}
+    - BMI: ${context.bmi?.bmi || "Unknown"} (${context.bmi?.category || "Unknown"})
+    
+    Recent Workouts:
+    ${context.recentWorkouts.map(w => `- ${w.title} (${w.totalDuration} mins)`).join('\n')}
+    
+    Recent Meals:
+    ${context.recentMeals.map(m => `- ${m.title} (${m.totalCalories} kcal)`).join('\n')}
+
+    The user says: "${userMessage}"
+
+    Provide a concise, highly personalized, and encouraging response based on their data. Keep it under 150 words.
+    `;
+
+    const result = await model.generateContent(prompt);
+    return result.response.text();
 };

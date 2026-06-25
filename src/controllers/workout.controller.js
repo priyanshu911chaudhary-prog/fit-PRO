@@ -31,17 +31,36 @@ const logWorkout = asyncHandler(async (req, res) => {
 
 const getWorkoutHistory = asyncHandler(async (req, res) => {
     const userId = req.user._id;
+    const { page = 1, limit = 10, startDate, endDate } = req.query;
 
-    // Fetch the log AND populate the nested exercise details
-    const logs = await WorkoutLog.find({ user: userId })
+    const query = { user: userId };
+    if (startDate && endDate) {
+        query.createdAt = {
+            $gte: new Date(startDate),
+            $lte: new Date(endDate)
+        };
+    }
+
+    const skip = (page - 1) * limit;
+
+    const logs = await WorkoutLog.find(query)
         .populate({
-            path: "exercises.exerciseId", // Path to the nested field
-            select: "name targetMuscle category" // Only get what you need
+            path: "exercises.exerciseId",
+            select: "name targetMuscle category"
         })
-        .sort({ createdAt: -1 });
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit));
+
+    const totalLogs = await WorkoutLog.countDocuments(query);
 
     return res.status(200).json(
-        new ApiResponse(200, "History fetched", logs)
+        new ApiResponse(200, "History fetched", {
+            logs,
+            currentPage: parseInt(page),
+            totalPages: Math.ceil(totalLogs / limit),
+            totalLogs
+        })
     );
 });
 

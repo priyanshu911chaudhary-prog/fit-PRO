@@ -5,7 +5,18 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 const dashboardRouter = Router();
 dashboardRouter.use(verifyJWT);
 
-// The aggregation endpoint
+/**
+ * @swagger
+ * /dashboard/stats:
+ *   get:
+ *     summary: Get user dashboard statistics
+ *     tags: [Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Dashboard data retrieved successfully
+ */
 dashboardRouter.route("/stats").get(getDashboardData);
 
 export default dashboardRouter;

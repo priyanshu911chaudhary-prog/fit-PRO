@@ -42,8 +42,36 @@ export const UserWeightPreferenceEnum = {
     OBESE: "obese"
 }
 
+export const ExerciseCategoryEnum = {
+    STRENGTH: "strength",
+    CARDIO: "cardio",
+    FLEXIBILITY: "flexibility"
+};
+
+export const MuscleGroupEnum = {
+    CHEST: "chest",
+    BACK: "back",
+    LEGS: "legs",
+    SHOULDERS: "shoulders",
+    ARMS: "arms",
+    CORE: "core",
+    FULL_BODY: "full_body"
+};
+
+export const EquipmentEnum = {
+    BODYWEIGHT: "bodyweight",
+    DUMBBELL: "dumbbell",
+    BARBELL: "barbell",
+    MACHINE: "machine",
+    CABLE: "cable",
+    OTHER: "other"
+};
+
 export const AvailableUserGenders = Object.values(UserGenderEnum);
 export const AvailableUserGoals = Object.values(UserGoalEnum);
 export const AvailableUserActivityLevels = Object.values(UserActivityLevelEnum);
 export const AvailableUserDietaryPreferences = Object.values(UserDietaryPreferenceEnum);
 export const AvailableUserWeightPreferences = Object.values(UserWeightPreferenceEnum);
+export const AvailableExerciseCategories = Object.values(ExerciseCategoryEnum);
+export const AvailableMuscleGroups = Object.values(MuscleGroupEnum);
+export const AvailableEquipment = Object.values(EquipmentEnum);

@@ -1,19 +1,16 @@
-import dotenv from "dotenv";
+import "dotenv/config";
 import app from "./app.js";
 import connectDB from "./config/db.js";
 import dns from "dns";
 
 dns.setServers(["1.1.1.1","8.8.8.8"]);
 
-dotenv.config({
-    path: "./.env",
-});
-
 const port =process.env.PORT || 5000;
 
 app.get("/", (req, res) => {
     res.send("Welcome to AI Fitness Server");
 });
+
 
 connectDB().then(()=>{
     app.listen(port, () => {

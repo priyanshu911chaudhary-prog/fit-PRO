@@ -23,7 +23,7 @@ export interface IUser extends Document {
   createdAt: Date;
   updatedAt: Date;
   comparePassword(password: string): Promise<boolean>;
-  generateAccessToken(): Promise<string>;
+  generateAccessToken(hasProfile?: boolean): Promise<string>;
   generateRefreshToken(): Promise<string>;
   generateTemporaryToken(durationMs?: number): {
     unhasedToken: string;
@@ -123,10 +123,21 @@ userSchema.methods.comparePassword = async function (password: string): Promise<
   return await bcrypt.compare(password, this.password);
 };
 
-userSchema.methods.generateAccessToken = async function (): Promise<string> {
+userSchema.methods.generateAccessToken = async function (hasProfile?: boolean): Promise<string> {
+  let isProfileComplete = hasProfile;
+  if (isProfileComplete === undefined) {
+    try {
+      const { Profile } = await import("./profile");
+      const profile = await Profile.findOne({ user: this._id });
+      isProfileComplete = !!profile?.isProfileComplete;
+    } catch {
+      isProfileComplete = false;
+    }
+  }
   return await signAccessToken({
     userId: this._id.toString(),
     email: this.email,
+    hasProfile: isProfileComplete,
   });
 };
 

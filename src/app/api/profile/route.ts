@@ -5,10 +5,12 @@ import { ApiResponse } from "@/lib/api/api-response";
 import { withAuth } from "@/lib/api/with-auth";
 import { withHandler } from "@/lib/api/with-handler";
 import { validateBody } from "@/lib/api/with-validation";
-import { TokenPayload } from "@/lib/auth/jwt";
+import { setAuthCookies } from "@/lib/auth/cookies";
+import { TokenPayload, signAccessToken } from "@/lib/auth/jwt";
 import { calculateAge, calculateBMI, getFitnessMetrics } from "@/lib/fitness-calc";
 import { Bmi } from "@/models/bmi";
 import { Profile } from "@/models/profile";
+import { User } from "@/models/user";
 import { profileSetupSchema, profileUpdateSchema } from "@/validators/profile.validator";
 
 export const GET = withHandler(
@@ -85,10 +87,17 @@ export const POST = withHandler(
       });
     }
 
-    return NextResponse.json(
+    const user = await User.findById(userId);
+    const newAccessToken = user
+      ? await user.generateAccessToken(true)
+      : await signAccessToken({ userId: userId.toString(), email: sessionUser.email, hasProfile: true });
+
+    const response = NextResponse.json(
       new ApiResponse(200, "Profile setup complete. Welcome to the dashboard!", profile),
       { status: 200 }
     );
+    setAuthCookies(response, newAccessToken);
+    return response;
   })
 );
 

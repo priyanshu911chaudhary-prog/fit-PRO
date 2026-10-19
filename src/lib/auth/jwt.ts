@@ -4,6 +4,7 @@ import { env } from "../env";
 export interface TokenPayload {
   userId: string;
   email: string;
+  hasProfile?: boolean;
 }
 
 const accessSecret = new TextEncoder().encode(env.ACCESS_TOKEN_SECRET);
@@ -32,6 +33,7 @@ export async function verifyAccessToken(token: string): Promise<TokenPayload> {
   return {
     userId: payload.userId as string,
     email: payload.email as string,
+    hasProfile: payload.hasProfile as boolean | undefined,
   };
 }
 

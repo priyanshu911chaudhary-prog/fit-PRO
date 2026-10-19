@@ -239,7 +239,7 @@ All API endpoints return a standardized, uniform response envelope:
 | **BMI** | `GET` | `/api/bmi` | Yes | Historical BMI logs (Returns 200 with `[]` if empty) |
 | **BMI** | `POST` | `/api/bmi` | Yes | Logs weight, recalculates BMI category with zero gaps |
 | **Water** | `GET` | `/api/water/today` | Yes | Timezone-aware today's consumption vs 3000ml target |
-| **Water** | `POST` | `/api/water` | Yes | Logs water intake volume in ml |
+| **Water** | `POST` | `/api/water` | Yes | Logs water intake in ml (supports optional backdated date within last 7 days) |
 | **Water** | `DELETE`| `/api/water/[id]` | Yes | Deletes logged water entry (Owner-restricted) |
 | **Catalog** | `GET` | `/api/exercises` | Yes | Paginated exercise catalog with muscle/equipment filters |
 | **Catalog** | `GET` | `/api/foods` | Yes | Paginated food catalog with dietary/mealType filters |

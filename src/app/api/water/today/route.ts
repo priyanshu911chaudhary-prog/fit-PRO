@@ -37,6 +37,7 @@ export const GET = withHandler(
       new ApiResponse(200, "Today's water intake fetched successfully", {
         totalMl,
         todayStr,
+        targetAmount: 3000,
         logs: todayLogs,
       }),
       { status: 200 }

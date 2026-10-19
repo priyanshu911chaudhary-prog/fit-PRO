@@ -40,12 +40,13 @@ export default function WaterPage() {
       const res = await apiClient<{
         totalMl?: number;
         todayStr?: string;
+        targetAmount?: number;
         logs?: WaterLog[];
         water?: TodayWaterResponse;
       }>("/api/water/today");
       if (res.success && res.data) {
         const total = res.data.totalMl ?? res.data.water?.totalAmount ?? 0;
-        const target = res.data.water?.targetAmount ?? 2500;
+        const target = res.data.targetAmount ?? res.data.water?.targetAmount ?? 3000;
         const logs = res.data.logs ?? res.data.water?.logs ?? [];
         setData({
           totalAmount: total,
@@ -66,13 +67,14 @@ export default function WaterPage() {
     apiClient<{
       totalMl?: number;
       todayStr?: string;
+      targetAmount?: number;
       logs?: WaterLog[];
       water?: TodayWaterResponse;
     }>("/api/water/today")
       .then((res) => {
         if (isMounted && res.success && res.data) {
           const total = res.data.totalMl ?? res.data.water?.totalAmount ?? 0;
-          const target = res.data.water?.targetAmount ?? 2500;
+          const target = res.data.targetAmount ?? res.data.water?.targetAmount ?? 3000;
           const logs = res.data.logs ?? res.data.water?.logs ?? [];
           setData({
             totalAmount: total,
@@ -145,7 +147,7 @@ export default function WaterPage() {
   };
 
   const total = data?.totalAmount || 0;
-  const target = data?.targetAmount || 2500;
+  const target = data?.targetAmount || 3000;
   const percentage = Math.min(Math.round((total / target) * 100), 100);
   const glasses = Math.round((total / 250) * 10) / 10;
 
@@ -223,7 +225,7 @@ export default function WaterPage() {
           </div>
 
           {/* Quick Add Buttons */}
-          <div className="w-full max-w-md grid grid-cols-3 gap-2.5 pt-2">
+          <div className="w-full max-w-md grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
             <Button
               type="button"
               disabled={isSubmitting}
@@ -255,6 +257,17 @@ export default function WaterPage() {
             >
               <span className="text-xs font-bold">+750 ml</span>
               <span className="text-[10px] text-muted-foreground">Sports Shaker</span>
+            </Button>
+
+            <Button
+              type="button"
+              disabled={isSubmitting}
+              onClick={() => handleAddWater(1000)}
+              variant="outline"
+              className="h-12 border-cyan-500/30 hover:bg-cyan-500/10 hover:border-cyan-500/50 flex flex-col items-center justify-center py-1 text-cyan-400"
+            >
+              <span className="text-xs font-bold">+1L</span>
+              <span className="text-[10px] text-muted-foreground">Pitcher</span>
             </Button>
           </div>
 

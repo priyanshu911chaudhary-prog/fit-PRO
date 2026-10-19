@@ -52,6 +52,7 @@ ROUTE_MAP.md
 /tests
 /test-results
 /qa
+vitest.config.*
 
 # scripts & legacy
 /scripts

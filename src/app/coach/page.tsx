@@ -162,8 +162,45 @@ function CoachContent() {
   );
 
   useEffect(() => {
-    fetchConversations();
-  }, [fetchConversations]);
+    let ignore = false;
+    async function initConversations() {
+      try {
+        const res = await fetch("/api/coach/conversations");
+        if (!res.ok || ignore) return;
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data?.conversations) && !ignore) {
+          const list: ConversationSummary[] = data.data.conversations;
+          setConversations(list);
+
+          const storedId =
+            typeof window !== "undefined"
+              ? localStorage.getItem(LOCAL_STORAGE_ACTIVE_CHAT_KEY)
+              : null;
+
+          if (storedId && list.some((c) => c._id === storedId)) {
+            await loadConversation(storedId);
+          } else if (list.length > 0) {
+            await loadConversation(list[0]._id);
+          } else {
+            setActiveConversationId(null);
+            setActiveTitle("New Chat");
+            setMessages([DEFAULT_WELCOME_MESSAGE]);
+          }
+        }
+      } catch {
+        // Quiet fallback
+      } finally {
+        if (!ignore) {
+          setIsLoadingConversations(false);
+        }
+      }
+    }
+
+    void initConversations();
+    return () => {
+      ignore = true;
+    };
+  }, [loadConversation]);
 
   const handleNewChat = () => {
     if (isStreaming) return;

@@ -19,7 +19,7 @@ interface AuthContextType {
   user: AuthUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (data: { email: string; password: string }) => Promise<void>;
+  login: (data: { email: string; password: string }, redirectUrl?: string) => Promise<void>;
   register: (data: { name?: string; fullName?: string; email: string; password: string }) => Promise<{ success: boolean; emailSent?: boolean }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -34,11 +34,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshUser = useCallback(async () => {
     try {
-      const res = await apiClient<{ user: AuthUser; hasProfile?: boolean }>("/api/auth/me");
+      const res = await apiClient<{ user: AuthUser; hasProfile?: boolean; isProfileComplete?: boolean }>("/api/auth/me");
       if (res.success && res.data?.user) {
+        const hasProfile = Boolean(res.data.hasProfile ?? res.data.isProfileComplete ?? res.data.user.hasProfile);
         setUser({
           ...res.data.user,
-          hasProfile: res.data.hasProfile,
+          hasProfile,
         });
       } else {
         setUser(null);
@@ -52,13 +53,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let isMounted = true;
-    apiClient<{ user: AuthUser; hasProfile?: boolean }>("/api/auth/me")
+    apiClient<{ user: AuthUser; hasProfile?: boolean; isProfileComplete?: boolean }>("/api/auth/me")
       .then((res) => {
         if (isMounted) {
           if (res.success && res.data?.user) {
+            const hasProfile = Boolean(res.data.hasProfile ?? res.data.isProfileComplete ?? res.data.user.hasProfile);
             setUser({
               ...res.data.user,
-              hasProfile: res.data.hasProfile,
+              hasProfile,
             });
           } else {
             setUser(null);
@@ -77,26 +79,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const login = async (data: { email: string; password: string }) => {
-    const res = await apiClient<{ user: AuthUser; hasProfile?: boolean }>("/api/auth/login", {
+  const login = async (data: { email: string; password: string }, redirectUrl?: string) => {
+    const res = await apiClient<{ user: AuthUser; hasProfile?: boolean; isProfileComplete?: boolean }>("/api/auth/login", {
       method: "POST",
       body: JSON.stringify(data),
     });
 
     if (res.success && res.data?.user) {
       const displayName = res.data.user.fullName || res.data.user.name || "User";
+      const hasProfile = Boolean(res.data.hasProfile ?? res.data.isProfileComplete ?? res.data.user.hasProfile);
       setUser({
         ...res.data.user,
         name: displayName,
-        hasProfile: res.data.hasProfile,
+        hasProfile,
       });
       toast.success(res.message || "Logged in successfully");
-      await refreshUser();
-      if (res.data.hasProfile === false) {
-        router.push("/onboarding");
-      } else {
-        router.push("/dashboard");
-      }
+      const dest =
+        !hasProfile
+          ? "/onboarding"
+          : redirectUrl && !redirectUrl.startsWith("/login")
+          ? (redirectUrl.startsWith("/") ? redirectUrl : `/${redirectUrl}`)
+          : "/dashboard";
+      window.location.href = dest;
     }
   };
 
@@ -130,7 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setUser(null);
       toast.success("Logged out successfully");
-      router.push("/login");
+      window.location.href = "/login";
     }
   };
 

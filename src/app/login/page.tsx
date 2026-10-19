@@ -13,16 +13,29 @@ import { OAuthButtons } from "@/components/auth/oauth-buttons";
 import { toast } from "sonner";
 
 function LoginForm() {
-  const { login } = useAuth();
+  const { user, login, isAuthenticated, isLoading } = useAuth();
   const searchParams = useSearchParams();
   const registered = searchParams.get("registered");
   const verified = searchParams.get("verified");
   const oauthError = searchParams.get("error");
+  const redirectTarget = searchParams.get("redirect");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  React.useEffect(() => {
+    if (!isLoading && isAuthenticated && user && !isSubmitting) {
+      const destination =
+        !user.hasProfile
+          ? "/onboarding"
+          : redirectTarget && !redirectTarget.startsWith("/login")
+          ? (redirectTarget.startsWith("/") ? redirectTarget : `/${redirectTarget}`)
+          : "/dashboard";
+      window.location.replace(destination);
+    }
+  }, [isLoading, isAuthenticated, user, redirectTarget, isSubmitting]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +46,7 @@ function LoginForm() {
 
     try {
       setIsSubmitting(true);
-      await login({ email, password });
+      await login({ email, password }, redirectTarget || undefined);
     } catch (err: unknown) {
       const errorMsg =
         (err as { response?: { message?: string } })?.response?.message ||
@@ -44,6 +57,14 @@ function LoginForm() {
       setIsSubmitting(false);
     }
   };
+
+  if (!isLoading && isAuthenticated) {
+    return (
+      <div className="flex justify-center p-12">
+        <Loader2 className="size-8 text-indigo-500 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <Card className="w-full max-w-md border-border/60 bg-card/70 backdrop-blur-xl shadow-2xl relative z-10">

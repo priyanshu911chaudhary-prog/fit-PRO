@@ -17,9 +17,7 @@ export const GET = withHandler(
     const userId = sessionUser.userId;
     const timeZone = getUserTimezone(req);
     const todayStr = formatInTimezone(new Date(), timeZone);
-    const twoDaysAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
-
-    let [profile, bmiHistory, allWorkoutLogs, recentWorkouts, recentMeals, recentWaterLogs] =
+    const [profile, initialBmiHistory, allWorkoutLogs, recentWorkouts, recentMeals, recentWaterLogs] =
       await Promise.all([
         Profile.findOne({ user: userId }),
         Bmi.find({ user: userId }).sort({ date: 1 }).limit(30).select("bmi weight date createdAt -_id"),
@@ -32,6 +30,8 @@ export const GET = withHandler(
     if (!profile) {
       throw new ApiError(404, "Profile not found. Please complete onboarding.");
     }
+
+    let bmiHistory = initialBmiHistory;
 
     // Auto-seed initial baseline BMI record if none exists yet
     if (bmiHistory.length === 0 && profile.weight && profile.height) {

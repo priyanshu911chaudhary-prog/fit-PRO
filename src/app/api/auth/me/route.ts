@@ -24,6 +24,7 @@ export const GET = withHandler(
       new ApiResponse(200, "Current user fetched successfully", {
         user,
         profile,
+        hasProfile: profile?.isProfileComplete ?? false,
         isProfileComplete: profile?.isProfileComplete ?? false,
       }),
       { status: 200 }

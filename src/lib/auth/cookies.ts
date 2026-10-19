@@ -9,7 +9,7 @@ export const REFRESH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60; // 7 days in seconds
 export function setAuthCookies(
   res: NextResponse,
   accessToken: string,
-  refreshToken: string
+  refreshToken?: string
 ): void {
   const isProduction = process.env.NODE_ENV === "production";
 
@@ -23,13 +23,15 @@ export function setAuthCookies(
   });
 
   // Refresh token cookie (scoped to /api/auth as requested)
-  res.cookies.set(REFRESH_COOKIE_NAME, refreshToken, {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: "lax",
-    path: "/api/auth",
-    maxAge: REFRESH_COOKIE_MAX_AGE,
-  });
+  if (refreshToken) {
+    res.cookies.set(REFRESH_COOKIE_NAME, refreshToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: "lax",
+      path: "/api/auth",
+      maxAge: REFRESH_COOKIE_MAX_AGE,
+    });
+  }
 }
 
 export function clearAuthCookies(res: NextResponse): void {

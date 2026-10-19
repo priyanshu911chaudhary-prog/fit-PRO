@@ -1,7 +1,6 @@
 "use client";
 
 import React, { Suspense, useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   Dumbbell,
   ArrowRight,
@@ -31,7 +30,6 @@ import {
 } from "@/constants";
 
 function OnboardingForm() {
-  const router = useRouter();
   const { refreshUser } = useAuth();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -84,7 +82,7 @@ function OnboardingForm() {
       if (res.success) {
         toast.success("Profile created! Day-1 metrics recorded.");
         await refreshUser();
-        router.push("/dashboard");
+        window.location.href = "/dashboard";
       }
     } catch (err: unknown) {
       const msg =

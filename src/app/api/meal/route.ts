@@ -27,22 +27,34 @@ export const POST = withHandler(
       throw new ApiError(400, "One or more food item IDs are invalid or do not exist in the database");
     }
 
-    // Approved Fix 3: Compute totalCalories server-side
+    // CHK-064: Server computes calories from catalog food x quantity and IGNORES any client-supplied calories or totals
     const foodsMap = new Map(foundFoods.map((f) => [f._id.toString(), f]));
     let computedCalories = 0;
 
     const enrichedMeals = body.meals.map((m) => {
       const food = foodsMap.get(m.foodItemId);
-      const calories = m.calories ?? food?.calories ?? 0;
-      computedCalories += calories;
+      if (!food) {
+        throw new ApiError(400, "Food item not found");
+      }
+
+      // Quantity from validated quantity property or parsed from servingSize
+      let quantity = m.quantity;
+      if (!quantity || quantity <= 0) {
+        const parsed = parseFloat(m.servingSize);
+        quantity = !isNaN(parsed) && parsed > 0 ? parsed : 1;
+      }
+
+      const itemCalories = Math.round(food.calories * quantity);
+      computedCalories += itemCalories;
+
       return {
         foodItemId: m.foodItemId,
         servingSize: m.servingSize,
-        calories,
+        calories: itemCalories,
       };
     });
 
-    const totalCalories = body.totalCalories ?? computedCalories;
+    const totalCalories = computedCalories;
 
     const newLog = await MealLog.create({
       user: userId,

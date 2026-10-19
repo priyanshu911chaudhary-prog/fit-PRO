@@ -14,6 +14,7 @@ export const mealItemSchema = z.preprocess((val: unknown) => {
 
     return {
       foodItemId,
+      quantity,
       servingSize,
       calories: typeof item.calories === "number" ? item.calories : undefined,
     };
@@ -23,6 +24,7 @@ export const mealItemSchema = z.preprocess((val: unknown) => {
   foodItemId: z
     .string()
     .regex(objectIdRegex, "Invalid food item ID format"),
+  quantity: z.number().min(0.01).max(100).default(1),
   servingSize: z
     .string()
     .min(1, "Serving size cannot be empty")

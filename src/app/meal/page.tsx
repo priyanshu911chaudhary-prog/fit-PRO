@@ -235,6 +235,7 @@ function MealContent() {
           totalCalories,
           meals: addedItems.map((i) => ({
             foodItemId: i.foodItemId,
+            quantity: i.quantity,
             servingSize: `${i.quantity} serving${i.quantity > 1 ? "s" : ""}`,
             calories: i.calories * i.quantity,
           })),

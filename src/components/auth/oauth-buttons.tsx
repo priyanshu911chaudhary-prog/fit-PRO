@@ -38,9 +38,17 @@ export function OAuthButtons({ onSuccess }: OAuthButtonsProps) {
   const [gisLoaded, setGisLoaded] = useState(false);
 
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+  const isGoogleConfigured =
+    Boolean(googleClientId) &&
+    googleClientId !== "your_google_client_id" &&
+    googleClientId !== "dummy" &&
+    googleClientId !== "undefined" &&
+    (googleClientId?.includes(".apps.googleusercontent.com") ||
+      googleClientId?.includes(".googleusercontent.com"));
 
   useEffect(() => {
     if (
+      !isGoogleConfigured ||
       !googleClientId ||
       !gisLoaded ||
       typeof window === "undefined" ||
@@ -81,12 +89,16 @@ export function OAuthButtons({ onSuccess }: OAuthButtonsProps) {
         },
       });
 
-      // Attempt non-intrusive Google One-Tap prompt
-      window.google.accounts.id.prompt();
-    } catch (err) {
-      console.warn("GIS initialization notice:", err);
+      // Attempt non-intrusive Google One-Tap prompt with notification callback
+      window.google.accounts.id.prompt((notification) => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          // Handled silently
+        }
+      });
+    } catch {
+      // Handled silently
     }
-  }, [gisLoaded, googleClientId, onSuccess]);
+  }, [gisLoaded, googleClientId, isGoogleConfigured, onSuccess]);
 
   const handleGoogleClick = () => {
     setLoadingProvider("google");
@@ -100,11 +112,13 @@ export function OAuthButtons({ onSuccess }: OAuthButtonsProps) {
 
   return (
     <div className="space-y-3">
-      <Script
-        src="https://accounts.google.com/gsi/client"
-        strategy="afterInteractive"
-        onLoad={() => setGisLoaded(true)}
-      />
+      {isGoogleConfigured && (
+        <Script
+          src="https://accounts.google.com/gsi/client"
+          strategy="afterInteractive"
+          onLoad={() => setGisLoaded(true)}
+        />
+      )}
 
       <div className="relative">
         <div className="absolute inset-0 flex items-center">

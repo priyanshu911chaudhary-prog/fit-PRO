@@ -11,6 +11,8 @@ import {
   Calendar,
   User as UserIcon,
   ShieldCheck,
+  Lock,
+  KeyRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -162,6 +164,51 @@ export default function ProfilePage() {
       toast.error(msg);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // Change Password Form state
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!oldPassword) {
+      toast.error("Please enter your current password");
+      return;
+    }
+    if (!newPassword) {
+      toast.error("Please enter a new password");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("New passwords do not match");
+      return;
+    }
+
+    try {
+      setIsChangingPassword(true);
+      const res = await apiClient("/api/auth/change-password", {
+        method: "POST",
+        body: JSON.stringify({ oldPassword, newPassword }),
+      });
+
+      if (res.success) {
+        toast.success("Password updated successfully!");
+        setOldPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+      }
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { message?: string } })?.response?.message ||
+        (err as Error).message ||
+        "Failed to change password";
+      toast.error(msg);
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -439,6 +486,85 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
       </form>
+
+      {/* Security & Password Card */}
+      <Card className="border-border/60 bg-card/75 backdrop-blur-md shadow-xl">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Lock className="size-5 text-indigo-400" />
+            <CardTitle className="text-lg font-bold">Security & Password</CardTitle>
+          </div>
+          <CardDescription className="text-xs">
+            Update your account password to keep your fitness profile secure.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form id="change-password-form" onSubmit={handleChangePassword} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="oldPassword">Current Password</Label>
+                <Input
+                  id="oldPassword"
+                  type="password"
+                  placeholder="••••••••"
+                  value={oldPassword}
+                  onChange={(e) => setOldPassword(e.target.value)}
+                  className="bg-background/50"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="newPassword">New Password</Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  placeholder="••••••••"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="bg-background/50"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="bg-background/50"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <Button
+                type="submit"
+                id="change-password-btn"
+                disabled={isChangingPassword}
+                variant="outline"
+                className="border-indigo-500/30 hover:bg-indigo-500/10 text-foreground cursor-pointer"
+              >
+                {isChangingPassword ? (
+                  <>
+                    <Loader2 className="size-4 mr-2 animate-spin" />
+                    Updating Password...
+                  </>
+                ) : (
+                  <>
+                    <KeyRound className="size-4 mr-2 text-indigo-400" />
+                    Update Password
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

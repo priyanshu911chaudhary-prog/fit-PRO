@@ -5,6 +5,32 @@ import { verifyAccessToken } from "@/lib/auth/jwt";
 const ACCESS_COOKIE_NAME = "accessToken";
 const REFRESH_COOKIE_NAME = "refreshToken";
 
+const SECURITY_HEADERS: Record<string, string> = {
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+  "Content-Security-Policy": [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://accounts.google.com https://apis.google.com",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com data:",
+    "img-src 'self' data: https: blob:",
+    "connect-src 'self' https://accounts.google.com https://generativelanguage.googleapis.com",
+    "frame-src 'self' https://accounts.google.com",
+    "frame-ancestors 'none'",
+  ].join("; "),
+};
+
+function applySecurityHeaders(res: NextResponse): NextResponse {
+  for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+    if (!res.headers.has(key)) {
+      res.headers.set(key, value);
+    }
+  }
+  return res;
+}
+
 const APP_PAGES = [
   "/dashboard",
   "/water",
@@ -55,53 +81,67 @@ export async function proxy(request: NextRequest) {
       // If access token is expired/missing but refresh token exists,
       // redirect to refresh route handler so new cookies can be set on response
       if (refreshToken) {
-        return NextResponse.redirect(
-          new URL(`/api/auth/refresh?redirect=${currentUrl}`, request.url)
+        return applySecurityHeaders(
+          NextResponse.redirect(
+            new URL(`/api/auth/refresh?redirect=${currentUrl}`, request.url)
+          )
         );
       }
 
       // No tokens at all -> redirect to login
-      return NextResponse.redirect(
-        new URL(`/login?redirect=${currentUrl}`, request.url)
+      return applySecurityHeaders(
+        NextResponse.redirect(
+          new URL(`/login?redirect=${currentUrl}`, request.url)
+        )
       );
     }
 
     // User is authenticated: check profile completion
     if (!payload.hasProfile) {
-      return NextResponse.redirect(new URL("/onboarding", request.url));
+      return applySecurityHeaders(
+        NextResponse.redirect(new URL("/onboarding", request.url))
+      );
     }
 
-    return NextResponse.next();
+    return applySecurityHeaders(NextResponse.next());
   }
 
   // 2. Onboarding Guard (/onboarding)
   if (isOnboarding) {
     if (!payload) {
       if (refreshToken) {
-        return NextResponse.redirect(
-          new URL("/api/auth/refresh?redirect=%2Fonboarding", request.url)
+        return applySecurityHeaders(
+          NextResponse.redirect(
+            new URL("/api/auth/refresh?redirect=%2Fonboarding", request.url)
+          )
         );
       }
-      return NextResponse.redirect(
-        new URL("/login?redirect=%2Fonboarding", request.url)
+      return applySecurityHeaders(
+        NextResponse.redirect(
+          new URL("/login?redirect=%2Fonboarding", request.url)
+        )
       );
     }
 
     // User is already onboarded: redirect to /dashboard
     if (payload.hasProfile) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      return applySecurityHeaders(
+        NextResponse.redirect(new URL("/dashboard", request.url))
+      );
     }
 
-    return NextResponse.next();
+    return applySecurityHeaders(NextResponse.next());
   }
 
   // 3. If user already authenticated and visits login/register
   if (isAuthRoute && payload) {
     const dest = payload.hasProfile ? "/dashboard" : "/onboarding";
-    return NextResponse.redirect(new URL(dest, request.url));
+    return applySecurityHeaders(
+      NextResponse.redirect(new URL(dest, request.url))
+    );
   }
 
-  return NextResponse.next();
+  return applySecurityHeaders(NextResponse.next());
 }
 
 export const config = {

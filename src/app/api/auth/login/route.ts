@@ -1,5 +1,6 @@
 
 import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
 import { ApiError } from "@/lib/api/api-error";
 import { ApiResponse } from "@/lib/api/api-response";
 import { checkRateLimit } from "@/lib/api/rate-limit";
@@ -8,6 +9,9 @@ import { validateBody } from "@/lib/api/with-validation";
 import { setAuthCookies } from "@/lib/auth/cookies";
 import { User } from "@/models/user";
 import { loginSchema } from "@/validators/auth.validator";
+
+// Pre-computed 12-round bcrypt hash matching UserSchema work factor
+const DUMMY_BCRYPT_HASH = "$2b$12$Kwr5ouVioe/Z/fu4x5yGEuFUMGkaiw/172cZ8pGlDGLJs3y8ulqAC";
 
 export const POST = withHandler(async (req: NextRequest) => {
   // 1. IP-based rate limit: 20 attempts per hour
@@ -32,7 +36,8 @@ export const POST = withHandler(async (req: NextRequest) => {
   const user = await User.findOne({ email: body.email }).select("+password");
 
   if (!user || user.authProvider !== "local") {
-    // Unified error message per approved fix 9
+    // BUG-014: Perform dummy bcrypt comparison to neutralize user enumeration timing attacks
+    await bcrypt.compare(body.password, DUMMY_BCRYPT_HASH);
     throw new ApiError(400, "Invalid email or password");
   }
 

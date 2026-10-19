@@ -27,7 +27,6 @@ const workoutPlanSchema = new Schema<IWorkoutPlan>(
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true,
     },
     planName: {
       type: String,
@@ -60,6 +59,14 @@ const workoutPlanSchema = new Schema<IWorkoutPlan>(
 );
 
 workoutPlanSchema.index({ user: 1, createdAt: -1 });
+workoutPlanSchema.index(
+  { user: 1, isActive: 1 },
+  {
+    unique: true,
+    name: "user_single_active_workout_plan",
+    partialFilterExpression: { isActive: true },
+  }
+);
 
 export const WorkoutPlan: Model<IWorkoutPlan> =
   mongoose.models.WorkoutPlan ||

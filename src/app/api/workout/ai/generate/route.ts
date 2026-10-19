@@ -38,15 +38,32 @@ export const POST = withHandler(
 
     const enrichedSchedule = await mapAIExercisesToIds(rawPlan.schedule);
 
-    // Approved Fix 18: Deactivate previous active plans when a new one is generated
-    await WorkoutPlan.updateMany({ user: userId, isActive: true }, { isActive: false });
-
+    // BUG-015: Concurrency safety - save newly generated plan as inactive first
     const savedPlan = await WorkoutPlan.create({
       user: userId,
       planName: rawPlan.planName,
       schedule: enrichedSchedule,
-      isActive: true,
+      isActive: false,
     });
+
+    // Atomic swap: deactivate any previous active plan and activate the new plan safely
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        await WorkoutPlan.updateMany(
+          { user: userId, _id: { $ne: savedPlan._id }, isActive: true },
+          { isActive: false }
+        );
+        await WorkoutPlan.findByIdAndUpdate(savedPlan._id, { isActive: true });
+        break;
+      } catch (err: unknown) {
+        const error = err as { code?: number };
+        if (error.code === 11000 && attempt < 4) {
+          await new Promise((r) => setTimeout(r, 50 * (attempt + 1)));
+          continue;
+        }
+        throw err;
+      }
+    }
 
     const populatedPlan = await WorkoutPlan.findById(savedPlan._id).populate(
       "schedule.exercises.exerciseId",

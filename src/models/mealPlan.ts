@@ -30,7 +30,6 @@ const mealPlanSchema = new Schema<IMealPlan>(
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true,
     },
     planName: {
       type: String,
@@ -66,6 +65,14 @@ const mealPlanSchema = new Schema<IMealPlan>(
 );
 
 mealPlanSchema.index({ user: 1, createdAt: -1 });
+mealPlanSchema.index(
+  { user: 1, isActive: 1 },
+  {
+    unique: true,
+    name: "user_single_active_meal_plan",
+    partialFilterExpression: { isActive: true },
+  }
+);
 
 export const MealPlan: Model<IMealPlan> =
   mongoose.models.MealPlan || mongoose.model<IMealPlan>("MealPlan", mealPlanSchema);

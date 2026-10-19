@@ -37,15 +37,32 @@ export const POST = withHandler(
 
     const enrichedSchedule = await mapAIMealsToIds(rawPlan.schedule);
 
-    // Approved Fix 18: Deactivate previous active plans when a new one is generated
-    await MealPlan.updateMany({ user: userId, isActive: true }, { isActive: false });
-
+    // BUG-015: Concurrency safety - save newly generated plan as inactive first
     const savedPlan = await MealPlan.create({
       user: userId,
       planName: rawPlan.planName,
       schedule: enrichedSchedule,
-      isActive: true,
+      isActive: false,
     });
+
+    // Atomic swap: deactivate any previous active plan and activate the new plan safely
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        await MealPlan.updateMany(
+          { user: userId, _id: { $ne: savedPlan._id }, isActive: true },
+          { isActive: false }
+        );
+        await MealPlan.findByIdAndUpdate(savedPlan._id, { isActive: true });
+        break;
+      } catch (err: unknown) {
+        const error = err as { code?: number };
+        if (error.code === 11000 && attempt < 4) {
+          await new Promise((r) => setTimeout(r, 50 * (attempt + 1)));
+          continue;
+        }
+        throw err;
+      }
+    }
 
     const populatedPlan = await MealPlan.findById(savedPlan._id).populate(
       "schedule.meals.foodItemId",

@@ -258,6 +258,34 @@ All API endpoints return a standardized, uniform response envelope:
 
 ---
 
+## 🧪 Enterprise Testing Suite (Showcase)
+
+This application includes a production-grade testing suite designed to showcase testing maturity and software craftsmanship across all levels of the testing pyramid.
+
+| Layer | Runner & Tools | Test Target | Key Highlights |
+| :--- | :--- | :--- | :--- |
+| **Unit** | Vitest 5 | `tests/unit/` | Zod schema validation boundaries, bcrypt 72-byte caps, Mifflin-St Jeor BMR math, JWT HS256 tokens |
+| **Component** | Testing Library + Happy-DOM | `tests/components/` | Form submissions, loading spinners, password visibility toggles, reactive metric cards |
+| **API & Contract** | Vitest 5 | `tests/api/` | Standardized `{ statusCode, success, message, data }` envelopes (200–500), atomic Mongo TTL rate limiting |
+| **DB Integration** | Vitest + Isolated Atlas DB | `tests/integration/` | Real MongoDB persistence, relational cascading, Day-1 initial BMI records, isolated teardown |
+| **E2E Journeys** | Playwright 1.64 | `tests/e2e/` | 4 critical user flows: Auth lifecycle, Biometrics & BMI, Daily hydration tracking, Gemini AI Coach |
+
+### Test Commands
+```bash
+# Run all Unit, Component, API, and Integration suites (100% pass)
+npm test
+
+# Run Playwright End-to-End browser journeys
+npm run test:e2e
+
+# Run with interactive UI
+npm run test:watch
+```
+
+For full architecture details, coverage tables, and design decisions, see the dedicated [tests/README.md](tests/README.md).
+
+---
+
 ## 🛡️ Health & Medical Disclaimer
 
 > **IMPORTANT**: AI Fitness and its integrated AI Coach features provide fitness, workout, and nutritional suggestions for informational and educational purposes only. They do not constitute medical advice, medical diagnosis, or treatment. Always consult a qualified physician or healthcare provider before beginning any new diet or exercise regimen.

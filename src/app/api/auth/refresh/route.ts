@@ -80,7 +80,10 @@ export const POST = withHandler(async (req: NextRequest) => {
 export const GET = withHandler(async (req: NextRequest) => {
   const url = new URL(req.url);
   const redirectTarget = url.searchParams.get("redirect") || "/dashboard";
-  const loginTarget = new URL("/login", req.url);
+  const loginTarget = new URL(
+    `/login?redirect=${encodeURIComponent(redirectTarget)}`,
+    req.url
+  );
 
   const incomingToken = req.cookies.get(REFRESH_COOKIE_NAME)?.value;
   if (!incomingToken) {

@@ -3,11 +3,11 @@
 import React, { Suspense, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Lock, Eye, EyeOff, ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
+import { Lock, Eye, EyeOff, ArrowRight, Loader2, CheckCircle2, ArrowLeft } from "lucide-react";
+import { FitProLogo } from "@/components/brand/fit-pro-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
 
@@ -30,8 +30,8 @@ function ResetPasswordForm() {
       return;
     }
 
-    if (password.length < 6) {
-      toast.error("Password must be at least 6 characters.");
+    if (password.length < 8) {
+      toast.error("Password must be at least 8 characters.");
       return;
     }
 
@@ -52,7 +52,7 @@ function ResetPasswordForm() {
         toast.success(res.message || "Password has been reset successfully!");
         setTimeout(() => {
           router.push("/login");
-        }, 2000);
+        }, 1500);
       }
     } catch (err: unknown) {
       const msg =
@@ -66,111 +66,121 @@ function ResetPasswordForm() {
   };
 
   return (
-    <Card className="w-full max-w-md border-border/60 bg-card/70 backdrop-blur-xl shadow-2xl">
-      <CardHeader className="space-y-3 text-center pb-4">
-        <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-500 dark:bg-indigo-500/20 shadow-md">
-          <Lock className="size-7" />
+    <div className="w-full max-w-[420px] mx-auto rounded-3xl border border-border/70 bg-card/85 dark:bg-card/75 backdrop-blur-2xl p-6 sm:p-8 shadow-2xl space-y-6">
+      {/* Brand Header */}
+      <div className="flex flex-col items-center text-center space-y-2">
+        <Link
+          href="/"
+          className="flex size-11 items-center justify-center rounded-2xl bg-card border border-border/80 shadow-xs hover:border-emerald-500/40 hover:scale-105 transition-all duration-200"
+        >
+          <FitProLogo size={24} />
+        </Link>
+        <div className="space-y-0.5">
+          <h1 className="font-heading text-xl font-black tracking-tight text-foreground">
+            Set New Password
+          </h1>
+          <p className="text-xs text-muted-foreground">
+            Choose a secure password with at least 8 characters.
+          </p>
         </div>
-        <CardTitle className="text-2xl font-bold tracking-tight">Set New Password</CardTitle>
-        <CardDescription className="text-sm text-muted-foreground">
-          Please choose a secure password with at least 6 characters
-        </CardDescription>
-      </CardHeader>
+      </div>
 
-      <CardContent className="space-y-4">
-        {isSuccess ? (
-          <div className="space-y-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-5 text-center">
-            <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-500">
-              <CheckCircle2 className="size-6" />
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-                Password Updated!
-              </p>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Redirecting to sign-in page...
-              </p>
+      {isSuccess ? (
+        <div className="space-y-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-5 text-center">
+          <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
+            <CheckCircle2 className="size-5" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-bold text-foreground">
+              Password Updated
+            </p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Redirecting you to sign in...
+            </p>
+          </div>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="password" className="text-xs font-semibold">New Password</Label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-2.5 size-4 text-muted-foreground pointer-events-none" />
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Min 8 characters"
+                className="pl-9 pr-9 bg-background/50 text-sm focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/50"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
             </div>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="password">New Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-2.5 size-4 text-muted-foreground pointer-events-none" />
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Min 6 characters"
-                  className="pl-9 pr-9 bg-background/50"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                </button>
-              </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="confirmPassword" className="text-xs font-semibold">Confirm New Password</Label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-2.5 size-4 text-muted-foreground pointer-events-none" />
+              <Input
+                id="confirmPassword"
+                type={showPassword ? "text" : "password"}
+                placeholder="Repeat new password"
+                className="pl-9 bg-background/50 text-sm focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/50"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+              />
             </div>
+          </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="confirmPassword">Confirm New Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-2.5 size-4 text-muted-foreground pointer-events-none" />
-                <Input
-                  id="confirmPassword"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Repeat new password"
-                  className="pl-9 bg-background/50"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-bold h-10 shadow-sm shadow-emerald-500/25 active:scale-[0.99] transition-all cursor-pointer"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="size-4 mr-2 animate-spin" />
+                Updating Password...
+              </>
+            ) : (
+              <>
+                Save New Password
+                <ArrowRight className="size-4 ml-1.5" />
+              </>
+            )}
+          </Button>
+        </form>
+      )}
 
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-gradient-to-r from-indigo-600 to-fuchsia-600 hover:from-indigo-500 hover:to-fuchsia-500 text-white font-medium shadow-md shadow-indigo-500/20"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="size-4 mr-2 animate-spin" />
-                  Resetting Password...
-                </>
-              ) : (
-                <>
-                  Save New Password
-                  <ArrowRight className="size-4 ml-2" />
-                </>
-              )}
-            </Button>
-          </form>
-        )}
-      </CardContent>
-
-      <CardFooter className="flex justify-center border-t border-border/40 pt-4">
+      <div className="pt-2 border-t border-border/40 text-center">
         <Link
           href="/login"
-          className="flex items-center text-xs font-semibold text-indigo-500 hover:text-indigo-400 transition-colors"
+          className="inline-flex items-center text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
         >
+          <ArrowLeft className="size-3.5 mr-1.5" />
           Back to Sign In
-          <ArrowRight className="size-3.5 ml-1" />
         </Link>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 }
 
 export default function ResetPasswordTokenPage() {
   return (
-    <div className="flex flex-1 items-center justify-center p-4 py-12 sm:px-6 lg:px-8">
-      <Suspense fallback={<div className="w-full max-w-md h-80 rounded-xl bg-card/50 animate-pulse" />}>
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-background relative overflow-hidden">
+      {/* Ambient Glow */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[140px] pointer-events-none -z-10" />
+
+      <Suspense fallback={<div className="w-full max-w-[420px] h-80 rounded-3xl bg-card/40 animate-pulse mx-auto" />}>
         <ResetPasswordForm />
       </Suspense>
     </div>

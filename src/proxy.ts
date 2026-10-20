@@ -78,20 +78,11 @@ export async function proxy(request: NextRequest) {
         pathname + (request.nextUrl.search || "")
       );
 
-      // If access token is expired/missing but refresh token exists,
-      // redirect to refresh route handler so new cookies can be set on response
-      if (refreshToken) {
-        return applySecurityHeaders(
-          NextResponse.redirect(
-            new URL(`/api/auth/refresh?redirect=${currentUrl}`, request.url)
-          )
-        );
-      }
-
-      // No tokens at all -> redirect to login
+      // Scoped refresh token is sent to /api/auth. Route through refresh handler
+      // to transparently restore session or redirect to /login if no valid session exists.
       return applySecurityHeaders(
         NextResponse.redirect(
-          new URL(`/login?redirect=${currentUrl}`, request.url)
+          new URL(`/api/auth/refresh?redirect=${currentUrl}`, request.url)
         )
       );
     }
@@ -109,16 +100,9 @@ export async function proxy(request: NextRequest) {
   // 2. Onboarding Guard (/onboarding)
   if (isOnboarding) {
     if (!payload) {
-      if (refreshToken) {
-        return applySecurityHeaders(
-          NextResponse.redirect(
-            new URL("/api/auth/refresh?redirect=%2Fonboarding", request.url)
-          )
-        );
-      }
       return applySecurityHeaders(
         NextResponse.redirect(
-          new URL("/login?redirect=%2Fonboarding", request.url)
+          new URL("/api/auth/refresh?redirect=%2Fonboarding", request.url)
         )
       );
     }
@@ -135,6 +119,14 @@ export async function proxy(request: NextRequest) {
 
   // 3. If user already authenticated and visits login/register
   if (isAuthRoute && payload) {
+    const dest = payload.hasProfile ? "/dashboard" : "/onboarding";
+    return applySecurityHeaders(
+      NextResponse.redirect(new URL(dest, request.url))
+    );
+  }
+
+  // 4. If user already authenticated and visits the root landing page (/)
+  if (pathname === "/" && payload) {
     const dest = payload.hasProfile ? "/dashboard" : "/onboarding";
     return applySecurityHeaders(
       NextResponse.redirect(new URL(dest, request.url))

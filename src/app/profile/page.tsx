@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Scale,
@@ -13,12 +13,21 @@ import {
   ShieldCheck,
   Lock,
   KeyRound,
+  Zap,
+  Dumbbell,
+  HeartPulse,
+  Award,
+  CheckCircle2,
+  Sliders,
+  Utensils,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { apiClient } from "@/lib/api-client";
+import { useAuth } from "@/context/auth-context";
 import { toast } from "sonner";
 import {
   UserGoalEnum,
@@ -27,6 +36,7 @@ import {
   EquipmentEnum,
   ExperienceLevelEnum,
 } from "@/constants";
+import { cn } from "cn";
 
 interface ProfileData {
   _id?: string;
@@ -51,12 +61,25 @@ interface ProfileMetrics {
   age: number;
 }
 
-export default function ProfilePage() {
+const GOAL_ICONS: Record<string, React.ElementType> = {
+  [UserGoalEnum.MUSCLE_BUILDING]: Dumbbell,
+  [UserGoalEnum.WEIGHT_LOSS]: Flame,
+  [UserGoalEnum.STRENGTH_TRAINING]: Zap,
+  [UserGoalEnum.ENDURANCE_TRAINING]: Activity,
+  [UserGoalEnum.GENERAL_FITNESS]: HeartPulse,
+};
+
+function ProfileContent() {
   const router = useRouter();
+  const { user } = useAuth();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [metrics, setMetrics] = useState<ProfileMetrics | null>(null);
+  const [authProvider, setAuthProvider] = useState<string>("local");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
+  const effectiveAuthProvider = user?.authProvider || authProvider || "local";
+  const isOAuthUser = effectiveAuthProvider === "google" || effectiveAuthProvider === "microsoft";
 
   // Editable Form fields
   const [height, setHeight] = useState<number>(175);
@@ -69,9 +92,12 @@ export default function ProfilePage() {
 
   useEffect(() => {
     let isMounted = true;
-    apiClient<{ profile: ProfileData; metrics?: ProfileMetrics; isProfileComplete?: boolean }>("/api/profile")
+    apiClient<{ profile: ProfileData; metrics?: ProfileMetrics; isProfileComplete?: boolean; authProvider?: string }>("/api/profile")
       .then((res) => {
         if (isMounted) {
+          if (res.data?.authProvider) {
+            setAuthProvider(res.data.authProvider);
+          }
           if (res.data?.profile) {
             const p = res.data.profile;
             setProfile(p);
@@ -154,7 +180,7 @@ export default function ProfilePage() {
         if (res.data.metrics) {
           setMetrics(res.data.metrics);
         }
-        toast.success("Profile updated successfully!");
+        toast.success("Bio-passport baseline updated successfully!");
       }
     } catch (err: unknown) {
       const msg =
@@ -196,7 +222,7 @@ export default function ProfilePage() {
       });
 
       if (res.success) {
-        toast.success("Password updated successfully!");
+        toast.success("Security credentials updated successfully!");
         setOldPassword("");
         setNewPassword("");
         setConfirmPassword("");
@@ -214,120 +240,147 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center p-8">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="size-8 text-indigo-500 animate-spin" />
-          <p className="text-sm text-muted-foreground animate-pulse">Loading fitness profile...</p>
-        </div>
+      <div className="flex min-h-[60vh] flex-col items-center justify-center p-8 space-y-3">
+        <Loader2 className="size-8 text-emerald-400 animate-spin" />
+        <p className="text-xs font-mono text-muted-foreground animate-pulse">
+          Calibrating athlete bio-passport...
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto max-w-5xl px-4 py-8 space-y-8">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight">Fitness Profile</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage your biometrics, target metrics, and workout preferences
-          </p>
+    <div className="container mx-auto max-w-6xl px-4 py-8 space-y-8">
+      {/* 1. Header Banner */}
+      <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl p-5 sm:p-6 shadow-xl">
+        <div className="absolute top-0 left-1/4 right-1/4 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent" />
+        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2.5">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium border border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
+                <ShieldCheck className="size-3.5" />
+                ATHLETE BIO-PASSPORT
+              </span>
+              <span className="text-xs text-muted-foreground font-mono">
+                METABOLIC ENGINE SYNCED
+              </span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+              Athlete Profile & Biometrics
+            </h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              Configure baseline anthropometrics, active energy expenditure multipliers, and workout gear.
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Metric Cards Banner */}
+      {/* 2. Derived Telemetry Strip */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="border-border/60 bg-card/60 backdrop-blur-md shadow-xs">
+        {/* Metric 1: Derived BMI */}
+        <Card className="border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl shadow-lg relative overflow-hidden">
           <CardContent className="p-5 flex items-center gap-4">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-400">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
               <Scale className="size-6" />
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground font-medium">Derived BMI</p>
-              <p className="text-2xl font-extrabold text-foreground">{metrics?.bmi ?? "—"}</p>
-              <p className="text-[11px] text-indigo-400 capitalize">
-                {metrics?.bmiCategory ? `${metrics.bmiCategory} category` : "Calculated Metric"}
+            <div className="space-y-0.5">
+              <p className="text-xs font-mono text-muted-foreground">Anthropometric BMI</p>
+              <p className="text-3xl font-extrabold font-mono text-foreground">
+                {metrics?.bmi ?? "—"}
               </p>
+              <Badge variant="outline" className="border-emerald-500/30 text-emerald-400 bg-emerald-500/10 text-[10px] font-mono font-bold capitalize">
+                {metrics?.bmiCategory ? `${metrics.bmiCategory} category` : "Calibrated"}
+              </Badge>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-border/60 bg-card/60 backdrop-blur-md shadow-xs">
+        {/* Metric 2: Basal BMR */}
+        <Card className="border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl shadow-lg relative overflow-hidden">
           <CardContent className="p-5 flex items-center gap-4">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 shrink-0">
               <Flame className="size-6" />
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground font-medium">BMR (Basal)</p>
-              <p className="text-2xl font-extrabold text-foreground">
+            <div className="space-y-0.5">
+              <p className="text-xs font-mono text-muted-foreground">Basal BMR Floor</p>
+              <p className="text-3xl font-extrabold font-mono text-foreground">
                 {metrics?.bmr ?? "—"}{" "}
-                {metrics?.bmr ? <span className="text-xs font-normal text-muted-foreground">kcal</span> : null}
+                {metrics?.bmr ? <span className="text-xs font-normal font-sans text-muted-foreground">kcal/d</span> : null}
               </p>
-              <p className="text-[11px] text-emerald-400">Resting Expenditure</p>
+              <p className="text-[11px] text-amber-400 font-mono">Resting Metabolic Baseline</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-border/60 bg-card/60 backdrop-blur-md shadow-xs">
+        {/* Metric 3: Active TDEE */}
+        <Card className="border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl shadow-lg relative overflow-hidden">
           <CardContent className="p-5 flex items-center gap-4">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-fuchsia-500/10 text-fuchsia-400">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shrink-0">
               <Activity className="size-6" />
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground font-medium">TDEE Target</p>
-              <p className="text-2xl font-extrabold text-foreground">
+            <div className="space-y-0.5">
+              <p className="text-xs font-mono text-muted-foreground">Active TDEE Target</p>
+              <p className="text-3xl font-extrabold font-mono text-foreground">
                 {metrics?.tdee ?? "—"}{" "}
-                {metrics?.tdee ? <span className="text-xs font-normal text-muted-foreground">kcal</span> : null}
+                {metrics?.tdee ? <span className="text-xs font-normal font-sans text-muted-foreground">kcal/d</span> : null}
               </p>
-              <p className="text-[11px] text-fuchsia-400">Maintenance Target</p>
+              <p className="text-[11px] text-cyan-400 font-mono">Maintenance Caloric Budget</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Main Settings Form */}
+      {/* 3. Main Settings Form */}
       <form onSubmit={handleSave}>
-        <Card className="border-border/60 bg-card/75 backdrop-blur-md shadow-xl">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold">Biometrics & Goals</CardTitle>
-            <CardDescription className="text-xs">
-              Updating your metrics recalculates your BMR, TDEE, and informs AI plan generators.
+        <Card className="border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl shadow-xl">
+          <CardHeader className="pb-3 border-b border-border/40">
+            <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+              <Sliders className="size-4 text-emerald-400" />
+              Biometrics & Calibration Parameters
+            </CardTitle>
+            <CardDescription className="text-xs text-muted-foreground">
+              Adjusting your biometric specifications dynamically re-computes your metabolic expenditure baselines.
             </CardDescription>
           </CardHeader>
 
-          <CardContent className="space-y-6">
-            {/* Non-editable personal info */}
+          <CardContent className="space-y-6 pt-5">
+            {/* Non-editable bio-passport card */}
             {profile && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-xl bg-muted/40 text-xs">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-xl bg-card/40 border border-border/60 text-xs font-mono">
                 <div>
-                  <span className="text-muted-foreground flex items-center gap-1 mb-1">
-                    <UserIcon className="size-3.5" /> Gender
+                  <span className="text-muted-foreground flex items-center gap-1.5 mb-1 text-[11px]">
+                    <UserIcon className="size-3.5 text-emerald-400" /> Biological Sex
                   </span>
-                  <span className="font-semibold text-foreground capitalize">{profile.gender}</span>
+                  <span className="font-bold text-foreground capitalize">{profile.gender}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground flex items-center gap-1 mb-1">
-                    <Calendar className="size-3.5" /> Date of Birth
+                  <span className="text-muted-foreground flex items-center gap-1.5 mb-1 text-[11px]">
+                    <Calendar className="size-3.5 text-cyan-400" /> Date of Birth
                   </span>
-                  <span className="font-semibold text-foreground">{formatDob(profile.dob)}</span>
+                  <span className="font-bold text-foreground">{formatDob(profile.dob)}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground block mb-1">Dynamic Age</span>
-                  <span className="font-semibold text-foreground">{profile.age || metrics?.age || "—"} years</span>
+                  <span className="text-muted-foreground block mb-1 text-[11px]">Calibrated Age</span>
+                  <span className="font-bold text-foreground">{profile.age || metrics?.age || "—"} years</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground flex items-center gap-1 mb-1">
-                    <ShieldCheck className="size-3.5 text-emerald-400" /> Member Status
+                  <span className="text-muted-foreground flex items-center gap-1.5 mb-1 text-[11px]">
+                    <ShieldCheck className="size-3.5 text-emerald-400" /> Bio-Passport Status
                   </span>
-                  <span className="font-semibold text-emerald-400">Active</span>
+                  <span className="font-bold text-emerald-400 flex items-center gap-1">
+                    <span className="size-2 rounded-full bg-emerald-400 inline-block animate-pulse" />
+                    Verified
+                  </span>
                 </div>
               </div>
             )}
 
-            {/* Editable metrics */}
+            {/* Editable Height & Weight */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="height">Height (cm)</Label>
+                <Label htmlFor="height" className="text-xs font-medium text-muted-foreground">
+                  Height (cm)
+                </Label>
                 <Input
                   id="height"
                   type="number"
@@ -335,13 +388,15 @@ export default function ProfilePage() {
                   max={250}
                   value={height}
                   onChange={(e) => setHeight(Number(e.target.value))}
-                  className="bg-background/50"
+                  className="bg-background/50 border-border/70 text-foreground font-mono text-sm h-10"
                   required
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="weight">Weight (kg)</Label>
+                <Label htmlFor="weight" className="text-xs font-medium text-muted-foreground">
+                  Body Weight (kg)
+                </Label>
                 <Input
                   id="weight"
                   type="number"
@@ -349,7 +404,7 @@ export default function ProfilePage() {
                   max={300}
                   value={weight}
                   onChange={(e) => setWeight(Number(e.target.value))}
-                  className="bg-background/50"
+                  className="bg-background/50 border-border/70 text-foreground font-mono text-sm h-10"
                   required
                 />
               </div>
@@ -357,92 +412,128 @@ export default function ProfilePage() {
 
             {/* Fitness Goal */}
             <div className="space-y-2">
-              <Label>Primary Fitness Goal</Label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {(Object.values(UserGoalEnum) as string[]).map((goal) => (
-                  <button
-                    key={goal}
-                    type="button"
-                    onClick={() => setFitnessGoal(goal)}
-                    className={`p-2.5 rounded-xl text-left border text-xs capitalize transition-all cursor-pointer ${
-                      fitnessGoal === goal
-                        ? "border-indigo-500 bg-indigo-500/10 text-indigo-400 font-bold ring-2 ring-indigo-500/20"
-                        : "border-border bg-background/50 hover:bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {goal.replace(/_/g, " ")}
-                  </button>
-                ))}
+              <Label className="text-xs font-medium text-muted-foreground">
+                Primary Fitness Protocol
+              </Label>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                {(Object.values(UserGoalEnum) as string[]).map((goal) => {
+                  const isSelected = fitnessGoal === goal;
+                  const IconComp = GOAL_ICONS[goal] || Activity;
+
+                  return (
+                    <button
+                      key={goal}
+                      type="button"
+                      onClick={() => setFitnessGoal(goal)}
+                      className={cn(
+                        "p-3 rounded-xl text-left border text-xs capitalize transition-all cursor-pointer flex flex-col justify-between space-y-2",
+                        isSelected
+                          ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400 font-semibold shadow-xs"
+                          : "border-border/60 bg-card/40 hover:bg-muted/30 text-muted-foreground"
+                      )}
+                    >
+                      <IconComp className={cn("size-4", isSelected ? "text-emerald-400" : "text-muted-foreground")} />
+                      <span className="leading-tight">{goal.replace(/_/g, " ")}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
             {/* Activity Level */}
             <div className="space-y-2">
-              <Label>Activity Level</Label>
+              <Label className="text-xs font-medium text-muted-foreground">
+                Activity & Exertion Level
+              </Label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                {(Object.values(UserActivityLevelEnum) as string[]).map((lvl) => (
-                  <button
-                    key={lvl}
-                    type="button"
-                    onClick={() => setActivityLevel(lvl)}
-                    className={`p-2.5 rounded-xl text-left border text-xs capitalize transition-all cursor-pointer ${
-                      activityLevel === lvl
-                        ? "border-indigo-500 bg-indigo-500/10 text-indigo-400 font-bold ring-2 ring-indigo-500/20"
-                        : "border-border bg-background/50 hover:bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {lvl.replace(/_/g, " ")}
-                  </button>
-                ))}
+                {(Object.values(UserActivityLevelEnum) as string[]).map((lvl) => {
+                  const isSelected = activityLevel === lvl;
+                  return (
+                    <button
+                      key={lvl}
+                      type="button"
+                      onClick={() => setActivityLevel(lvl)}
+                      className={cn(
+                        "p-3 rounded-xl text-left border text-xs capitalize transition-all cursor-pointer",
+                        isSelected
+                          ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400 font-semibold shadow-xs"
+                          : "border-border/60 bg-card/40 hover:bg-muted/30 text-muted-foreground"
+                      )}
+                    >
+                      <span className="block font-semibold">{lvl.replace(/_/g, " ")}</span>
+                      <span className="text-[10px] text-muted-foreground font-mono">
+                        {lvl === UserActivityLevelEnum.SEDENTARY && "Desk job, low exercise"}
+                        {lvl === UserActivityLevelEnum.LIGHTLY_ACTIVE && "1–3 sessions/wk"}
+                        {lvl === UserActivityLevelEnum.MODERATELY_ACTIVE && "3–5 training days/wk"}
+                        {lvl === UserActivityLevelEnum.VERY_ACTIVE && "6–7 intensive sessions"}
+                        {lvl === UserActivityLevelEnum.SUPER_ACTIVE && "Athletic heavy volume"}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
             {/* Experience & Diet */}
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Experience Level</Label>
+                <Label className="text-xs font-medium text-muted-foreground">
+                  Experience Tier
+                </Label>
                 <div className="grid grid-cols-3 gap-2">
-                  {(Object.values(ExperienceLevelEnum) as string[]).map((exp) => (
-                    <button
-                      key={exp}
-                      type="button"
-                      onClick={() => setExperienceLevel(exp)}
-                      className={`p-2.5 rounded-xl text-center border text-xs capitalize transition-all cursor-pointer ${
-                        experienceLevel === exp
-                          ? "border-indigo-500 bg-indigo-500/10 text-indigo-400 font-bold ring-2 ring-indigo-500/20"
-                          : "border-border bg-background/50 hover:bg-muted text-muted-foreground"
-                      }`}
-                    >
-                      {exp}
-                    </button>
-                  ))}
+                  {(Object.values(ExperienceLevelEnum) as string[]).map((exp) => {
+                    const isSelected = experienceLevel === exp;
+                    return (
+                      <button
+                        key={exp}
+                        type="button"
+                        onClick={() => setExperienceLevel(exp)}
+                        className={cn(
+                          "p-2.5 rounded-xl text-center border text-xs capitalize transition-all cursor-pointer font-medium",
+                          isSelected
+                            ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400 font-semibold shadow-xs"
+                            : "border-border/60 bg-card/40 hover:bg-muted/30 text-muted-foreground"
+                        )}
+                      >
+                        {exp}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label>Dietary Preference</Label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-                  {(Object.values(UserDietaryPreferenceEnum) as string[]).map((diet) => (
-                    <button
-                      key={diet}
-                      type="button"
-                      onClick={() => setDietaryPreference(diet)}
-                      className={`p-2.5 rounded-xl text-center border text-xs capitalize transition-all cursor-pointer ${
-                        dietaryPreference === diet
-                          ? "border-indigo-500 bg-indigo-500/10 text-indigo-400 font-bold ring-2 ring-indigo-500/20"
-                          : "border-border bg-background/50 hover:bg-muted text-muted-foreground"
-                      }`}
-                    >
-                      {diet.replace(/_/g, " ")}
-                    </button>
-                  ))}
+                <Label className="text-xs font-medium text-muted-foreground">
+                  Dietary Strategy
+                </Label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {(Object.values(UserDietaryPreferenceEnum) as string[]).map((diet) => {
+                    const isSelected = dietaryPreference === diet;
+                    return (
+                      <button
+                        key={diet}
+                        type="button"
+                        onClick={() => setDietaryPreference(diet)}
+                        className={cn(
+                          "p-2.5 rounded-xl text-center border text-xs capitalize transition-all cursor-pointer font-medium",
+                          isSelected
+                            ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-400 font-semibold shadow-xs"
+                            : "border-border/60 bg-card/40 hover:bg-muted/30 text-muted-foreground"
+                        )}
+                      >
+                        {diet.replace(/_/g, " ")}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
 
             {/* Equipment Selection */}
             <div className="space-y-2">
-              <Label>Available Equipment</Label>
+              <Label className="text-xs font-medium text-muted-foreground">
+                Available Training Equipment
+              </Label>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
                 {(Object.values(EquipmentEnum) as string[]).map((eq) => {
                   const isSelected = equipmentAvailable.includes(eq);
@@ -451,11 +542,12 @@ export default function ProfilePage() {
                       key={eq}
                       type="button"
                       onClick={() => toggleEquipment(eq)}
-                      className={`p-2.5 rounded-xl text-center border text-xs capitalize transition-all cursor-pointer ${
+                      className={cn(
+                        "p-2.5 rounded-xl text-center border text-xs capitalize transition-all cursor-pointer font-medium",
                         isSelected
-                          ? "border-indigo-500 bg-indigo-500/10 text-indigo-400 font-semibold ring-2 ring-indigo-500/20"
-                          : "border-border bg-background/50 hover:bg-muted text-muted-foreground"
-                      }`}
+                          ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400 font-semibold shadow-xs"
+                          : "border-border/60 bg-card/40 hover:bg-muted/30 text-muted-foreground"
+                      )}
                     >
                       {eq.replace(/_/g, " ")}
                     </button>
@@ -468,17 +560,17 @@ export default function ProfilePage() {
               <Button
                 type="submit"
                 disabled={isSaving}
-                className="bg-gradient-to-r from-indigo-600 to-fuchsia-600 hover:from-indigo-500 hover:to-fuchsia-500 text-white font-medium shadow-md shadow-indigo-500/20 cursor-pointer"
+                className="bg-primary text-primary-foreground font-semibold text-xs h-10 px-5 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 cursor-pointer transition-all"
               >
                 {isSaving ? (
                   <>
                     <Loader2 className="size-4 mr-2 animate-spin" />
-                    Saving Changes...
+                    Committing Calibration...
                   </>
                 ) : (
                   <>
                     <Save className="size-4 mr-2" />
-                    Save Profile Changes
+                    Commit Bio-Passport Changes
                   </>
                 )}
               </Button>
@@ -487,84 +579,138 @@ export default function ProfilePage() {
         </Card>
       </form>
 
-      {/* Security & Password Card */}
-      <Card className="border-border/60 bg-card/75 backdrop-blur-md shadow-xl">
-        <CardHeader>
+      {/* 4. Security & Credentials Vault */}
+      <Card className="border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl shadow-lg">
+        <CardHeader className="pb-3 border-b border-border/40">
           <div className="flex items-center gap-2">
-            <Lock className="size-5 text-indigo-400" />
-            <CardTitle className="text-lg font-bold">Security & Password</CardTitle>
+            <Lock className="size-4 text-emerald-400" />
+            <CardTitle className="text-base font-bold text-foreground">
+              Security & Authentication
+            </CardTitle>
           </div>
-          <CardDescription className="text-xs">
-            Update your account password to keep your fitness profile secure.
+          <CardDescription className="text-xs text-muted-foreground">
+            {isOAuthUser
+              ? "Federated identity provider and single sign-on security"
+              : "Update your account password to protect your biometric data"}
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form id="change-password-form" onSubmit={handleChangePassword} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="oldPassword">Current Password</Label>
-                <Input
-                  id="oldPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  value={oldPassword}
-                  onChange={(e) => setOldPassword(e.target.value)}
-                  className="bg-background/50"
-                  required
-                />
-              </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="newPassword">New Password</Label>
-                <Input
-                  id="newPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="bg-background/50"
-                  required
-                />
+        <CardContent className="pt-4">
+          {isOAuthUser ? (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/5">
+              <div className="flex items-start gap-3">
+                <div className="flex size-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0 mt-0.5">
+                  <ShieldCheck className="size-5" />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-foreground">
+                      Single Sign-On Active
+                    </span>
+                    <Badge variant="outline" className="text-[10px] uppercase font-mono border-emerald-500/40 text-emerald-400 bg-emerald-500/10">
+                      {effectiveAuthProvider === "google" ? "Google Account" : "Microsoft Workspace"}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    You signed in via {effectiveAuthProvider === "google" ? "Google" : "Microsoft"}. Your account does not require a local password; security, authentication, and multi-factor verification are managed directly by your identity provider.
+                  </p>
+                </div>
               </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="bg-background/50"
-                  required
-                />
+              <div className="shrink-0 flex items-center">
+                <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 font-mono px-3 py-1.5 rounded-lg border border-emerald-500/20 bg-background/50">
+                  <CheckCircle2 className="size-3.5" />
+                  SSO Secured
+                </span>
               </div>
             </div>
+          ) : (
+            <form id="change-password-form" onSubmit={handleChangePassword} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="oldPassword" className="text-xs font-medium text-muted-foreground">
+                    Current Password
+                  </Label>
+                  <Input
+                    id="oldPassword"
+                    type="password"
+                    placeholder="••••••••"
+                    value={oldPassword}
+                    onChange={(e) => setOldPassword(e.target.value)}
+                    className="bg-background/50 border-border/70 text-foreground font-mono text-xs h-9"
+                    required
+                  />
+                </div>
 
-            <div className="flex justify-end pt-2">
-              <Button
-                type="submit"
-                id="change-password-btn"
-                disabled={isChangingPassword}
-                variant="outline"
-                className="border-indigo-500/30 hover:bg-indigo-500/10 text-foreground cursor-pointer"
-              >
-                {isChangingPassword ? (
-                  <>
-                    <Loader2 className="size-4 mr-2 animate-spin" />
-                    Updating Password...
-                  </>
-                ) : (
-                  <>
-                    <KeyRound className="size-4 mr-2 text-indigo-400" />
-                    Update Password
-                  </>
-                )}
-              </Button>
-            </div>
-          </form>
+                <div className="space-y-1.5">
+                  <Label htmlFor="newPassword" className="text-xs font-medium text-muted-foreground">
+                    New Password
+                  </Label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    placeholder="••••••••"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="bg-background/50 border-border/70 text-foreground font-mono text-xs h-9"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="confirmPassword" className="text-xs font-medium text-muted-foreground">
+                    Confirm New Password
+                  </Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="bg-background/50 border-border/70 text-foreground font-mono text-xs h-9"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <Button
+                  type="submit"
+                  id="change-password-btn"
+                  disabled={isChangingPassword}
+                  variant="outline"
+                  className="border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-400 text-xs h-9 px-4 cursor-pointer font-medium"
+                >
+                  {isChangingPassword ? (
+                    <>
+                      <Loader2 className="size-4 mr-2 animate-spin" />
+                      Updating Credentials...
+                    </>
+                  ) : (
+                    <>
+                      <KeyRound className="size-3.5 mr-2" />
+                      Update Credentials
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          )}
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="container mx-auto max-w-6xl p-8">
+          <div className="w-full h-96 rounded-2xl bg-[#0B0F0E]/80 border border-border/70 animate-pulse" />
+        </div>
+      }
+    >
+      <ProfileContent />
+    </Suspense>
   );
 }

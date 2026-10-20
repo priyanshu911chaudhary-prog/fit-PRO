@@ -1,9 +1,10 @@
 "use client";
 
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState, useMemo } from "react";
 import {
   Utensils,
   Plus,
+  Minus,
   Trash2,
   Loader2,
   Calendar,
@@ -11,15 +12,26 @@ import {
   CheckCircle2,
   Search,
   Apple,
+  Flame,
+  Activity,
+  Zap,
+  Coffee,
+  Sun,
+  Moon,
+  Cookie,
+  ChevronRight,
+  TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
 import { MealTypeEnum } from "@/constants";
+import { cn } from "cn";
 
 interface FoodItem {
   _id: string;
@@ -105,18 +117,32 @@ function formatSafeDate(val?: string | Date): string {
   return `${dateStr} at ${timeStr}`;
 }
 
+const MEAL_ICONS = {
+  [MealTypeEnum.BREAKFAST]: Sun,
+  [MealTypeEnum.LUNCH]: Utensils,
+  [MealTypeEnum.DINNER]: Moon,
+  [MealTypeEnum.SNACK]: Cookie,
+};
+
 function MealContent() {
   const [activeTab, setActiveTab] = useState("log");
 
   // Catalog State
   const [foodsCatalog, setFoodsCatalog] = useState<FoodItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
 
   // Meal Form State
-  const [mealType, setMealType] = useState("breakfast");
-  const [date, setDate] = useState<string>(() => new Date().toISOString().split("T")[0]);
+  const [mealType, setMealType] = useState<string>(MealTypeEnum.BREAKFAST);
+  const [date, setDate] = useState<string>("2026-10-19");
   const [addedItems, setAddedItems] = useState<AddedFoodItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    try {
+      setDate(new Date().toISOString().split("T")[0]);
+    } catch {}
+  }, []);
 
   // History State
   const [history, setHistory] = useState<MealLogRecord[]>([]);
@@ -179,7 +205,7 @@ function MealContent() {
           i.foodItemId === food._id ? { ...i, quantity: i.quantity + 1 } : i
         )
       );
-      toast.info(`Increased quantity for ${food.name}`);
+      toast.info(`Increased portion for ${food.name}`);
     } else {
       setAddedItems([
         ...addedItems,
@@ -193,7 +219,7 @@ function MealContent() {
           quantity: 1,
         },
       ]);
-      toast.success(`Added ${food.name}`);
+      toast.success(`Added ${food.name} to plate`);
     }
   };
 
@@ -207,21 +233,57 @@ function MealContent() {
     );
   };
 
+  const handleAdjustQuantity = (foodItemId: string, delta: number) => {
+    setAddedItems(
+      addedItems
+        .map((i) => {
+          if (i.foodItemId === foodItemId) {
+            const nextQty = Math.max(0, Number((i.quantity + delta).toFixed(1)));
+            return { ...i, quantity: nextQty };
+          }
+          return i;
+        })
+        .filter((i) => i.quantity > 0)
+    );
+  };
+
   const handleRemoveItem = (foodItemId: string) => {
     setAddedItems(addedItems.filter((i) => i.foodItemId !== foodItemId));
   };
 
   // Live macro calculation
-  const totalCalories = addedItems.reduce((acc, item) => acc + item.calories * item.quantity, 0);
-  const totalProtein = addedItems.reduce((acc, item) => acc + item.protein * item.quantity, 0);
-  const totalCarbs = addedItems.reduce((acc, item) => acc + item.carbs * item.quantity, 0);
-  const totalFat = addedItems.reduce((acc, item) => acc + item.fat * item.quantity, 0);
+  const totalCalories = useMemo(
+    () => addedItems.reduce((acc, item) => acc + Math.round(item.calories * item.quantity), 0),
+    [addedItems]
+  );
+  const totalProtein = useMemo(
+    () => addedItems.reduce((acc, item) => acc + Math.round(item.protein * item.quantity), 0),
+    [addedItems]
+  );
+  const totalCarbs = useMemo(
+    () => addedItems.reduce((acc, item) => acc + Math.round(item.carbs * item.quantity), 0),
+    [addedItems]
+  );
+  const totalFat = useMemo(
+    () => addedItems.reduce((acc, item) => acc + Math.round(item.fat * item.quantity), 0),
+    [addedItems]
+  );
+
+  // Macro Energy Percentages
+  const proteinCals = totalProtein * 4;
+  const carbsCals = totalCarbs * 4;
+  const fatCals = totalFat * 9;
+  const macroCalSum = proteinCals + carbsCals + fatCals || 1;
+
+  const proteinPct = Math.round((proteinCals / macroCalSum) * 100);
+  const carbsPct = Math.round((carbsCals / macroCalSum) * 100);
+  const fatPct = Math.max(0, 100 - proteinPct - carbsPct);
 
   const handleSubmitMeal = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (addedItems.length === 0) {
-      toast.error("Please add at least one food item to your meal.");
+      toast.error("Please add at least one food item to your meal plate.");
       return;
     }
 
@@ -237,13 +299,15 @@ function MealContent() {
             foodItemId: i.foodItemId,
             quantity: i.quantity,
             servingSize: `${i.quantity} serving${i.quantity > 1 ? "s" : ""}`,
-            calories: i.calories * i.quantity,
+            calories: Math.round(i.calories * i.quantity),
           })),
         }),
       });
 
       if (res.success) {
-        toast.success("Meal logged successfully!");
+        toast.success("Meal logged successfully!", {
+          description: `Recorded ${addedItems.length} items • ${totalCalories} kcal`,
+        });
         setAddedItems([]);
         await fetchHistory();
         setActiveTab("history");
@@ -273,125 +337,318 @@ function MealContent() {
     }
   };
 
-  const filteredCatalog = foodsCatalog.filter((item) =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredCatalog = useMemo(() => {
+    return foodsCatalog.filter((item) => {
+      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+      if (categoryFilter === "high_protein") return matchesSearch && item.protein >= 20;
+      if (categoryFilter === "low_carb") return matchesSearch && item.carbs <= 10;
+      if (categoryFilter === "snack") return matchesSearch && item.calories <= 250;
+      return matchesSearch;
+    });
+  }, [foodsCatalog, searchQuery, categoryFilter]);
 
   return (
-    <div className="container mx-auto max-w-6xl px-4 py-8 space-y-8">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-extrabold tracking-tight">Nutrition & Meals</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Server-validated macronutrients with catalog lookup and real-time caloric calculation.
-        </p>
+    <Tabs value={activeTab} onValueChange={(val) => val && setActiveTab(val)} className="container mx-auto max-w-7xl px-4 py-8 space-y-8">
+      {/* 1. Header Banner */}
+      <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl p-5 sm:p-6 shadow-xl">
+        <div className="absolute top-0 left-1/4 right-1/4 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
+        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2.5">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium border border-cyan-500/30 bg-cyan-500/10 text-cyan-400">
+                <Utensils className="size-3.5" />
+                NUTRITIONAL TELEMETRY
+              </span>
+              <span className="text-xs text-muted-foreground font-mono">
+                MACRO RATIOS ACTIVE
+              </span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+              Nutrition & Macronutrient Ledger
+            </h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              Precision macronutrient tracking, real-time energy calculation, and dietary fuel logging.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <TabsList className="bg-background/60 border border-border/70 p-1 rounded-xl">
+              <TabsTrigger
+                value="log"
+                onClick={() => setActiveTab("log")}
+                className={cn(
+                  "flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all",
+                  activeTab === "log" ? "bg-primary text-primary-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Plus className="size-3.5" />
+                Log Meal
+              </TabsTrigger>
+              <TabsTrigger
+                value="history"
+                onClick={() => setActiveTab("history")}
+                className={cn(
+                  "flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all",
+                  activeTab === "history" ? "bg-primary text-primary-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <History className="size-3.5" />
+                History ({history.length})
+              </TabsTrigger>
+            </TabsList>
+          </div>
+        </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="bg-muted/50 p-1">
-          <TabsTrigger value="log" className="flex items-center gap-2">
-            <Plus className="size-4" />
-            Log Meal
-          </TabsTrigger>
-          <TabsTrigger value="history" className="flex items-center gap-2">
-            <History className="size-4" />
-            Meal History ({history.length})
-          </TabsTrigger>
-        </TabsList>
-
+      <div className="space-y-6">
         {/* TAB 1: LOG MEAL */}
-        <TabsContent value="log" className="space-y-6">
+        <TabsContent value="log" className="space-y-6 mt-0">
+          {/* Dynamic Macro Fuel HUD (Top 4 Cards) */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Energy */}
+            <Card className="border-border/60 bg-[#0B0F0E]/70 backdrop-blur-md p-4 space-y-1">
+              <div className="flex items-center justify-between text-muted-foreground text-xs font-medium">
+                <span className="flex items-center gap-1.5">
+                  <Flame className="size-3.5 text-emerald-400" />
+                  Total Energy
+                </span>
+                <Badge variant="outline" className="text-[10px] font-mono border-emerald-500/30 text-emerald-400">
+                  PLATE
+                </Badge>
+              </div>
+              <div className="text-2xl font-extrabold font-mono text-foreground">
+                {totalCalories} <span className="text-xs font-sans text-muted-foreground font-normal">kcal</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground/80">Metabolic fuel sum</p>
+            </Card>
+
+            {/* Protein */}
+            <Card className="border-border/60 bg-[#0B0F0E]/70 backdrop-blur-md p-4 space-y-1">
+              <div className="flex items-center justify-between text-muted-foreground text-xs font-medium">
+                <span className="flex items-center gap-1.5">
+                  <Activity className="size-3.5 text-cyan-400" />
+                  Protein
+                </span>
+                <span className="text-[10px] font-mono text-cyan-400">{proteinPct}%</span>
+              </div>
+              <div className="text-2xl font-extrabold font-mono text-cyan-400">
+                {totalProtein} <span className="text-xs font-sans text-muted-foreground font-normal">g</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground/80">{proteinCals} kcal • Muscle synthesis</p>
+            </Card>
+
+            {/* Carbs */}
+            <Card className="border-border/60 bg-[#0B0F0E]/70 backdrop-blur-md p-4 space-y-1">
+              <div className="flex items-center justify-between text-muted-foreground text-xs font-medium">
+                <span className="flex items-center gap-1.5">
+                  <Zap className="size-3.5 text-amber-400" />
+                  Carbohydrates
+                </span>
+                <span className="text-[10px] font-mono text-amber-400">{carbsPct}%</span>
+              </div>
+              <div className="text-2xl font-extrabold font-mono text-amber-400">
+                {totalCarbs} <span className="text-xs font-sans text-muted-foreground font-normal">g</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground/80">{carbsCals} kcal • Glycogen replenish</p>
+            </Card>
+
+            {/* Fats */}
+            <Card className="border-border/60 bg-[#0B0F0E]/70 backdrop-blur-md p-4 space-y-1">
+              <div className="flex items-center justify-between text-muted-foreground text-xs font-medium">
+                <span className="flex items-center gap-1.5">
+                  <TrendingUp className="size-3.5 text-purple-400" />
+                  Lipids & Fats
+                </span>
+                <span className="text-[10px] font-mono text-purple-400">{fatPct}%</span>
+              </div>
+              <div className="text-2xl font-extrabold font-mono text-purple-400">
+                {totalFat} <span className="text-xs font-sans text-muted-foreground font-normal">g</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground/80">{fatCals} kcal • Hormonal baseline</p>
+            </Card>
+          </div>
+
+          {/* Segmented Macro Bar */}
+          {totalCalories > 0 && (
+            <div className="p-3.5 rounded-xl border border-border/70 bg-[#0B0F0E]/80 backdrop-blur-md space-y-2">
+              <div className="flex justify-between text-xs font-mono text-muted-foreground">
+                <span>Macronutrient Ratio Breakdown</span>
+                <span className="text-foreground">100% Caloric Coverage</span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-muted/30 overflow-hidden flex">
+                <div
+                  style={{ width: `${proteinPct}%` }}
+                  className="bg-cyan-400 h-full transition-all duration-300"
+                  title={`Protein: ${proteinPct}%`}
+                />
+                <div
+                  style={{ width: `${carbsPct}%` }}
+                  className="bg-amber-400 h-full transition-all duration-300"
+                  title={`Carbs: ${carbsPct}%`}
+                />
+                <div
+                  style={{ width: `${fatPct}%` }}
+                  className="bg-purple-400 h-full transition-all duration-300"
+                  title={`Fats: ${fatPct}%`}
+                />
+              </div>
+              <div className="flex items-center justify-between text-[11px] font-mono pt-0.5">
+                <span className="flex items-center gap-1.5 text-cyan-400">
+                  <span className="size-2 rounded-full bg-cyan-400" />
+                  Protein: {proteinPct}% ({totalProtein}g)
+                </span>
+                <span className="flex items-center gap-1.5 text-amber-400">
+                  <span className="size-2 rounded-full bg-amber-400" />
+                  Carbs: {carbsPct}% ({totalCarbs}g)
+                </span>
+                <span className="flex items-center gap-1.5 text-purple-400">
+                  <span className="size-2 rounded-full bg-purple-400" />
+                  Fats: {fatPct}% ({totalFat}g)
+                </span>
+              </div>
+            </div>
+          )}
+
           <form onSubmit={handleSubmitMeal}>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Left Column: Meal Config & Food Picker */}
-              <div className="space-y-6">
-                <Card className="border-border/60 bg-card/75 backdrop-blur-md">
-                  <CardHeader>
-                    <CardTitle className="text-base font-bold">Meal Details</CardTitle>
-                    <CardDescription className="text-xs">
-                      Select date and meal category
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Left Column (5 cols): Meal Configuration & Food Catalog */}
+              <div className="lg:col-span-5 space-y-6">
+                {/* 1. Meal Details Card */}
+                <Card className="border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl shadow-lg">
+                  <CardHeader className="pb-3 border-b border-border/40">
+                    <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+                      <Zap className="size-4 text-cyan-400" />
+                      Meal Parameters
+                    </CardTitle>
+                    <CardDescription className="text-xs text-muted-foreground">
+                      Session timing and designated meal window
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+
+                  <CardContent className="space-y-4 pt-4">
                     <div className="space-y-1.5">
-                      <Label htmlFor="date">Date</Label>
+                      <Label htmlFor="date" className="text-xs font-medium text-muted-foreground">
+                        Meal Date
+                      </Label>
                       <Input
                         id="date"
                         type="date"
                         value={date}
                         onChange={(e) => setDate(e.target.value)}
-                        className="bg-background/50"
+                        className="bg-background/50 border-border/70 text-foreground font-mono text-xs h-9"
                         required
                       />
                     </div>
 
-                    <div className="space-y-1.5">
-                      <Label>Meal Type</Label>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-medium text-muted-foreground">
+                        Designated Window
+                      </Label>
                       <div className="grid grid-cols-2 gap-2">
-                        {Object.values(MealTypeEnum).map((type) => (
-                          <button
-                            key={type}
-                            type="button"
-                            onClick={() => setMealType(type)}
-                            className={`p-2.5 rounded-xl text-center border text-xs capitalize transition-all ${
-                              mealType === type
-                                ? "border-emerald-500 bg-emerald-500/10 text-emerald-400 font-bold ring-2 ring-emerald-500/20"
-                                : "border-border bg-background/50 hover:bg-muted text-muted-foreground"
-                            }`}
-                          >
-                            {type}
-                          </button>
-                        ))}
+                        {Object.values(MealTypeEnum).map((type) => {
+                          const IconComp = MEAL_ICONS[type] || Utensils;
+                          const isSelected = mealType === type;
+
+                          return (
+                            <button
+                              key={type}
+                              type="button"
+                              onClick={() => setMealType(type)}
+                              className={cn(
+                                "flex items-center gap-2.5 p-2.5 rounded-xl border text-xs capitalize transition-all cursor-pointer font-medium",
+                                isSelected
+                                  ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-400 font-semibold shadow-xs"
+                                  : "border-border/60 bg-muted/20 text-muted-foreground hover:bg-muted/40"
+                              )}
+                            >
+                              <IconComp className={cn("size-4", isSelected ? "text-cyan-400" : "text-muted-foreground")} />
+                              <span>{type}</span>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                {/* Food Catalog Picker */}
-                <Card className="border-border/60 bg-card/75 backdrop-blur-md">
-                  <CardHeader>
-                    <CardTitle className="text-base font-bold flex items-center justify-between">
-                      <span>Foods Catalog</span>
-                      <span className="text-xs font-normal text-muted-foreground">
+                {/* 2. Food Catalog Picker */}
+                <Card className="border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl shadow-lg">
+                  <CardHeader className="pb-3 border-b border-border/40">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+                        <Search className="size-4 text-emerald-400" />
+                        Nutrition Catalog
+                      </CardTitle>
+                      <Badge variant="outline" className="text-[10px] font-mono border-border/80 text-muted-foreground">
                         {filteredCatalog.length} foods
-                      </span>
-                    </CardTitle>
-                    <div className="pt-2">
+                      </Badge>
+                    </div>
+
+                    <div className="pt-2 space-y-2.5">
                       <div className="relative">
-                        <Search className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
+                        <Search className="absolute left-3 top-2.5 size-3.5 text-muted-foreground" />
                         <Input
-                          placeholder="Search foods..."
+                          placeholder="Search chicken, oats, eggs, whey..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          className="pl-9 text-xs h-9 bg-background/50"
+                          className="pl-8 text-xs h-8 bg-background/50 border-border/70 text-foreground"
                         />
+                      </div>
+                      <div className="flex gap-1.5 overflow-x-auto pb-1 text-[10px]">
+                        {[
+                          { id: "all", label: "All Items" },
+                          { id: "high_protein", label: "High Protein" },
+                          { id: "low_carb", label: "Low Carb" },
+                          { id: "snack", label: "Snacks" },
+                        ].map((cat) => (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => setCategoryFilter(cat.id)}
+                            className={cn(
+                              "px-2.5 py-1 rounded-md border shrink-0 transition-all cursor-pointer font-medium",
+                              categoryFilter === cat.id
+                                ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400 font-bold shadow-xs"
+                                : "border-border/60 bg-muted/20 text-muted-foreground hover:bg-muted/40"
+                            )}
+                          >
+                            {cat.label}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <div className="max-h-64 overflow-y-auto space-y-1.5 pr-1">
+
+                  <CardContent className="pt-3">
+                    <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
                       {filteredCatalog.length === 0 ? (
-                        <p className="text-xs text-muted-foreground text-center py-4">
-                          No foods found matching search.
-                        </p>
+                        <div className="py-8 text-center text-xs text-muted-foreground">
+                          No items matching query.
+                        </div>
                       ) : (
                         filteredCatalog.map((food) => (
                           <div
                             key={food._id}
-                            className="flex items-center justify-between p-2 rounded-lg border border-border/40 bg-muted/20 hover:bg-muted/50 transition-colors"
+                            className="flex items-center justify-between p-2.5 rounded-xl border border-border/60 bg-card/40 hover:bg-muted/30 transition-all group"
                           >
-                            <div className="space-y-0.5">
-                              <p className="text-xs font-semibold text-foreground">{food.name}</p>
-                              <p className="text-[10px] text-muted-foreground">
-                                {food.calories} kcal • P: {food.protein}g | C: {food.carbs}g | F: {food.fat}g
+                            <div className="space-y-0.5 min-w-0 pr-2">
+                              <p className="text-xs font-semibold text-foreground truncate group-hover:text-cyan-400 transition-colors">
+                                {food.name}
                               </p>
+                              <div className="flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground">
+                                <span className="text-foreground font-bold">{food.calories} kcal</span>
+                                <span>•</span>
+                                <span className="text-cyan-400">P:{food.protein}g</span>
+                                <span className="text-amber-400">C:{food.carbs}g</span>
+                                <span className="text-purple-400">F:{food.fat}g</span>
+                              </div>
                             </div>
                             <Button
                               type="button"
-                              size="xs"
+                              size="sm"
                               variant="outline"
                               onClick={() => handleAddFood(food)}
-                              className="text-xs h-7 px-2 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
+                              className="h-7 px-2.5 text-xs font-medium border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-500/50 cursor-pointer shrink-0"
                             >
                               <Plus className="size-3 mr-1" />
                               Add
@@ -404,78 +661,97 @@ function MealContent() {
                 </Card>
               </div>
 
-              {/* Right Column: Selected Foods & Macro Breakdown */}
-              <div className="lg:col-span-2 space-y-4">
-                {/* Live Macro Summary Header */}
-                <div className="grid grid-cols-4 gap-3">
-                  <div className="p-3.5 rounded-xl border border-border bg-card/60 backdrop-blur-md text-center">
-                    <span className="text-[10px] text-muted-foreground uppercase font-bold">Calories</span>
-                    <p className="text-xl font-extrabold text-foreground">{totalCalories}</p>
-                    <span className="text-[10px] text-muted-foreground">kcal</span>
-                  </div>
-                  <div className="p-3.5 rounded-xl border border-indigo-500/30 bg-indigo-500/5 text-center">
-                    <span className="text-[10px] text-indigo-400 uppercase font-bold">Protein</span>
-                    <p className="text-xl font-extrabold text-indigo-400">{totalProtein}g</p>
-                    <span className="text-[10px] text-muted-foreground">{totalProtein * 4} kcal</span>
-                  </div>
-                  <div className="p-3.5 rounded-xl border border-amber-500/30 bg-amber-500/5 text-center">
-                    <span className="text-[10px] text-amber-400 uppercase font-bold">Carbs</span>
-                    <p className="text-xl font-extrabold text-amber-400">{totalCarbs}g</p>
-                    <span className="text-[10px] text-muted-foreground">{totalCarbs * 4} kcal</span>
-                  </div>
-                  <div className="p-3.5 rounded-xl border border-rose-500/30 bg-rose-500/5 text-center">
-                    <span className="text-[10px] text-rose-400 uppercase font-bold">Fats</span>
-                    <p className="text-xl font-extrabold text-rose-400">{totalFat}g</p>
-                    <span className="text-[10px] text-muted-foreground">{totalFat * 9} kcal</span>
-                  </div>
-                </div>
-
-                <Card className="border-border/60 bg-card/75 backdrop-blur-md shadow-lg">
-                  <CardHeader className="flex flex-row items-center justify-between pb-3">
+              {/* Right Column (7 cols): Staged Plate Breakdown */}
+              <div className="lg:col-span-7 space-y-4">
+                <Card className="border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl shadow-lg">
+                  <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-border/40">
                     <div>
-                      <CardTitle className="text-base font-bold">Plate Breakdown</CardTitle>
-                      <CardDescription className="text-xs">
-                        Adjust servings for each selected food
+                      <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+                        <Apple className="size-4 text-emerald-400" />
+                        Plate Fuel Breakdown
+                      </CardTitle>
+                      <CardDescription className="text-xs text-muted-foreground">
+                        Adjust servings, verify portion sizes, and calculate meal energy
                       </CardDescription>
                     </div>
-                    <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">
-                      {addedItems.length} Items
-                    </span>
+                    <Badge variant="outline" className="text-xs font-mono border-cyan-500/30 text-cyan-400 bg-cyan-500/10">
+                      {addedItems.length} Food Items
+                    </Badge>
                   </CardHeader>
 
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-4 pt-4">
                     {addedItems.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center p-12 text-center text-xs text-muted-foreground space-y-3">
-                        <Apple className="size-10 opacity-30" />
-                        <p>No food items added yet. Select items from the catalog on the left.</p>
+                      <div className="flex flex-col items-center justify-center p-14 text-center text-xs text-muted-foreground space-y-3">
+                        <div className="size-12 rounded-2xl bg-muted/20 border border-border/70 flex items-center justify-center">
+                          <Apple className="size-6 text-muted-foreground/50" />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="font-semibold text-foreground text-sm">Plate is currently empty</p>
+                          <p className="text-[11px] text-muted-foreground max-w-sm">
+                            Pick food items from the catalog on the left to compute live protein, carbs, fats, and total caloric energy.
+                          </p>
+                        </div>
                       </div>
                     ) : (
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         {addedItems.map((item) => (
                           <div
                             key={item.foodItemId}
-                            className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20"
+                            className="p-3.5 rounded-xl border border-border/70 bg-card/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-cyan-500/30 transition-all"
                           >
-                            <div className="space-y-0.5">
-                              <p className="text-xs font-bold text-foreground">{item.name}</p>
-                              <p className="text-[10px] text-muted-foreground">
-                                {item.calories * item.quantity} kcal • P: {item.protein * item.quantity}g | C: {item.carbs * item.quantity}g | F: {item.fat * item.quantity}g
+                            <div className="space-y-1 min-w-0">
+                              <p className="text-sm font-bold text-foreground">
+                                {item.name}
                               </p>
+                              <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono text-muted-foreground">
+                                <span className="font-bold text-foreground">
+                                  {Math.round(item.calories * item.quantity)} kcal
+                                </span>
+                                <span>•</span>
+                                <span className="text-cyan-400">
+                                  P: {Math.round(item.protein * item.quantity)}g
+                                </span>
+                                <span>•</span>
+                                <span className="text-amber-400">
+                                  C: {Math.round(item.carbs * item.quantity)}g
+                                </span>
+                                <span>•</span>
+                                <span className="text-purple-400">
+                                  F: {Math.round(item.fat * item.quantity)}g
+                                </span>
+                              </div>
                             </div>
 
-                            <div className="flex items-center gap-3">
-                              <div className="flex items-center gap-1.5">
-                                <Label className="text-[10px] text-muted-foreground">Qty:</Label>
+                            {/* Servings Stepper */}
+                            <div className="flex items-center gap-2 shrink-0">
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => handleAdjustQuantity(item.foodItemId, -0.5)}
+                                  className="size-7 rounded border border-border/80 bg-muted/30 hover:bg-muted/70 flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer text-xs"
+                                  title="-0.5 serving"
+                                >
+                                  <Minus className="size-3" />
+                                </button>
                                 <Input
                                   type="number"
-                                  min={1}
+                                  min={0.5}
                                   max={50}
+                                  step={0.5}
                                   value={item.quantity}
                                   onChange={(e) =>
                                     handleUpdateQuantity(item.foodItemId, Number(e.target.value))
                                   }
-                                  className="w-16 h-7 text-xs text-center bg-background/50"
+                                  className="w-16 h-7 text-xs font-mono text-center bg-background/60 border-border/70 text-foreground px-1"
                                 />
+                                <button
+                                  type="button"
+                                  onClick={() => handleAdjustQuantity(item.foodItemId, 0.5)}
+                                  className="size-7 rounded border border-border/80 bg-muted/30 hover:bg-muted/70 flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer text-xs"
+                                  title="+0.5 serving"
+                                >
+                                  <Plus className="size-3" />
+                                </button>
                               </div>
 
                               <Button
@@ -483,7 +759,8 @@ function MealContent() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => handleRemoveItem(item.foodItemId)}
-                                className="size-7 text-muted-foreground hover:text-rose-400"
+                                className="size-7 text-muted-foreground hover:text-rose-400 transition-colors cursor-pointer"
+                                aria-label="Remove food"
                               >
                                 <Trash2 className="size-3.5" />
                               </Button>
@@ -491,22 +768,26 @@ function MealContent() {
                           </div>
                         ))}
 
-                        <div className="pt-4 flex justify-end">
+                        <div className="pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-border/40">
+                          <div className="text-xs font-mono text-muted-foreground">
+                            Energy Yield: <strong className="text-emerald-400 font-bold">{totalCalories} kcal</strong> across {addedItems.length} items
+                          </div>
+
                           <Button
                             type="submit"
                             id="submit-meal-btn"
                             disabled={isSubmitting}
-                            className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium shadow-md shadow-emerald-500/20"
+                            className="bg-primary text-primary-foreground font-semibold text-xs h-10 px-5 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all cursor-pointer"
                           >
                             {isSubmitting ? (
                               <>
                                 <Loader2 className="size-4 mr-2 animate-spin" />
-                                Saving Meal...
+                                Committing Fuel Log...
                               </>
                             ) : (
                               <>
                                 <CheckCircle2 className="size-4 mr-2" />
-                                Save Meal to Log
+                                Commit Meal to Log
                               </>
                             )}
                           </Button>
@@ -521,36 +802,61 @@ function MealContent() {
         </TabsContent>
 
         {/* TAB 2: HISTORY */}
-        <TabsContent value="history" className="space-y-4">
-          <Card className="border-border/60 bg-card/75 backdrop-blur-md">
-            <CardHeader>
-              <CardTitle className="text-base font-bold flex items-center gap-2">
-                <History className="size-4 text-emerald-400" />
-                Logged Nutrition History
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Chronological list of all logged meals and macronutrient distributions.
-              </CardDescription>
+        <TabsContent value="history" className="space-y-4 mt-0">
+          <Card className="border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl shadow-lg">
+            <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-border/40">
+              <div>
+                <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+                  <History className="size-4 text-cyan-400" />
+                  Logged Nutrition History
+                </CardTitle>
+                <CardDescription className="text-xs text-muted-foreground">
+                  Complete chronological archive of all consumed meals and caloric intakes
+                </CardDescription>
+              </div>
+              <Badge variant="outline" className="text-xs font-mono border-cyan-500/30 text-cyan-400 bg-cyan-500/10">
+                {history.length} Logged Meals
+              </Badge>
             </CardHeader>
-            <CardContent>
+
+            <CardContent className="pt-4">
               {isLoadingHistory ? (
-                <div className="flex justify-center p-8">
-                  <Loader2 className="size-6 text-emerald-500 animate-spin" />
+                <div className="flex flex-col items-center justify-center p-12 space-y-3">
+                  <Loader2 className="size-8 text-cyan-400 animate-spin" />
+                  <p className="text-xs font-mono text-muted-foreground">
+                    Retrieving nutrition ledger...
+                  </p>
                 </div>
               ) : history.length === 0 ? (
-                <div className="text-center py-12 text-xs text-muted-foreground">
-                  No meals logged yet. Switch to &quot;Log Meal&quot; to record your first meal!
+                <div className="py-14 text-center text-xs text-muted-foreground space-y-3">
+                  <div className="size-12 rounded-2xl bg-muted/20 border border-border/70 flex items-center justify-center mx-auto">
+                    <Utensils className="size-6 text-muted-foreground/50" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-semibold text-foreground text-sm">No meals logged yet</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Switch to &quot;Log Meal&quot; to track your first nutritional fuel session.
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => setActiveTab("log")}
+                    className="bg-primary text-primary-foreground font-semibold text-xs h-8 px-3"
+                  >
+                    <Plus className="size-3.5 mr-1" />
+                    Log First Meal
+                  </Button>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {history.map((record) => (
                     <div
                       key={record._id}
-                      className="p-4 rounded-xl border border-border/60 bg-muted/20 hover:border-emerald-500/30 transition-all space-y-3"
+                      className="p-4 sm:p-5 rounded-xl border border-border/70 bg-card/40 hover:border-cyan-500/40 transition-all space-y-3"
                     >
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/40 pb-3">
                         <div className="flex items-center gap-3">
-                          <div className="size-9 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                          <div className="size-10 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center justify-center shrink-0">
                             <Utensils className="size-5" />
                           </div>
                           <div>
@@ -558,12 +864,12 @@ function MealContent() {
                               <h4 className="font-bold text-sm text-foreground capitalize">
                                 {record.title || record.mealType || "Meal"}
                               </h4>
-                              <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+                              <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[11px] font-mono font-bold text-emerald-400">
                                 {record.totalCalories} kcal
                               </span>
                             </div>
-                            <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
-                              <Calendar className="size-3" />
+                            <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1 font-mono">
+                              <Calendar className="size-3 text-cyan-400" />
                               {formatSafeDate(record.createdAt || record.date)}
                             </p>
                           </div>
@@ -573,7 +879,7 @@ function MealContent() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleDeleteLog(record._id)}
-                          className="size-8 text-muted-foreground hover:text-rose-500 self-end sm:self-center"
+                          className="size-8 text-muted-foreground hover:text-rose-400 self-end sm:self-center transition-colors cursor-pointer"
                           aria-label="Delete meal log"
                         >
                           <Trash2 className="size-4" />
@@ -581,7 +887,7 @@ function MealContent() {
                       </div>
 
                       {/* Food items breakdown */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 pt-1">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 pt-1">
                         {(record.meals || record.items || []).map((item, itemIdx) => {
                           const foodName =
                             typeof item.foodItemId === "object" && item.foodItemId !== null
@@ -606,14 +912,15 @@ function MealContent() {
                           return (
                             <div
                               key={itemIdx}
-                              className="p-2.5 rounded-lg bg-background/50 border border-border/30 text-xs space-y-1"
+                              className="p-3 rounded-lg bg-background/50 border border-border/40 text-xs space-y-1"
                             >
                               <p className="font-semibold text-foreground truncate">
                                 {foodName}
                               </p>
-                              <p className="text-[10px] text-muted-foreground">
-                                {serving} • {caloriesVal} kcal
-                              </p>
+                              <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground">
+                                <span>{serving}</span>
+                                <span className="text-emerald-400 font-bold">{caloriesVal} kcal</span>
+                              </div>
                             </div>
                           );
                         })}
@@ -625,8 +932,8 @@ function MealContent() {
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
-    </div>
+      </div>
+    </Tabs>
   );
 }
 
@@ -634,8 +941,8 @@ export default function MealPage() {
   return (
     <Suspense
       fallback={
-        <div className="container mx-auto max-w-6xl p-8">
-          <div className="w-full h-96 rounded-xl bg-card/50 animate-pulse" />
+        <div className="container mx-auto max-w-7xl p-8">
+          <div className="w-full h-96 rounded-2xl bg-[#0B0F0E]/80 border border-border/70 animate-pulse" />
         </div>
       }
     >

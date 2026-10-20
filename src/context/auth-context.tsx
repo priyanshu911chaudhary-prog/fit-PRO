@@ -13,6 +13,7 @@ export interface AuthUser {
   isEmailVerified: boolean;
   role: string;
   hasProfile?: boolean;
+  authProvider?: string;
 }
 
 interface AuthContextType {

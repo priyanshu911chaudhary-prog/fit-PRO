@@ -15,7 +15,10 @@ import { profileSetupSchema, profileUpdateSchema } from "@/validators/profile.va
 
 export const GET = withHandler(
   withAuth(async (_req: NextRequest, _ctx: unknown, sessionUser: TokenPayload) => {
-    const profile = await Profile.findOne({ user: sessionUser.userId });
+    const [profile, user] = await Promise.all([
+      Profile.findOne({ user: sessionUser.userId }),
+      User.findById(sessionUser.userId).select("authProvider"),
+    ]);
 
     if (!profile) {
       return NextResponse.json(
@@ -23,6 +26,7 @@ export const GET = withHandler(
           profile: null,
           metrics: null,
           isProfileComplete: false,
+          authProvider: user?.authProvider || "local",
         }),
         { status: 200 }
       );
@@ -43,6 +47,7 @@ export const GET = withHandler(
         profile,
         metrics,
         isProfileComplete: profile.isProfileComplete,
+        authProvider: user?.authProvider || "local",
       }),
       { status: 200 }
     );

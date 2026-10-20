@@ -46,7 +46,6 @@ export async function apiClient<T = unknown>(
 
   // If 401 and not an auth attempt endpoint, try single-flight refresh
   const isAuthBypassUrl =
-    url.includes("/api/auth/me") ||
     url.includes("/api/auth/login") ||
     url.includes("/api/auth/register") ||
     url.includes("/api/auth/refresh") ||

@@ -48,12 +48,9 @@ MIGRATION_AUDIT.md
 MIGRATION_REPORT.md
 ROUTE_MAP.md
 
-# testing & qa
-/tests
-/test-results
-/qa
-vitest.config.*
-
 # scripts & legacy
 /scripts
 /legacy_backend
+
+/.agents
+

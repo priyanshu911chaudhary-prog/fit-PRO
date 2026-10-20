@@ -1,0 +1,49 @@
+"use client";
+
+import React from "react";
+import Link from "next/link";
+import { ArrowLeft, Compass, Home } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { FitProLogo } from "@/components/brand/fit-pro-logo";
+
+export default function NotFoundPage() {
+  return (
+    <div className="min-h-[75vh] flex items-center justify-center px-4 relative overflow-hidden">
+      {/* Background ambient glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="max-w-md w-full p-8 sm:p-10 rounded-3xl border border-border/70 bg-[#0B0F0E]/85 backdrop-blur-2xl text-center space-y-6 shadow-2xl relative z-10">
+        <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+          <FitProLogo size={32} />
+        </div>
+
+        <div className="space-y-2">
+          <div className="text-4xl font-extrabold font-mono tracking-tight text-foreground">
+            404
+          </div>
+          <h2 className="text-xl font-bold tracking-tight text-foreground">
+            Off-Course Trajectory
+          </h2>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            The telemetry coordinate or route you requested does not exist on this athlete operating system.
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+          <Link href="/dashboard" className="w-full sm:w-auto">
+            <Button className="w-full bg-primary text-primary-foreground font-semibold text-xs h-9 px-4 shadow-md shadow-emerald-500/20 cursor-pointer">
+              <Home className="size-3.5 mr-1.5" />
+              Command Center
+            </Button>
+          </Link>
+          <Link href="/" className="w-full sm:w-auto">
+            <Button variant="outline" className="w-full border-border/80 text-xs h-9 px-4 cursor-pointer">
+              <ArrowLeft className="size-3.5 mr-1.5" />
+              Return Home
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}

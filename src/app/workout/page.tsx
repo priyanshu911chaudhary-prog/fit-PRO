@@ -140,15 +140,14 @@ function WorkoutContent() {
   // Workout Form State
   const [workoutType, setWorkoutType] = useState("Chest & Triceps");
   const [duration, setDuration] = useState<number>(50);
-  const [date, setDate] = useState<string>("2026-10-19");
   const [workoutExercises, setWorkoutExercises] = useState<WorkoutExerciseEntry[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    try {
-      setDate(new Date().toISOString().split("T")[0]);
-    } catch {}
-  }, []);
+  const [date, setDate] = useState<string>(() => {
+    const now = new Date();
+    const offset = now.getTimezoneOffset() * 60_000;
+    return new Date(now.getTime() - offset).toISOString().slice(0, 10);
+  });
 
   // History State
   const [history, setHistory] = useState<WorkoutLogRecord[]>([]);
@@ -163,7 +162,7 @@ function WorkoutContent() {
           setExercisesCatalog(res.data.exercises);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
 
     return () => {
       isMounted = false;
@@ -193,7 +192,7 @@ function WorkoutContent() {
           setHistory(res.data.logs);
         }
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => {
         if (isMounted) setIsLoadingHistory(false);
       });
@@ -1048,8 +1047,8 @@ function WorkoutContent() {
                             typeof ex.exerciseId === "object" && ex.exerciseId !== null
                               ? (ex.exerciseId as { name?: string }).name
                               : typeof ex.exercise === "object" && ex.exercise !== null
-                              ? (ex.exercise as { name?: string }).name
-                              : "Movement";
+                                ? (ex.exercise as { name?: string }).name
+                                : "Movement";
 
                           const setsCount = Array.isArray(ex.sets) ? ex.sets.length : (ex.sets ?? 1);
                           const repsCount = (Array.isArray(ex.sets) && ex.sets[0] ? ex.sets[0].reps : ex.reps) ?? 10;

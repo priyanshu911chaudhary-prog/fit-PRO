@@ -4,6 +4,7 @@ import { setAuthCookies } from "@/lib/auth/cookies";
 import { env } from "@/lib/env";
 import { Profile } from "@/models/profile";
 import { User } from "@/models/user";
+import { logger } from "@/lib/logger";
 
 export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
@@ -106,7 +107,11 @@ export async function GET(req: NextRequest) {
     setAuthCookies(response, accessToken, refreshToken);
     return response;
   } catch (err: unknown) {
-    console.error("Google OAuth callback error:", err);
+    logger.error("Google OAuth callback failed", {
+      event: "auth.oauth.callback.failed",
+      provider: "google",
+      errorName: err instanceof Error ? err.name : "UnknownError",
+    });
     const msg = err instanceof Error ? err.message : "Authentication failed";
     const res = NextResponse.redirect(
       new URL(`/login?error=${encodeURIComponent(msg)}`, env.APP_URL)

@@ -97,14 +97,13 @@ function DashboardContent() {
   const [chartMetric, setChartMetric] = useState<"weight" | "bmi">("weight");
   const [timeRange, setTimeRange] = useState<"7d" | "30d" | "all">("all");
 
-  const [greeting, setGreeting] = useState("Welcome");
-
-  useEffect(() => {
+  const greeting = (() => {
     const hour = new Date().getHours();
-    if (hour < 12) setGreeting("Good morning");
-    else if (hour < 17) setGreeting("Good afternoon");
-    else setGreeting("Good evening");
-  }, []);
+
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    return "Good evening";
+  })();
 
   const fetchStats = async () => {
     try {
@@ -350,8 +349,8 @@ function DashboardContent() {
                       metricDelta.isPositive
                         ? "border-amber-500/30 text-amber-400 bg-amber-500/10"
                         : metricDelta.isZero
-                        ? "border-muted-foreground/30 text-muted-foreground"
-                        : "border-emerald-500/30 text-emerald-400 bg-emerald-500/10"
+                          ? "border-muted-foreground/30 text-muted-foreground"
+                          : "border-emerald-500/30 text-emerald-400 bg-emerald-500/10"
                     )}
                   >
                     {metricDelta.isPositive ? `+${metricDelta.diff}` : metricDelta.diff} {metricDelta.unit}

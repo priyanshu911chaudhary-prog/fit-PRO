@@ -134,15 +134,14 @@ function MealContent() {
 
   // Meal Form State
   const [mealType, setMealType] = useState<string>(MealTypeEnum.BREAKFAST);
-  const [date, setDate] = useState<string>("2026-10-19");
   const [addedItems, setAddedItems] = useState<AddedFoodItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    try {
-      setDate(new Date().toISOString().split("T")[0]);
-    } catch {}
-  }, []);
+  const [date, setDate] = useState<string>(() => {
+    const now = new Date();
+    const offset = now.getTimezoneOffset() * 60_000;
+    return new Date(now.getTime() - offset).toISOString().slice(0, 10);
+  });
 
   // History State
   const [history, setHistory] = useState<MealLogRecord[]>([]);
@@ -157,7 +156,7 @@ function MealContent() {
           setFoodsCatalog(res.data.foods);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
 
     return () => {
       isMounted = false;
@@ -187,7 +186,7 @@ function MealContent() {
           setHistory(res.data.logs);
         }
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => {
         if (isMounted) setIsLoadingHistory(false);
       });
@@ -893,16 +892,16 @@ function MealContent() {
                             typeof item.foodItemId === "object" && item.foodItemId !== null
                               ? (item.foodItemId as { name?: string }).name
                               : typeof item.foodItem === "object" && item.foodItem !== null
-                              ? (item.foodItem as { name?: string }).name
-                              : "Food";
+                                ? (item.foodItem as { name?: string }).name
+                                : "Food";
 
                           const caloriesVal =
                             item.calories ??
                             (typeof item.foodItemId === "object" && item.foodItemId !== null
                               ? (item.foodItemId as { calories?: number }).calories
                               : typeof item.foodItem === "object" && item.foodItem !== null
-                              ? (item.foodItem as { calories?: number }).calories
-                              : 0) ??
+                                ? (item.foodItem as { calories?: number }).calories
+                                : 0) ??
                             0;
 
                           const serving =

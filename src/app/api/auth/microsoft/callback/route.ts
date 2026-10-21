@@ -4,6 +4,7 @@ import { setAuthCookies } from "@/lib/auth/cookies";
 import { env } from "@/lib/env";
 import { Profile } from "@/models/profile";
 import { User } from "@/models/user";
+import { logger } from "@/lib/logger";
 
 export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
@@ -151,7 +152,11 @@ export async function GET(req: NextRequest) {
 
     return response;
   } catch (err: unknown) {
-    console.error("Microsoft OAuth callback error:", err);
+    logger.error("Microsoft OAuth callback failed", {
+      event: "auth.oauth.callback.failed",
+      provider: "microsoft",
+      errorName: err instanceof Error ? err.name : "UnknownError",
+    });
     const msg = err instanceof Error ? err.message : "Microsoft authentication failed";
     return NextResponse.redirect(
       new URL(`/login?error=${encodeURIComponent(msg)}`, env.APP_URL)

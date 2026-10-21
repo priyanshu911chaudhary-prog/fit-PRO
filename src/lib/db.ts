@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { env } from "./env";
+import { logger } from "./logger";
 
 interface MongooseCache {
   conn: typeof mongoose | null;
@@ -37,7 +38,9 @@ export async function connectDB(): Promise<typeof mongoose> {
     return cached.conn;
   } catch (error) {
     cached.promise = null;
-    console.error("❌ MongoDB connection error:", error);
+    logger.error("MongoDB connection failed", {
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
     throw error;
   }
 }

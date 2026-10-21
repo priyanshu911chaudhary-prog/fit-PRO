@@ -1,6 +1,9 @@
-type LogLevel = "info" | "warn" | "error" | "debug";
 
-interface LogMeta {
+import "server-only";
+
+import pino from "pino";
+
+export interface LogMeta {
   requestId?: string;
   method?: string;
   path?: string;
@@ -10,31 +13,94 @@ interface LogMeta {
   [key: string]: unknown;
 }
 
-class Logger {
-  private formatMessage(level: LogLevel, message: string, meta?: LogMeta): string {
-    const timestamp = new Date().toISOString();
-    const metaString = meta && Object.keys(meta).length > 0 ? ` ${JSON.stringify(meta)}` : "";
-    return `[${timestamp}] [${level.toUpperCase()}] ${message}${metaString}`;
-  }
+const isDevelopment = process.env.NODE_ENV === "development";
 
+const pinoLogger = pino({
+  level:
+    process.env.LOG_LEVEL ??
+    (isDevelopment ? "debug" : "info"),
+
+  base: {
+    service: "fit-pro",
+  },
+
+  timestamp: pino.stdTimeFunctions.isoTime,
+
+  // Prevent common credentials and personal identifiers from
+  // appearing in structured log metadata.
+  redact: {
+    paths: [
+      "password",
+      "*.password",
+      "token",
+      "*.token",
+      "accessToken",
+      "*.accessToken",
+      "refreshToken",
+      "*.refreshToken",
+      "authorization",
+      "*.authorization",
+      "headers.authorization",
+      "cookie",
+      "*.cookie",
+      "apiKey",
+      "*.apiKey",
+      "secret",
+      "*.secret",
+      "email",
+      "*.email",
+      "userId",
+      "*.userId",
+    ],
+    censor: "[REDACTED]",
+  },
+
+  ...(isDevelopment
+    ? {
+        transport: {
+          target: "pino-pretty",
+          options: {
+            colorize: true,
+            translateTime: "SYS:standard",
+            ignore: "pid,hostname",
+          },
+        },
+      }
+    : {}),
+});
+
+export const logger = {
   info(message: string, meta?: LogMeta) {
-    console.log(this.formatMessage("info", message, meta));
-  }
+    if (meta) {
+      pinoLogger.info(meta, message);
+    } else {
+      pinoLogger.info(message);
+    }
+  },
 
   warn(message: string, meta?: LogMeta) {
-    console.warn(this.formatMessage("warn", message, meta));
-  }
+    if (meta) {
+      pinoLogger.warn(meta, message);
+    } else {
+      pinoLogger.warn(message);
+    }
+  },
 
   error(message: string, meta?: LogMeta) {
-    console.error(this.formatMessage("error", message, meta));
-  }
+    if (meta) {
+      pinoLogger.error(meta, message);
+    } else {
+      pinoLogger.error(message);
+    }
+  },
 
   debug(message: string, meta?: LogMeta) {
-    if (process.env.NODE_ENV !== "production") {
-      console.debug(this.formatMessage("debug", message, meta));
+    if (meta) {
+      pinoLogger.debug(meta, message);
+    } else {
+      pinoLogger.debug(message);
     }
-  }
-}
+  },
+};
 
-export const logger = new Logger();
 export default logger;

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { logger } from "@/lib/logger";
 
 // Normalise MongoDB URI alias
 if (!process.env.MONGODB_URI && process.env.MONGO_URI) {
@@ -48,13 +49,27 @@ export function getEnv(): Env {
 
     // In production runtime or when server starts, fail fast
     if (process.env.NODE_ENV === "production" && !process.env.NEXT_PHASE) {
-      console.error("❌ Environment validation error:\n" + errorDetails);
+      logger.error("Environment validation failed", {
+        event: "config.validation.failed",
+        issueCount: result.error.issues.length,
+        issues: result.error.issues.map((issue) => ({
+          field: issue.path.join("."),
+          code: issue.code,
+        })),
+      });
       throw new Error(`Environment validation failed:\n${errorDetails}`);
     }
 
     // In development or build phase, fallback with warning
-    console.warn("⚠️ Environment variables missing or invalid for strict runtime:\n" + errorDetails);
-    
+    logger.warn("Environment variables missing or invalid", {
+      event: "config.validation.warning",
+      issueCount: result.error.issues.length,
+      issues: result.error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        code: issue.code,
+      })),
+    });
+
     // Provide safe defaults for build/development if missing
     parsedEnv = {
       NODE_ENV: (process.env.NODE_ENV as "development" | "test" | "production") || "development",

@@ -1,0 +1,74 @@
+﻿name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate application
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand({ ping: 1 }).ok' "
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Check TypeScript
+        run: npx tsc --noEmit
+
+      - name: Run tests
+        run: npm test
+        env:
+          NODE_ENV: test
+          APP_URL: http://localhost:3000
+          MONGODB_URI: mongodb://127.0.0.1:27017/fit-PRO-test
+          MONGODB_URI_TEST: mongodb://127.0.0.1:27017/fit-PRO-test
+          ACCESS_TOKEN_SECRET: ci_access_token_secret_only_for_tests_12345
+          REFRESH_TOKEN_SECRET: ci_refresh_token_secret_only_for_tests_12345
+          GEMINI_API_KEY: ""
+          REDIS_URL: redis://127.0.0.1:6379
+
+      - name: Build application
+        run: npm run build
+        env:
+          APP_URL: http://localhost:3000
+          MONGODB_URI: mongodb://127.0.0.1:27017/fit-PRO-build
+          ACCESS_TOKEN_SECRET: ci_build_access_token_secret_123456789
+          REFRESH_TOKEN_SECRET: ci_build_refresh_token_secret_123456789
+          GEMINI_API_KEY: ""
+          NEXT_TELEMETRY_DISABLED: "1"

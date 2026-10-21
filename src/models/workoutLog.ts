@@ -13,6 +13,7 @@ export interface IWorkoutLog extends Document {
   totalDuration: number;
   exercises: IWorkoutLogExercise[];
   completionPercentage: number;
+  date?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -34,6 +35,10 @@ const workoutLogSchema = new Schema<IWorkoutLog>(
       type: Number,
       required: true,
       min: 0,
+    },
+    date: {
+      type: String,
+      index: true,
     },
     exercises: [
       {
@@ -72,6 +77,7 @@ const workoutLogSchema = new Schema<IWorkoutLog>(
 );
 
 workoutLogSchema.index({ user: 1, createdAt: -1 });
+workoutLogSchema.index({ user: 1, date: 1 });
 
 export const WorkoutLog: Model<IWorkoutLog> =
   mongoose.models.WorkoutLog || mongoose.model<IWorkoutLog>("WorkoutLog", workoutLogSchema);

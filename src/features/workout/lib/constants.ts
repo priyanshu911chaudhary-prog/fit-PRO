@@ -15,4 +15,5 @@ export const MUSCLE_GROUPS = [
   { id: "shoulders", label: "Shoulders" },
   { id: "arms", label: "Arms" },
   { id: "core", label: "Core" },
+  { id: "full_body", label: "Full Body" },
 ];

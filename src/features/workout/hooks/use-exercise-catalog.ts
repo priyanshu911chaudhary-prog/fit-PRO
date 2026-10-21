@@ -11,7 +11,7 @@ export function useExerciseCatalog() {
 
   useEffect(() => {
     let isMounted = true;
-    apiClient<{ exercises: ExerciseItem[] }>("/api/exercises?limit=50")
+    apiClient<{ exercises: ExerciseItem[] }>("/api/exercises?limit=500")
       .then((res) => {
         if (isMounted && res.data?.exercises) {
           setExercisesCatalog(res.data.exercises);
@@ -25,8 +25,12 @@ export function useExerciseCatalog() {
   }, []);
 
   const filteredCatalog = useMemo(() => {
+    const queryLower = searchQuery.toLowerCase().trim();
     return exercisesCatalog.filter((item) => {
-      const matchesQuery = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesQuery =
+        !queryLower ||
+        item.name.toLowerCase().includes(queryLower) ||
+        Boolean(item.aliases?.some((a) => a.toLowerCase().includes(queryLower)));
       const matchesMuscle = selectedMuscle
         ? item.targetMuscle.toLowerCase() === selectedMuscle.toLowerCase()
         : true;

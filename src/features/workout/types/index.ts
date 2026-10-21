@@ -4,6 +4,7 @@ export interface ExerciseItem {
   targetMuscle: string;
   equipment: string;
   category: string;
+  aliases?: string[];
 }
 
 export interface SetRow {
@@ -24,11 +25,15 @@ export interface WorkoutExerciseLogItem {
     _id?: string;
     name?: string;
     targetMuscle?: string;
+    category?: string;
+    equipment?: string;
   } | string;
   exercise?: {
     _id?: string;
     name?: string;
     targetMuscle?: string;
+    category?: string;
+    equipment?: string;
   } | string;
   sets?: number | Array<{
     setNumber?: number;
@@ -48,4 +53,12 @@ export interface WorkoutLogRecord {
   date?: string;
   createdAt?: string;
   exercises: WorkoutExerciseLogItem[];
+}
+
+export interface DailyWorkoutSummary {
+  totalVolumeTonnage: number;
+  exercisesCount: number;
+  totalSetsCount: number;
+  totalDuration: number;
+  estimatedCaloriesBurn: number;
 }

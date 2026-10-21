@@ -13,6 +13,7 @@ export interface IExercise extends Document {
   targetMuscle: MuscleGroup;
   equipment: Equipment;
   category: ExerciseCategory;
+  aliases?: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -44,11 +45,17 @@ const exerciseSchema = new Schema<IExercise>(
       enum: AvailableExerciseCategories,
       index: true,
     },
+    aliases: {
+      type: [String],
+      default: [],
+    },
   },
   {
     timestamps: true,
   }
 );
+
+exerciseSchema.index({ targetMuscle: 1, equipment: 1, category: 1 });
 
 export const Exercise: Model<IExercise> =
   mongoose.models.Exercise || mongoose.model<IExercise>("Exercise", exerciseSchema);

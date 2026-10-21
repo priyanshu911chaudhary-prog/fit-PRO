@@ -16,7 +16,7 @@ export async function mapAIExercisesToIds(
     }>;
   }>
 > {
-  const allExercises = await Exercise.find({}, "_id name");
+  const allExercises = await Exercise.find({}, "_id name aliases");
 
   return Promise.all(
     schedule.map(async (day) => {
@@ -24,11 +24,17 @@ export async function mapAIExercisesToIds(
         day.exercises.map(async (ex) => {
           const safeName = ex.name.trim();
           const regex = new RegExp(`^${safeName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
-          let match = allExercises.find((e) => regex.test(e.name));
+          let match = allExercises.find(
+            (e) => regex.test(e.name) || Boolean(e.aliases?.some((a) => regex.test(a)))
+          );
 
           if (!match) {
             // Find with partial regex match
-            match = allExercises.find((e) => new RegExp(safeName, "i").test(e.name));
+            match = allExercises.find(
+              (e) =>
+                new RegExp(safeName, "i").test(e.name) ||
+                Boolean(e.aliases?.some((a) => new RegExp(safeName, "i").test(a)))
+            );
           }
 
           if (!match) {
@@ -88,7 +94,7 @@ export async function mapAIMealsToIds(
     }>;
   }>
 > {
-  const allFoodItems = await FoodItem.find({}, "_id name");
+  const allFoodItems = await FoodItem.find({}, "_id name aliases");
 
   return Promise.all(
     schedule.map(async (day) => {
@@ -103,7 +109,9 @@ export async function mapAIMealsToIds(
           const fat = Math.max(0, Math.min(150, Number(m.fat) || 0));
 
           const regex = new RegExp(`^${safeName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
-          let match = allFoodItems.find((f) => regex.test(f.name));
+          let match = allFoodItems.find(
+            (f) => regex.test(f.name) || Boolean(f.aliases?.some((a) => regex.test(a)))
+          );
 
           if (!match) {
             try {
@@ -119,6 +127,11 @@ export async function mapAIMealsToIds(
                     fat,
                     mealType: "snack",
                     dietaryPreference: "none",
+                    isActive: false, // Don't pollute curated catalog search with arbitrary AI recipe strings
+                    category: "prepared",
+                    servingBasis: "per_serving",
+                    servingUnit: "serving",
+                    defaultQuantity: 1,
                   },
                 },
                 { upsert: true, new: true, setDefaultsOnInsert: true }

@@ -12,6 +12,9 @@
 
 # testing
 /coverage
+/test-results
+/tests/e2e/test-results
+/tests/e2e/playwright-report
 
 # next.js
 /.next/
@@ -48,8 +51,16 @@ MIGRATION_AUDIT.md
 MIGRATION_REPORT.md
 ROUTE_MAP.md
 
+# local analysis & scratch
+/scratch
+
 # scripts & legacy
-/scripts
+/scripts/*
+!/scripts/seed-meals.ts
+!/scripts/seed-exercises.ts
+!/scripts/reconcile-legacy-exercises.ts
+!/scripts/validate-catalog-data.ts
+!/scripts/parse-ledger.js
 /legacy_backend
 
 /.agents

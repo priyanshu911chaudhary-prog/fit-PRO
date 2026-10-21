@@ -99,6 +99,7 @@ export function ExerciseMovementCatalog({
                   variant="outline"
                   onClick={() => onAddExercise(exercise)}
                   className="h-7 px-2.5 text-xs font-medium border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50 cursor-pointer shrink-0"
+                  aria-label={`Add ${exercise.name} to workout`}
                 >
                   <Plus className="size-3 mr-1" />
                   Add

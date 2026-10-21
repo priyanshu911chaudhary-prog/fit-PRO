@@ -9,6 +9,8 @@ import { validateBody, validateQuery } from "@/lib/api/with-validation";
 import { TokenPayload } from "@/lib/auth/jwt";
 import { Exercise } from "@/models/exercise";
 import { WorkoutLog } from "@/models/workoutLog";
+import { getUserTimezone, getDayBoundsInTimezone, formatInTimezone } from "@/lib/timezone";
+import { calculateEstimatedCaloriesBurn } from "@/features/workout/lib/calculations";
 import {
   logWorkoutSchema,
   workoutHistoryQuerySchema,
@@ -27,12 +29,16 @@ export const POST = withHandler(
       throw new ApiError(400, "One or more exercise IDs are invalid or do not exist in the database");
     }
 
+    const userTimezone = getUserTimezone(req);
+    const logDate = body.date || formatInTimezone(new Date(), userTimezone);
+
     const newLog = await WorkoutLog.create({
       user: userId,
       title: body.title,
       exercises: body.exercises,
       totalDuration: body.totalDuration,
       completionPercentage: body.completionPercentage ?? 100,
+      date: logDate,
     });
 
     const populatedLog = await WorkoutLog.findById(newLog._id).populate(
@@ -52,9 +58,27 @@ export const GET = withHandler(
     const query = await validateQuery(req, workoutHistoryQuerySchema);
     const userId = sessionUser.userId;
 
+    const userTimezone = getUserTimezone(req);
     const filter: Record<string, unknown> = { user: userId };
 
-    if (query.startDate && query.endDate) {
+    if (query.date) {
+      const { startOfDay, endOfDay } = getDayBoundsInTimezone(
+        userTimezone,
+        new Date(`${query.date}T12:00:00Z`)
+      );
+
+      filter.$or = [
+        { date: query.date },
+        {
+          date: { $in: [null, ""] },
+          createdAt: { $gte: startOfDay, $lte: endOfDay },
+        },
+        {
+          date: { $exists: false },
+          createdAt: { $gte: startOfDay, $lte: endOfDay },
+        },
+      ];
+    } else if (query.startDate && query.endDate) {
       filter.createdAt = {
         $gte: query.startDate,
         $lte: query.endDate,
@@ -76,12 +100,47 @@ export const GET = withHandler(
       WorkoutLog.countDocuments(filter),
     ]);
 
+    // Aggregate daily totals across all matching logs for that day (or the fetched logs)
+    const allMatchingWorkouts = query.date ? await WorkoutLog.find(filter).lean() : logs;
+    let totalVolumeTonnage = 0;
+    let totalSetsCount = 0;
+    let totalDuration = 0;
+    const distinctExerciseIds = new Set<string>();
+
+    for (const w of allMatchingWorkouts) {
+      totalDuration += Number(w.totalDuration) || 0;
+      for (const ex of w.exercises || []) {
+        if (ex.exerciseId) {
+          const exIdStr = String(
+            typeof ex.exerciseId === "object" && ex.exerciseId !== null && "_id" in ex.exerciseId
+              ? (ex.exerciseId as unknown as Record<string, unknown>)._id
+              : ex.exerciseId
+          );
+          distinctExerciseIds.add(exIdStr);
+        }
+        const sCount = Number(ex.sets) || 1;
+        const reps = Number(ex.reps) || 0;
+        const weight = Number(ex.weight) || 0;
+        totalVolumeTonnage += sCount * reps * weight;
+        totalSetsCount += sCount;
+      }
+    }
+
+    const dailyTotals = {
+      totalVolumeTonnage,
+      exercisesCount: distinctExerciseIds.size,
+      totalSetsCount,
+      totalDuration,
+      estimatedCaloriesBurn: calculateEstimatedCaloriesBurn(totalDuration, totalVolumeTonnage),
+    };
+
     return NextResponse.json(
       new ApiResponse(200, "History fetched", {
         logs,
         currentPage: query.page,
         totalPages: Math.ceil(totalLogs / query.limit),
         totalLogs,
+        dailyTotals,
       }),
       { status: 200 }
     );

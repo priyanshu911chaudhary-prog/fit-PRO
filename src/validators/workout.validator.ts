@@ -77,11 +77,19 @@ export const logWorkoutSchema = z.preprocess((val: unknown) => {
     .array(workoutExerciseItemSchema)
     .min(1, "At least one exercise must be logged"),
   completionPercentage: z.number().min(0).max(100).default(100),
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (expected YYYY-MM-DD)")
+    .optional(),
 }));
 
 export const workoutHistoryQuerySchema = z.object({
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().min(1).max(50).default(10),
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (expected YYYY-MM-DD)")
+    .optional(),
   startDate: z.coerce.date().optional(),
   endDate: z.coerce.date().optional(),
 });

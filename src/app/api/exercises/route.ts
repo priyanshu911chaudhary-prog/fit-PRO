@@ -11,12 +11,14 @@ export const GET = withHandler(async (req: NextRequest) => {
   const equipment = searchParams.get("equipment")?.trim();
   const category = searchParams.get("category")?.trim();
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
-  const limit = Math.min(50, Math.max(1, Number(searchParams.get("limit")) || 20));
+  const limit = Math.min(500, Math.max(1, Number(searchParams.get("limit")) || 20));
 
   const filter: Record<string, unknown> = {};
 
   if (q) {
-    filter.name = { $regex: q, $options: "i" };
+    const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = { $regex: escaped, $options: "i" };
+    filter.$or = [{ name: regex }, { aliases: regex }];
   }
   if (targetMuscle) {
     filter.targetMuscle = targetMuscle;

@@ -9,6 +9,7 @@ import { formatSafeDate } from "../lib/calculations";
 interface WorkoutHistoryListProps {
   history: WorkoutLogRecord[];
   isLoadingHistory: boolean;
+  selectedDate?: string;
   onSelectLogTab: () => void;
   onDeleteLog: (id: string) => void;
 }
@@ -16,6 +17,7 @@ interface WorkoutHistoryListProps {
 export function WorkoutHistoryList({
   history,
   isLoadingHistory,
+  selectedDate,
   onSelectLogTab,
   onDeleteLog,
 }: WorkoutHistoryListProps) {
@@ -25,7 +27,7 @@ export function WorkoutHistoryList({
         <div>
           <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
             <History className="size-4 text-emerald-400" />
-            Logged Workout History
+            {selectedDate ? `Logged Workouts for ${selectedDate}` : "Logged Workout History"}
           </CardTitle>
           <CardDescription className="text-xs text-muted-foreground">
             Complete historical timeline of progressive overload sessions
@@ -50,9 +52,11 @@ export function WorkoutHistoryList({
               <History className="size-6 text-muted-foreground/50" />
             </div>
             <div className="space-y-1">
-              <p className="font-semibold text-foreground text-sm">No workouts logged yet</p>
+              <p className="font-semibold text-foreground text-sm">
+                No workouts logged {selectedDate ? `for ${selectedDate}` : "yet"}
+              </p>
               <p className="text-[11px] text-muted-foreground">
-                Switch to &quot;Log Session&quot; to record your first athletic workout.
+                Switch to &quot;Log Session&quot; to record your athletic workout for this date.
               </p>
             </div>
             <Button

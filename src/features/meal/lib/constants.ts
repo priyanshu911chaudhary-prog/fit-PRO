@@ -11,7 +11,11 @@ export const MEAL_ICONS: Record<string, LucideIcon> = {
 
 export const CATEGORY_FILTERS: { id: CategoryFilterId; label: string }[] = [
   { id: "all", label: "All Items" },
-  { id: "high_protein", label: "High Protein" },
-  { id: "low_carb", label: "Low Carb" },
-  { id: "snack", label: "Snacks" },
+  { id: "vegetables", label: "Vegetables" },
+  { id: "fruits", label: "Fruits" },
+  { id: "protein", label: "Proteins" },
+  { id: "grains", label: "Grains & Staples" },
+  { id: "dairy", label: "Dairy" },
+  { id: "fats_oils", label: "Fats & Oils" },
+  { id: "prepared", label: "Prepared" },
 ];

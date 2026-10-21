@@ -46,7 +46,7 @@ describe("Meal calculations & helpers", () => {
     expect(macros.totalFat).toBe(0);
     expect(macros.proteinPct).toBe(0);
     expect(macros.carbsPct).toBe(0);
-    expect(macros.fatPct).toBe(100);
+    expect(macros.fatPct).toBe(0);
   });
 
   it("filters food catalog accurately by search query and category", () => {

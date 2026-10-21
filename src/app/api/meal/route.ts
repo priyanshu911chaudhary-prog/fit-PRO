@@ -1,4 +1,3 @@
-
 import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
 import { ApiError } from "@/lib/api/api-error";
@@ -10,6 +9,12 @@ import { TokenPayload } from "@/lib/auth/jwt";
 import { FoodItem } from "@/models/foodItem";
 import { MealLog } from "@/models/mealLog";
 import {
+  calculateItemNutrients,
+  aggregateMacroDistribution,
+  normalizeDateOnly,
+} from "@/lib/nutrition-engine";
+import { getUserTimezone, getDayBoundsInTimezone } from "@/lib/timezone";
+import {
   logMealSchema,
   mealHistoryQuerySchema,
 } from "@/validators/meal.validator";
@@ -19,54 +24,88 @@ export const POST = withHandler(
     const body = await validateBody(req, logMealSchema);
     const userId = sessionUser.userId;
 
-    // Approved Fix 3: Validate that all referenced food items exist in database
+    // Validate that all referenced food items exist in database and are active
     const foodItemIds = body.meals.map((m) => new mongoose.Types.ObjectId(m.foodItemId));
-    const foundFoods = await FoodItem.find({ _id: { $in: foodItemIds } });
+    const foundFoods = await FoodItem.find({ _id: { $in: foodItemIds }, isActive: { $ne: false } });
 
     if (foundFoods.length !== foodItemIds.length) {
-      throw new ApiError(400, "One or more food item IDs are invalid or do not exist in the database");
+      throw new ApiError(400, "One or more food item IDs are invalid or inactive");
     }
 
-    // CHK-064: Server computes calories from catalog food x quantity and IGNORES any client-supplied calories or totals
     const foodsMap = new Map(foundFoods.map((f) => [f._id.toString(), f]));
-    let computedCalories = 0;
 
+    // Authoritative Server-side nutrient calculation
     const enrichedMeals = body.meals.map((m) => {
       const food = foodsMap.get(m.foodItemId);
       if (!food) {
         throw new ApiError(400, "Food item not found");
       }
 
-      // Quantity from validated quantity property or parsed from servingSize
-      let quantity = m.quantity;
-      if (!quantity || quantity <= 0) {
-        const parsed = parseFloat(m.servingSize);
-        quantity = !isNaN(parsed) && parsed > 0 ? parsed : 1;
+      if (typeof m.quantity !== "number" || isNaN(m.quantity) || m.quantity <= 0) {
+        throw new ApiError(400, "Quantity must be greater than 0");
+      }
+      const quantity = m.quantity;
+      const unit = m.unit || food.servingUnit || "g";
+
+      let nutrients;
+      try {
+        nutrients = calculateItemNutrients(
+          {
+            name: food.name,
+            calories: food.calories,
+            protein: food.protein,
+            carbs: food.carbs,
+            fat: food.fat,
+            servingBasis: food.servingBasis,
+            servingUnit: food.servingUnit,
+            pieceWeightG: food.pieceWeightG,
+            servingWeightG: food.servingWeightG,
+          },
+          quantity,
+          unit
+        );
+      } catch (err: unknown) {
+        throw new ApiError(400, (err as Error).message || "Invalid unit or portion for food item");
       }
 
-      const itemCalories = Math.round(food.calories * quantity);
-      computedCalories += itemCalories;
+      const displayServing =
+        m.servingSize && m.servingSize !== "1 serving"
+          ? m.servingSize
+          : `${quantity} ${unit}`;
 
       return {
-        foodItemId: m.foodItemId,
-        servingSize: m.servingSize,
-        calories: itemCalories,
+        foodItemId: food._id,
+        name: food.name,
+        quantity,
+        unit,
+        servingSize: displayServing,
+        calories: Math.round(nutrients.calories),
+        protein: Math.round(nutrients.protein * 10) / 10,
+        carbs: Math.round(nutrients.carbs * 10) / 10,
+        fat: Math.round(nutrients.fat * 10) / 10,
       };
     });
 
-    const totalCalories = computedCalories;
+    const mealMacros = aggregateMacroDistribution(enrichedMeals);
+
+    const consumedDate = normalizeDateOnly(body.consumedDate);
 
     const newLog = await MealLog.create({
       user: userId,
       title: body.title,
+      mealType: body.mealType,
+      consumedDate,
+      totalCalories: mealMacros.totalCalories,
+      totalProtein: mealMacros.totalProtein,
+      totalCarbs: mealMacros.totalCarbs,
+      totalFat: mealMacros.totalFat,
       meals: enrichedMeals,
-      totalCalories,
       completionPercentage: body.completionPercentage ?? 100,
     });
 
     const populatedLog = await MealLog.findById(newLog._id).populate(
       "meals.foodItemId",
-      "name calories protein carbs fat mealType dietaryPreference"
+      "name calories protein carbs fat mealType dietaryPreference servingBasis servingUnit pieceWeightG servingWeightG"
     );
 
     return NextResponse.json(
@@ -81,9 +120,27 @@ export const GET = withHandler(
     const query = await validateQuery(req, mealHistoryQuerySchema);
     const userId = sessionUser.userId;
 
+    const userTimezone = getUserTimezone(req);
     const filter: Record<string, unknown> = { user: userId };
 
-    if (query.startDate && query.endDate) {
+    if (query.date) {
+      const { startOfDay, endOfDay } = getDayBoundsInTimezone(
+        userTimezone,
+        new Date(`${query.date}T12:00:00Z`)
+      );
+
+      filter.$or = [
+        { consumedDate: query.date },
+        {
+          consumedDate: { $in: [null, ""] },
+          createdAt: { $gte: startOfDay, $lte: endOfDay },
+        },
+        {
+          consumedDate: { $exists: false },
+          createdAt: { $gte: startOfDay, $lte: endOfDay },
+        },
+      ];
+    } else if (query.startDate && query.endDate) {
       filter.createdAt = {
         $gte: query.startDate,
         $lte: query.endDate,
@@ -98,16 +155,40 @@ export const GET = withHandler(
 
     const [logs, totalLogs] = await Promise.all([
       MealLog.find(filter)
-        .populate("meals.foodItemId", "name calories protein carbs fat mealType dietaryPreference")
+        .populate("meals.foodItemId", "name calories protein carbs fat mealType dietaryPreference servingBasis servingUnit pieceWeightG servingWeightG")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(query.limit),
       MealLog.countDocuments(filter),
     ]);
 
+    // Aggregate daily totals if filtering by date, or for the fetched logs
+    let dailyTotals = {
+      totalCalories: 0,
+      totalProtein: 0,
+      totalCarbs: 0,
+      totalFat: 0,
+      proteinPct: 0,
+      carbsPct: 0,
+      fatPct: 0,
+    };
+
+    if (query.date) {
+      const allDayMeals = await MealLog.find(filter);
+      dailyTotals = aggregateMacroDistribution(
+        allDayMeals.map((m) => ({
+          calories: m.totalCalories || 0,
+          protein: m.totalProtein || 0,
+          carbs: m.totalCarbs || 0,
+          fat: m.totalFat || 0,
+        }))
+      );
+    }
+
     return NextResponse.json(
       new ApiResponse(200, "Meal history fetched", {
         logs,
+        dailyTotals,
         currentPage: query.page,
         totalPages: Math.ceil(totalLogs / query.limit),
         totalLogs,

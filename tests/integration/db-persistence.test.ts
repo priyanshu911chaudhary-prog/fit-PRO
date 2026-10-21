@@ -14,7 +14,7 @@ describe("Showcase: Integration Tests -> Database Persistence & Isolation", () =
       process.env.MONGODB_URI = process.env.MONGO_URI;
     }
     await connectDB();
-  });
+  }, 30000);
 
   afterAll(async () => {
     if (mongoose.connection.readyState === 1) {

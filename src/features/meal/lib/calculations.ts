@@ -1,4 +1,8 @@
 import { AddedFoodItem, FoodItem, MacroBreakdown } from "../types";
+import {
+  aggregateMacroDistribution,
+  calculateItemNutrients,
+} from "@/lib/nutrition-engine";
 
 export function formatSafeDate(val?: string | Date): string {
   if (!val) return "Today";
@@ -30,44 +34,52 @@ export function formatSafeDate(val?: string | Date): string {
 }
 
 export function calculateMealMacros(items: AddedFoodItem[]): MacroBreakdown {
-  const totalCalories = items.reduce(
-    (acc, item) => acc + Math.round(item.calories * item.quantity),
-    0
-  );
-  const totalProtein = items.reduce(
-    (acc, item) => acc + Math.round(item.protein * item.quantity),
-    0
-  );
-  const totalCarbs = items.reduce(
-    (acc, item) => acc + Math.round(item.carbs * item.quantity),
-    0
-  );
-  const totalFat = items.reduce(
-    (acc, item) => acc + Math.round(item.fat * item.quantity),
-    0
-  );
+  if (!items || items.length === 0) {
+    return {
+      totalCalories: 0,
+      totalProtein: 0,
+      totalCarbs: 0,
+      totalFat: 0,
+      proteinCals: 0,
+      carbsCals: 0,
+      fatCals: 0,
+      proteinPct: 0,
+      carbsPct: 0,
+      fatPct: 0,
+    };
+  }
 
-  const proteinCals = totalProtein * 4;
-  const carbsCals = totalCarbs * 4;
-  const fatCals = totalFat * 9;
-  const macroCalSum = proteinCals + carbsCals + fatCals || 1;
+  const computedItems = items.map((item) => {
+    // If item has base nutrition and servingBasis, use calculation engine
+    if (item.baseCalories !== undefined && item.servingBasis) {
+      return calculateItemNutrients(
+        {
+          name: item.name,
+          calories: item.baseCalories ?? item.calories,
+          protein: item.baseProtein ?? item.protein,
+          carbs: item.baseCarbs ?? item.carbs,
+          fat: item.baseFat ?? item.fat,
+          servingBasis: item.servingBasis,
+          servingUnit: item.servingUnit,
+          pieceWeightG: item.pieceWeightG,
+          servingWeightG: item.servingWeightG,
+        },
+        item.quantity,
+        item.unit
+      );
+    }
 
-  const proteinPct = Math.round((proteinCals / macroCalSum) * 100);
-  const carbsPct = Math.round((carbsCals / macroCalSum) * 100);
-  const fatPct = Math.max(0, 100 - proteinPct - carbsPct);
+    // Fallback for legacy items without base properties
+    return {
+      calories: item.calories * item.quantity,
+      protein: item.protein * item.quantity,
+      carbs: item.carbs * item.quantity,
+      fat: item.fat * item.quantity,
+      factor: item.quantity,
+    };
+  });
 
-  return {
-    totalCalories,
-    totalProtein,
-    totalCarbs,
-    totalFat,
-    proteinCals,
-    carbsCals,
-    fatCals,
-    proteinPct,
-    carbsPct,
-    fatPct,
-  };
+  return aggregateMacroDistribution(computedItems);
 }
 
 export function filterFoodCatalog(
@@ -77,10 +89,15 @@ export function filterFoodCatalog(
 ): FoodItem[] {
   const query = searchQuery.trim().toLowerCase();
   return catalog.filter((item) => {
-    const matchesSearch = item.name.toLowerCase().includes(query);
-    if (categoryFilter === "high_protein") return matchesSearch && item.protein >= 20;
-    if (categoryFilter === "low_carb") return matchesSearch && item.carbs <= 10;
-    if (categoryFilter === "snack") return matchesSearch && item.calories <= 250;
-    return matchesSearch;
+    const matchesSearch =
+      item.name.toLowerCase().includes(query) ||
+      (item.aliases && item.aliases.some((a) => a.toLowerCase().includes(query)));
+
+    if (!matchesSearch) return false;
+    if (categoryFilter === "all" || !categoryFilter) return true;
+    if (categoryFilter === "high_protein") return item.protein >= 20;
+    if (categoryFilter === "low_carb") return item.carbs <= 10;
+    if (categoryFilter === "snack") return item.calories <= 250;
+    return item.category === categoryFilter;
   });
 }

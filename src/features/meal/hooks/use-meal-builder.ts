@@ -6,102 +6,241 @@ import { apiClient } from "@/lib/api-client";
 import { MealTypeEnum } from "@/constants";
 import { AddedFoodItem, FoodItem } from "../types";
 import { calculateMealMacros } from "../lib/calculations";
+import { calculateItemNutrients } from "@/lib/nutrition-engine";
 
 export function useMealBuilder(onMealLogged?: () => Promise<void> | void) {
   const [mealType, setMealType] = useState<string>(MealTypeEnum.BREAKFAST);
   const [addedItems, setAddedItems] = useState<AddedFoodItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [date, setDate] = useState<string>(() => {
-    const now = new Date();
-    const offset = now.getTimezoneOffset() * 60_000;
-    return new Date(now.getTime() - offset).toISOString().slice(0, 10);
-  });
-
   const handleAddFood = (food: FoodItem) => {
-    const existing = addedItems.find((i) => i.foodItemId === food._id);
-    if (existing) {
-      setAddedItems(
-        addedItems.map((i) =>
-          i.foodItemId === food._id ? { ...i, quantity: i.quantity + 1 } : i
-        )
-      );
-      toast.info(`Increased portion for ${food.name}`);
-    } else {
-      setAddedItems([
-        ...addedItems,
+    const basis = food.servingBasis || "per_serving";
+    const defaultUnit = food.servingUnit || (basis === "per_100g" ? "g" : basis === "per_100ml" ? "ml" : "serving");
+    const defaultQty = food.defaultQuantity || (basis === "per_100g" ? 100 : 1);
+
+    const existingIndex = addedItems.findIndex((i) => i.foodItemId === food._id);
+
+    if (existingIndex >= 0) {
+      // Consolidate quantity
+      const existing = addedItems[existingIndex];
+      const nextQty = existing.quantity + (defaultQty <= 5 ? 1 : 50);
+      const nutrients = calculateItemNutrients(
         {
-          foodItemId: food._id,
+          name: existing.name,
+          calories: existing.baseCalories ?? existing.calories,
+          protein: existing.baseProtein ?? existing.protein,
+          carbs: existing.baseCarbs ?? existing.carbs,
+          fat: existing.baseFat ?? existing.fat,
+          servingBasis: existing.servingBasis,
+          servingUnit: existing.servingUnit,
+          pieceWeightG: existing.pieceWeightG,
+          servingWeightG: existing.servingWeightG,
+        },
+        nextQty,
+        existing.unit
+      );
+
+      const updated = [...addedItems];
+      updated[existingIndex] = {
+        ...existing,
+        quantity: nextQty,
+        calories: Math.round(nutrients.calories),
+        protein: Math.round(nutrients.protein * 10) / 10,
+        carbs: Math.round(nutrients.carbs * 10) / 10,
+        fat: Math.round(nutrients.fat * 10) / 10,
+      };
+      setAddedItems(updated);
+      toast.info(`Updated ${food.name} portion to ${nextQty} ${existing.unit}`);
+    } else {
+      const nutrients = calculateItemNutrients(
+        {
           name: food.name,
           calories: food.calories,
           protein: food.protein,
           carbs: food.carbs,
           fat: food.fat,
-          quantity: 1,
+          servingBasis: food.servingBasis,
+          servingUnit: food.servingUnit,
+          pieceWeightG: food.pieceWeightG,
+          servingWeightG: food.servingWeightG,
         },
-      ]);
-      toast.success(`Added ${food.name} to plate`);
+        defaultQty,
+        defaultUnit
+      );
+
+      const newItem: AddedFoodItem = {
+        foodItemId: food._id,
+        name: food.name,
+        baseCalories: food.calories,
+        baseProtein: food.protein,
+        baseCarbs: food.carbs,
+        baseFat: food.fat,
+        servingBasis: food.servingBasis || "per_serving",
+        servingUnit: defaultUnit,
+        pieceWeightG: food.pieceWeightG,
+        servingWeightG: food.servingWeightG,
+        quantity: defaultQty,
+        unit: defaultUnit,
+        calories: Math.round(nutrients.calories),
+        protein: Math.round(nutrients.protein * 10) / 10,
+        carbs: Math.round(nutrients.carbs * 10) / 10,
+        fat: Math.round(nutrients.fat * 10) / 10,
+      };
+
+      setAddedItems((prev) => [...prev, newItem]);
+      toast.success(`Added ${food.name} (${defaultQty} ${defaultUnit}) to plate`);
     }
   };
 
   const handleUpdateQuantity = (foodItemId: string, quantity: number) => {
     if (quantity <= 0) {
-      setAddedItems(addedItems.filter((i) => i.foodItemId !== foodItemId));
+      setAddedItems((prev) => prev.filter((i) => i.foodItemId !== foodItemId));
       return;
     }
-    setAddedItems(
-      addedItems.map((i) => (i.foodItemId === foodItemId ? { ...i, quantity } : i))
+
+    setAddedItems((prev) =>
+      prev.map((item) => {
+        if (item.foodItemId !== foodItemId) return item;
+
+        const nutrients = calculateItemNutrients(
+          {
+            name: item.name,
+            calories: item.baseCalories ?? item.calories,
+            protein: item.baseProtein ?? item.protein,
+            carbs: item.baseCarbs ?? item.carbs,
+            fat: item.baseFat ?? item.fat,
+            servingBasis: item.servingBasis,
+            servingUnit: item.servingUnit,
+            pieceWeightG: item.pieceWeightG,
+            servingWeightG: item.servingWeightG,
+          },
+          quantity,
+          item.unit
+        );
+
+        return {
+          ...item,
+          quantity,
+          calories: Math.round(nutrients.calories),
+          protein: Math.round(nutrients.protein * 10) / 10,
+          carbs: Math.round(nutrients.carbs * 10) / 10,
+          fat: Math.round(nutrients.fat * 10) / 10,
+        };
+      })
+    );
+  };
+
+  const handleUpdateUnit = (foodItemId: string, unit: string) => {
+    setAddedItems((prev) =>
+      prev.map((item) => {
+        if (item.foodItemId !== foodItemId) return item;
+
+        const nutrients = calculateItemNutrients(
+          {
+            name: item.name,
+            calories: item.baseCalories ?? item.calories,
+            protein: item.baseProtein ?? item.protein,
+            carbs: item.baseCarbs ?? item.carbs,
+            fat: item.baseFat ?? item.fat,
+            servingBasis: item.servingBasis,
+            servingUnit: item.servingUnit,
+            pieceWeightG: item.pieceWeightG,
+            servingWeightG: item.servingWeightG,
+          },
+          item.quantity,
+          unit
+        );
+
+        return {
+          ...item,
+          unit,
+          calories: Math.round(nutrients.calories),
+          protein: Math.round(nutrients.protein * 10) / 10,
+          carbs: Math.round(nutrients.carbs * 10) / 10,
+          fat: Math.round(nutrients.fat * 10) / 10,
+        };
+      })
     );
   };
 
   const handleAdjustQuantity = (foodItemId: string, delta: number) => {
-    setAddedItems(
-      addedItems
-        .map((i) => {
-          if (i.foodItemId === foodItemId) {
-            const nextQty = Math.max(0, Number((i.quantity + delta).toFixed(1)));
-            return { ...i, quantity: nextQty };
-          }
-          return i;
+    setAddedItems((prev) =>
+      prev
+        .map((item) => {
+          if (item.foodItemId !== foodItemId) return item;
+
+          const nextQty = Math.max(0, Number((item.quantity + delta).toFixed(1)));
+          if (nextQty <= 0) return null as unknown as AddedFoodItem;
+
+          const nutrients = calculateItemNutrients(
+            {
+              name: item.name,
+              calories: item.baseCalories ?? item.calories,
+              protein: item.baseProtein ?? item.protein,
+              carbs: item.baseCarbs ?? item.carbs,
+              fat: item.baseFat ?? item.fat,
+              servingBasis: item.servingBasis,
+              servingUnit: item.servingUnit,
+              pieceWeightG: item.pieceWeightG,
+              servingWeightG: item.servingWeightG,
+            },
+            nextQty,
+            item.unit
+          );
+
+          return {
+            ...item,
+            quantity: nextQty,
+            calories: Math.round(nutrients.calories),
+            protein: Math.round(nutrients.protein * 10) / 10,
+            carbs: Math.round(nutrients.carbs * 10) / 10,
+            fat: Math.round(nutrients.fat * 10) / 10,
+          };
         })
-        .filter((i) => i.quantity > 0)
+        .filter((item): item is AddedFoodItem => Boolean(item))
     );
   };
 
   const handleRemoveItem = (foodItemId: string) => {
-    setAddedItems(addedItems.filter((i) => i.foodItemId !== foodItemId));
+    setAddedItems((prev) => prev.filter((i) => i.foodItemId !== foodItemId));
+  };
+
+  const handleClearPlate = () => {
+    setAddedItems([]);
   };
 
   const macros = useMemo(() => calculateMealMacros(addedItems), [addedItems]);
 
-  const handleSubmitMeal = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleSubmitMeal = async (selectedDate: string) => {
     if (addedItems.length === 0) {
-      toast.error("Please add at least one food item to your meal plate.");
+      toast.error("Please add at least one food or ingredient to your plate.");
       return;
     }
 
     try {
       setIsSubmitting(true);
+      const title = mealType.charAt(0).toUpperCase() + mealType.slice(1);
+
+      const payload = {
+        title,
+        mealType,
+        consumedDate: selectedDate,
+        meals: addedItems.map((item) => ({
+          foodItemId: item.foodItemId,
+          quantity: item.quantity,
+          unit: item.unit,
+          servingSize: `${item.quantity} ${item.unit}`,
+        })),
+      };
+
       const res = await apiClient("/api/meal", {
         method: "POST",
-        body: JSON.stringify({
-          title: mealType.charAt(0).toUpperCase() + mealType.slice(1),
-          mealType,
-          totalCalories: macros.totalCalories,
-          meals: addedItems.map((i) => ({
-            foodItemId: i.foodItemId,
-            quantity: i.quantity,
-            servingSize: `${i.quantity} serving${i.quantity > 1 ? "s" : ""}`,
-            calories: Math.round(i.calories * i.quantity),
-          })),
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (res.success) {
-        toast.success("Meal logged successfully!", {
-          description: `Recorded ${addedItems.length} items • ${macros.totalCalories} kcal`,
+        toast.success(`Logged ${title} successfully!`, {
+          description: `${addedItems.length} ingredients • ${macros.totalCalories} kcal`,
         });
         setAddedItems([]);
         if (onMealLogged) {
@@ -122,14 +261,14 @@ export function useMealBuilder(onMealLogged?: () => Promise<void> | void) {
   return {
     mealType,
     setMealType,
-    date,
-    setDate,
     addedItems,
     isSubmitting,
     handleAddFood,
     handleUpdateQuantity,
+    handleUpdateUnit,
     handleAdjustQuantity,
     handleRemoveItem,
+    handleClearPlate,
     macros,
     handleSubmitMeal,
   };

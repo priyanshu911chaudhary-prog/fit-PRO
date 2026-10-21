@@ -11,6 +11,7 @@ import { formatSafeDate } from "../lib/calculations";
 interface MealHistoryListProps {
   history: MealLogRecord[];
   isLoadingHistory: boolean;
+  selectedDate: string;
   onNavigateToLog: () => void;
   onDeleteLog: (id: string) => void;
 }
@@ -18,6 +19,7 @@ interface MealHistoryListProps {
 export function MealHistoryList({
   history,
   isLoadingHistory,
+  selectedDate,
   onNavigateToLog,
   onDeleteLog,
 }: MealHistoryListProps) {
@@ -27,17 +29,17 @@ export function MealHistoryList({
         <div>
           <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
             <History className="size-4 text-cyan-400" />
-            Logged Nutrition History
+            Logged Meals for {selectedDate}
           </CardTitle>
           <CardDescription className="text-xs text-muted-foreground">
-            Complete chronological archive of all consumed meals and caloric intakes
+            Complete record of all meals, ingredients, and nutrients committed on this day
           </CardDescription>
         </div>
         <Badge
           variant="outline"
           className="text-xs font-mono border-cyan-500/30 text-cyan-400 bg-cyan-500/10"
         >
-          {history.length} Logged Meals
+          {history.length} Meals Logged
         </Badge>
       </CardHeader>
 
@@ -55,9 +57,9 @@ export function MealHistoryList({
               <Utensils className="size-6 text-muted-foreground/50" />
             </div>
             <div className="space-y-1">
-              <p className="font-semibold text-foreground text-sm">No meals logged yet</p>
+              <p className="font-semibold text-foreground text-sm">No meals logged for {selectedDate}</p>
               <p className="text-[11px] text-muted-foreground">
-                Switch to &quot;Log Meal&quot; to track your first nutritional fuel session.
+                Switch to &quot;Log Meal&quot; to compose and record your first meal for this date.
               </p>
             </div>
             <Button
@@ -66,7 +68,7 @@ export function MealHistoryList({
               className="bg-primary text-primary-foreground font-semibold text-xs h-8 px-3 cursor-pointer"
             >
               <Plus className="size-3.5 mr-1" />
-              Log First Meal
+              Log Meal for {selectedDate}
             </Button>
           </div>
         ) : (
@@ -89,10 +91,18 @@ export function MealHistoryList({
                         <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[11px] font-mono font-bold text-emerald-400">
                           {record.totalCalories} kcal
                         </span>
+                        {record.totalProtein !== undefined && (
+                          <div className="hidden sm:flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground">
+                            <span>•</span>
+                            <span className="text-cyan-400 font-semibold">P: {record.totalProtein}g</span>
+                            <span className="text-amber-400 font-semibold">C: {record.totalCarbs}g</span>
+                            <span className="text-purple-400 font-semibold">F: {record.totalFat}g</span>
+                          </div>
+                        )}
                       </div>
                       <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1 font-mono">
                         <Calendar className="size-3 text-cyan-400" />
-                        {formatSafeDate(record.createdAt || record.date)}
+                        {record.consumedDate || formatSafeDate(record.createdAt || record.date)}
                       </p>
                     </div>
                   </div>
@@ -102,7 +112,7 @@ export function MealHistoryList({
                     size="icon"
                     onClick={() => onDeleteLog(record._id)}
                     className="size-8 text-muted-foreground hover:text-rose-400 self-end sm:self-center transition-colors cursor-pointer"
-                    aria-label="Delete meal log"
+                    aria-label={`Delete ${record.title || "meal"}`}
                   >
                     <Trash2 className="size-4" />
                   </Button>
@@ -112,34 +122,46 @@ export function MealHistoryList({
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 pt-1">
                   {(record.meals || record.items || []).map((item, itemIdx) => {
                     const foodName =
-                      typeof item.foodItemId === "object" && item.foodItemId !== null
+                      item.name ||
+                      (typeof item.foodItemId === "object" && item.foodItemId !== null
                         ? (item.foodItemId as { name?: string }).name
                         : typeof item.foodItem === "object" && item.foodItem !== null
                           ? (item.foodItem as { name?: string }).name
-                          : "Food";
+                          : "Food Item");
 
                     const caloriesVal =
                       item.calories ??
                       (typeof item.foodItemId === "object" && item.foodItemId !== null
                         ? (item.foodItemId as { calories?: number }).calories
-                        : typeof item.foodItem === "object" && item.foodItem !== null
-                          ? (item.foodItem as { calories?: number }).calories
-                          : 0) ??
+                        : 0) ??
                       0;
 
                     const serving =
                       item.servingSize ||
-                      (item.quantity ? `${item.quantity} serving(s)` : "1 serving");
+                      (item.quantity ? `${item.quantity} ${item.unit || "serving(s)"}` : "1 serving");
+
+                    const proteinVal = item.protein;
+                    const carbsVal = item.carbs;
+                    const fatVal = item.fat;
 
                     return (
                       <div
                         key={itemIdx}
-                        className="p-3 rounded-lg bg-background/50 border border-border/40 text-xs space-y-1"
+                        className="p-3 rounded-lg bg-background/50 border border-border/40 text-xs space-y-1.5"
                       >
-                        <p className="font-semibold text-foreground truncate">{foodName}</p>
+                        <div className="flex items-center justify-between">
+                          <p className="font-semibold text-foreground truncate pr-1">{foodName}</p>
+                          <span className="text-emerald-400 font-mono font-bold shrink-0">{caloriesVal} kcal</span>
+                        </div>
                         <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground">
                           <span>{serving}</span>
-                          <span className="text-emerald-400 font-bold">{caloriesVal} kcal</span>
+                          {proteinVal !== undefined ? (
+                            <span className="text-[10px]">
+                              <span className="text-cyan-400">P:{proteinVal}g</span>{" "}
+                              <span className="text-amber-400">C:{carbsVal}g</span>{" "}
+                              <span className="text-purple-400">F:{fatVal}g</span>
+                            </span>
+                          ) : null}
                         </div>
                       </div>
                     );

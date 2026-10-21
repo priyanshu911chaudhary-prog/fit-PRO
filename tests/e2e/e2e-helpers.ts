@@ -68,6 +68,7 @@ export async function createVerifiedE2EUser(options?: {
   const accessToken = await signAccessToken({
     userId: user._id.toString(),
     email: user.email,
+    hasProfile: Boolean(options?.withProfile),
   });
 
   const refreshToken = await signRefreshToken({

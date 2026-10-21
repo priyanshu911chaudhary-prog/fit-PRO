@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from "next/server";
 import { ApiResponse } from "@/lib/api/api-response";
 import { withHandler } from "@/lib/api/with-handler";
@@ -7,20 +6,31 @@ import { FoodItem } from "@/models/foodItem";
 export const GET = withHandler(async (req: NextRequest) => {
   const { searchParams } = req.nextUrl;
   const q = searchParams.get("q")?.trim();
+  const category = searchParams.get("category")?.trim();
   const mealType = searchParams.get("mealType")?.trim();
   const dietaryPreference = searchParams.get("dietaryPreference")?.trim();
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
-  const limit = Math.min(50, Math.max(1, Number(searchParams.get("limit")) || 20));
+  const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit")) || 30));
 
-  const filter: Record<string, unknown> = {};
+  const filter: Record<string, unknown> = {
+    isActive: { $ne: false },
+  };
 
   if (q) {
-    filter.name = { $regex: q, $options: "i" };
+    const escapedQuery = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = { $regex: escapedQuery, $options: "i" };
+    filter.$or = [{ name: regex }, { aliases: regex }];
   }
-  if (mealType) {
-    filter.mealType = mealType;
+
+  if (category && category !== "all") {
+    filter.category = category;
   }
-  if (dietaryPreference) {
+
+  if (mealType && mealType !== "all") {
+    filter.mealType = { $in: [mealType, "any"] };
+  }
+
+  if (dietaryPreference && dietaryPreference !== "none" && dietaryPreference !== "all") {
     filter.dietaryPreference = dietaryPreference;
   }
 

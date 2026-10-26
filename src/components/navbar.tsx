@@ -17,6 +17,7 @@ import {
   User,
   LogOut,
   LayoutDashboard,
+  Trophy,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -36,6 +37,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const NAV_ITEMS = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Leaderboard", href: "/leaderboard", icon: Trophy },
   { name: "Workouts", href: "/workout", icon: Dumbbell },
   { name: "Meals", href: "/meal", icon: Utensils },
   { name: "Water", href: "/water", icon: Droplet },

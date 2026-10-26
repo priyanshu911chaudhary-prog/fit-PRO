@@ -7,6 +7,7 @@ import { withHandler } from "@/lib/api/with-handler";
 import { TokenPayload } from "@/lib/auth/jwt";
 import { WorkoutLog } from "@/models/workoutLog";
 import { invalidateDashboardCache } from "@/lib/cache/redis-cache";
+import { recalculateUserWeeklyScore } from "@/lib/leaderboard/recomputation";
 
 export const DELETE = withHandler(
   withAuth(
@@ -30,6 +31,12 @@ export const DELETE = withHandler(
         await invalidateDashboardCache(sessionUser.userId);
       } catch {
         // Safe fallback if Redis is unavailable
+      }
+
+      try {
+        await recalculateUserWeeklyScore(sessionUser.userId);
+      } catch {
+        // Safe fallback: failure is queued into LeaderboardOutbox
       }
 
       return NextResponse.json(

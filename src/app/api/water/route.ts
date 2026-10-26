@@ -8,6 +8,7 @@ import { TokenPayload } from "@/lib/auth/jwt";
 import { WaterLog } from "@/models/waterLog";
 import { logWaterSchema } from "@/validators/water.validator";
 import { invalidateDashboardCache } from "@/lib/cache/redis-cache";
+import { recalculateUserWeeklyScore } from "@/lib/leaderboard/recomputation";
 
 export const POST = withHandler(
   withAuth(async (req: NextRequest, _ctx: unknown, sessionUser: TokenPayload) => {
@@ -24,6 +25,12 @@ export const POST = withHandler(
       await invalidateDashboardCache(userId);
     } catch {
       // Safe fallback if Redis is unavailable
+    }
+
+    try {
+      await recalculateUserWeeklyScore(userId);
+    } catch {
+      // Safe fallback: failure is queued into LeaderboardOutbox
     }
 
     return NextResponse.json(

@@ -11,9 +11,9 @@ export interface HydrationStats {
   strokeDashoffset: number;
 }
 
-export function calculateHydrationStats(totalAmount = 0, targetAmount = 3000): HydrationStats {
+export function calculateHydrationStats(totalAmount = 0, targetAmount = 2500): HydrationStats {
   const total = totalAmount || 0;
-  const target = targetAmount || 3000;
+  const target = targetAmount || 2500;
   const percentage = Math.min(Math.round((total / target) * 100), 100);
   const remaining = Math.max(0, target - total);
   const glasses = Math.round((total / 250) * 10) / 10;

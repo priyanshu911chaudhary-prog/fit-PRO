@@ -12,6 +12,7 @@ import { WorkoutLog } from "@/models/workoutLog";
 import { getUserTimezone, getDayBoundsInTimezone, formatInTimezone } from "@/lib/timezone";
 import { calculateEstimatedCaloriesBurn } from "@/features/workout/lib/calculations";
 import { invalidateDashboardCache } from "@/lib/cache/redis-cache";
+import { recalculateUserWeeklyScore } from "@/lib/leaderboard/recomputation";
 import {
   logWorkoutSchema,
   workoutHistoryQuerySchema,
@@ -51,6 +52,12 @@ export const POST = withHandler(
       await invalidateDashboardCache(userId);
     } catch {
       // Safe fallback if Redis is unavailable
+    }
+
+    try {
+      await recalculateUserWeeklyScore(userId);
+    } catch {
+      // Safe fallback: failure is queued into LeaderboardOutbox
     }
 
     return NextResponse.json(

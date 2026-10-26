@@ -6,6 +6,7 @@ import { withHandler } from "@/lib/api/with-handler";
 import { TokenPayload } from "@/lib/auth/jwt";
 import { formatInTimezone, getUserTimezone } from "@/lib/timezone";
 import { WaterLog } from "@/models/waterLog";
+import { resolveUserTargets, DEFAULT_HYDRATION_TARGET_ML } from "@/lib/leaderboard/targets";
 
 export const GET = withHandler(
   withAuth(async (req: NextRequest, _ctx: unknown, sessionUser: TokenPayload) => {
@@ -13,11 +14,10 @@ export const GET = withHandler(
     const timeZone = getUserTimezone(req);
     const todayStr = formatInTimezone(new Date(), timeZone);
 
-    const recentLogs = await WaterLog.find({
-      user: userId,
-    })
-      .sort({ createdAt: -1, date: -1 })
-      .limit(100);
+    const [recentLogs, targets] = await Promise.all([
+      WaterLog.find({ user: userId }).sort({ createdAt: -1, date: -1 }).limit(100),
+      resolveUserTargets(userId).catch(() => ({ dailyHydrationTarget: DEFAULT_HYDRATION_TARGET_ML })),
+    ]);
 
     // Filter logs that match today's date in user's timezone (Approved Fix 7)
     const todayLogs = recentLogs.filter((log) => {
@@ -37,7 +37,7 @@ export const GET = withHandler(
       new ApiResponse(200, "Today's water intake fetched successfully", {
         totalMl,
         todayStr,
-        targetAmount: 3000,
+        targetAmount: targets.dailyHydrationTarget,
         logs: todayLogs,
       }),
       { status: 200 }

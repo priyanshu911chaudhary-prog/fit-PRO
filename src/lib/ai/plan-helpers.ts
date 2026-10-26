@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { Exercise } from "@/models/exercise";
 import { FoodItem } from "@/models/foodItem";
 import { AIMealPlanOutput, AIWorkoutPlanOutput } from "./gemini";
+import { invalidateCatalogCache } from "@/lib/cache/redis-cache";
 
 export async function mapAIExercisesToIds(
   schedule: AIWorkoutPlanOutput["schedule"]
@@ -17,8 +18,9 @@ export async function mapAIExercisesToIds(
   }>
 > {
   const allExercises = await Exercise.find({}, "_id name aliases");
+  let hasNewExercise = false;
 
-  return Promise.all(
+  const result = await Promise.all(
     schedule.map(async (day) => {
       const exercises = await Promise.all(
         day.exercises.map(async (ex) => {
@@ -54,6 +56,7 @@ export async function mapAIExercisesToIds(
               );
               if (match) {
                 allExercises.push(match);
+                hasNewExercise = true;
               }
             } catch {
               // On race, fetch existing
@@ -76,6 +79,16 @@ export async function mapAIExercisesToIds(
       };
     })
   );
+
+  if (hasNewExercise) {
+    try {
+      await invalidateCatalogCache("exercises");
+    } catch {
+      // Safe fallback if Redis is unavailable
+    }
+  }
+
+  return result;
 }
 
 export async function mapAIMealsToIds(
@@ -95,8 +108,9 @@ export async function mapAIMealsToIds(
   }>
 > {
   const allFoodItems = await FoodItem.find({}, "_id name aliases");
+  let hasNewFood = false;
 
-  return Promise.all(
+  const result = await Promise.all(
     schedule.map(async (day) => {
       const meals = await Promise.all(
         day.meals.map(async (m) => {
@@ -138,6 +152,7 @@ export async function mapAIMealsToIds(
               );
               if (match) {
                 allFoodItems.push(match);
+                hasNewFood = true;
               }
             } catch {
               match = (await FoodItem.findOne({ name: safeName })) || undefined;
@@ -162,4 +177,14 @@ export async function mapAIMealsToIds(
       };
     })
   );
+
+  if (hasNewFood) {
+    try {
+      await invalidateCatalogCache("foods");
+    } catch {
+      // Safe fallback if Redis is unavailable
+    }
+  }
+
+  return result;
 }

@@ -20,21 +20,31 @@ describe("Integration: Catalog Seeding, Dry-Run & AI Upsert Compatibility", () =
   });
 
   it("executes seedMeals in dry-run mode without modifying any database records", async () => {
+    const foodCountBefore = await FoodItem.countDocuments();
     const report = await seedMeals({ dryRun: true });
 
     expect(report.isDryRun).toBe(true);
     expect(report.totalCatalogItems).toBeGreaterThanOrEqual(300);
     expect(report.inserted).toBe(0);
     expect(report.updated).toBe(0);
+    expect(report.wouldInsert).toBeGreaterThan(0);
+
+    const foodCountAfter = await FoodItem.countDocuments();
+    expect(foodCountAfter).toBe(foodCountBefore);
   });
 
   it("executes seedExercises in dry-run mode without modifying any database records", async () => {
+    const exCountBefore = await Exercise.countDocuments();
     const report = await seedExercises({ dryRun: true });
 
     expect(report.isDryRun).toBe(true);
     expect(report.totalCatalogItems).toBeGreaterThanOrEqual(250);
     expect(report.inserted).toBe(0);
     expect(report.updated).toBe(0);
+    expect(report.wouldInsert).toBeGreaterThan(0);
+
+    const exCountAfter = await Exercise.countDocuments();
+    expect(exCountAfter).toBe(exCountBefore);
   });
 
   it("preserves AI plan mapping compatibility with alias resolution", async () => {

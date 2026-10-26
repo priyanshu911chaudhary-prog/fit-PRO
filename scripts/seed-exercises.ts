@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { Exercise, IExercise } from "../src/models/exercise";
 import { WorkoutLog } from "../src/models/workoutLog";
 import { catalogExercises, ExerciseSeedItem } from "../src/lib/catalog/exercise-catalog-data";
+import { invalidateCatalogCache } from "../src/lib/cache/redis-cache";
 
 export interface ExerciseSeedReport {
   totalCatalogItems: number;
@@ -13,6 +14,9 @@ export interface ExerciseSeedReport {
   conflicts: number;
   skipped: number;
   isDryRun: boolean;
+  wouldInsert: number;
+  wouldUpdate: number;
+  wouldResolveDuplicates: number;
 }
 
 function checkProductionSafety(uri: string) {
@@ -50,6 +54,9 @@ export async function seedExercises(options?: { dryRun?: boolean }): Promise<Exe
     conflicts: 0,
     skipped: 0,
     isDryRun,
+    wouldInsert: 0,
+    wouldUpdate: 0,
+    wouldResolveDuplicates: 0,
   };
 
   try {
@@ -102,9 +109,11 @@ export async function seedExercises(options?: { dryRun?: boolean }): Promise<Exe
         for (const sec of secondary) {
           // If secondary is NOT referenced, it is safe to merge into primary aliases
           if (!referencedExIds.has(String(sec._id))) {
-            report.duplicatesResolved++;
             removedIds.add(String(sec._id));
-            if (!isDryRun) {
+            if (isDryRun) {
+              report.wouldResolveDuplicates++;
+            } else {
+              report.duplicatesResolved++;
               await Exercise.deleteOne({ _id: sec._id });
               await Exercise.updateOne(
                 { _id: primary._id },
@@ -125,8 +134,10 @@ export async function seedExercises(options?: { dryRun?: boolean }): Promise<Exe
       const existing = exactMatch || (normMatches.length > 0 ? normMatches[0] : null);
 
       if (!existing) {
-        report.inserted++;
-        if (!isDryRun) {
+        if (isDryRun) {
+          report.wouldInsert++;
+        } else {
+          report.inserted++;
           await Exercise.create(item);
         }
       } else {
@@ -139,8 +150,10 @@ export async function seedExercises(options?: { dryRun?: boolean }): Promise<Exe
         if (isExactMatch) {
           report.unchanged++;
         } else {
-          report.updated++;
-          if (!isDryRun) {
+          if (isDryRun) {
+            report.wouldUpdate++;
+          } else {
+            report.updated++;
             await Exercise.updateOne(
               { _id: existing._id },
               {
@@ -160,13 +173,22 @@ export async function seedExercises(options?: { dryRun?: boolean }): Promise<Exe
       }
     }
 
+    // Invalidate cached catalog snapshot only on actual writes (never on dry-run)
+    if (!isDryRun && (report.inserted > 0 || report.updated > 0 || report.duplicatesResolved > 0)) {
+      try {
+        await invalidateCatalogCache("exercises");
+      } catch (err) {
+        console.warn("[seed-exercises] Redis cache invalidation skipped or failed:", err);
+      }
+    }
+
     console.log("\n=== EXERCISE CATALOG SEED REPORT ===");
     console.log(`Dry Run:             ${report.isDryRun ? "YES (No writes performed)" : "NO (Database updated)"}`);
     console.log(`Total Curated:       ${report.totalCatalogItems}`);
-    console.log(`Inserted:            ${report.inserted}`);
-    console.log(`Updated:             ${report.updated}`);
+    console.log(`Inserted:            ${report.inserted}${report.isDryRun ? ` (Would Insert: ${report.wouldInsert})` : ""}`);
+    console.log(`Updated:             ${report.updated}${report.isDryRun ? ` (Would Update: ${report.wouldUpdate})` : ""}`);
     console.log(`Unchanged:           ${report.unchanged}`);
-    console.log(`Duplicates Resolved: ${report.duplicatesResolved}`);
+    console.log(`Duplicates Resolved: ${report.duplicatesResolved}${report.isDryRun ? ` (Would Resolve: ${report.wouldResolveDuplicates})` : ""}`);
     console.log(`Conflicts:           ${report.conflicts}`);
     console.log("====================================\n");
 

@@ -1,7 +1,8 @@
 
-import Redis from "ioredis";
 import { ApiError } from "./api-error";
 import { logger } from "../logger";
+import { getRedisClient, ensureRedisConnected } from "../redis/client";
+
 
 export interface RateLimitOptions {
   keyPrefix: string;
@@ -31,37 +32,6 @@ export function getTrustedClientIp(req: Request): string {
   return "127.0.0.1";
 }
 
-// One Redis client per Node.js process.
-const redis = new Redis(
-  process.env.REDIS_URL || "redis://127.0.0.1:6379",
-  {
-    lazyConnect: true,
-    enableOfflineQueue: false,
-    maxRetriesPerRequest: 1,
-    retryStrategy: () => null,
-  }
-);
-
-let connectionPromise: Promise<void> | null = null;
-
-redis.on("error", (error: Error) => {
-  logger.error("Redis rate limiter connection error", {
-    error: error.message,
-  });
-});
-
-async function ensureRedisConnected(): Promise<void> {
-  if (redis.status === "ready") return;
-
-  if (!connectionPromise) {
-    connectionPromise = redis.connect().finally(() => {
-      connectionPromise = null;
-    });
-  }
-
-  await connectionPromise;
-}
-
 /**
  * Atomically increment a counter and initialize its expiry.
  * PTTL gives the remaining window duration in milliseconds.
@@ -89,7 +59,11 @@ export async function checkRateLimit(
   const fallbackReset = new Date(Date.now() + windowMs);
 
   try {
-    await ensureRedisConnected();
+    const redis = getRedisClient();
+    const connected = await ensureRedisConnected(redis);
+    if (!connected) {
+      throw new Error("Redis connection unavailable");
+    }
 
     const result = (await redis.eval(
       INCREMENT_SCRIPT,

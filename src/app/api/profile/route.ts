@@ -12,6 +12,7 @@ import { Bmi } from "@/models/bmi";
 import { Profile } from "@/models/profile";
 import { User } from "@/models/user";
 import { profileSetupSchema, profileUpdateSchema } from "@/validators/profile.validator";
+import { invalidateDashboardCache } from "@/lib/cache/redis-cache";
 
 export const GET = withHandler(
   withAuth(async (_req: NextRequest, _ctx: unknown, sessionUser: TokenPayload) => {
@@ -97,6 +98,12 @@ export const POST = withHandler(
       ? await user.generateAccessToken(true)
       : await signAccessToken({ userId: userId.toString(), email: sessionUser.email, hasProfile: true });
 
+    try {
+      await invalidateDashboardCache(userId);
+    } catch {
+      // Safe fallback if Redis is unavailable
+    }
+
     const response = NextResponse.json(
       new ApiResponse(200, "Profile setup complete. Welcome to the dashboard!", profile),
       { status: 200 }
@@ -164,6 +171,12 @@ export const PATCH = withHandler(
       gender: profile.gender,
       activityLevel: profile.activityLevel,
     });
+
+    try {
+      await invalidateDashboardCache(userId);
+    } catch {
+      // Safe fallback if Redis is unavailable
+    }
 
     return NextResponse.json(
       new ApiResponse(200, "Profile updated successfully", {

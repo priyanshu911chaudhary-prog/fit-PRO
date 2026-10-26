@@ -18,6 +18,7 @@ import {
   logMealSchema,
   mealHistoryQuerySchema,
 } from "@/validators/meal.validator";
+import { invalidateDashboardCache } from "@/lib/cache/redis-cache";
 
 export const POST = withHandler(
   withAuth(async (req: NextRequest, _ctx: unknown, sessionUser: TokenPayload) => {
@@ -107,6 +108,12 @@ export const POST = withHandler(
       "meals.foodItemId",
       "name calories protein carbs fat mealType dietaryPreference servingBasis servingUnit pieceWeightG servingWeightG"
     );
+
+    try {
+      await invalidateDashboardCache(userId);
+    } catch {
+      // Safe fallback if Redis is unavailable
+    }
 
     return NextResponse.json(
       new ApiResponse(201, "Meal logged successfully!", populatedLog),

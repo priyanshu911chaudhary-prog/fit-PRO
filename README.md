@@ -15,16 +15,19 @@ A state-of-the-art, full-stack fitness tracking, workout planning, and real-time
 - **Secure OAuth**: Google OAuth ID token validation via `google-auth-library` (audience check and `email_verified` enforcement); Microsoft OAuth verification via JWKS (`oid`/`sub` + `tid` identification).
 - **Non-Enumerating Auth**: Forgot-password, login, and registration endpoints return uniform timing and messaging, eliminating account enumeration.
 
-### 🛡️ Distributed Mongo TTL Rate Limiting
-- Zero in-memory rate limiters (`express-rate-limit` removed).
-- Built-in, high-performance distributed rate limiter backed by a dedicated MongoDB TTL collection (`RateLimit`), operating seamlessly across serverless instances and Vercel edge nodes.
+### 🛡️ Distributed Redis Rate Limiting & Caching
+- **Distributed Atomic Rate Limiter**: High-performance sliding-window rate limiting backed by Redis and executed atomically via Redis Lua scripting (`ioredis`). Supports IP-level and account/email-level limits.
+- **Fail-Open Policy & Availability Trade-off**: If Redis is offline or encounters a connection error, the rate limiter fails open (`allowed: true`) to preserve critical application availability while logging centralized errors for observability.
+- **Catalog Snapshot Caching**: Shared Redis snapshots for complete exercise and active food catalogs (~10m TTL) with in-memory filtering, alias resolution, and pagination.
+- **Per-User Dashboard Caching**: Complete computed dashboard results cached for 30s isolated per authenticated user ID and timezone, with instant versioned invalidation on data mutations.
+- **Graceful Fallback**: If Redis is unreachable, all catalog and dashboard reads transparently fall back to direct MongoDB queries without throwing errors.
 
 ### 🤖 AI Coach & Smart Plan Generation
 - **Official Google Gemini SDK**: Uses `@google/genai` with model configurable via `GEMINI_MODEL` (defaults to `gemini-2.5-flash`).
 - **Real-Time Streaming Coach**: Interactive SSE streaming endpoint (`/api/coach`) providing immediate conversational feedback, formatted markdown, and mandatory health disclaimers.
 - **Legacy AI Chat Contract**: Full backward compatibility with the Express `POST /api/ai/chat` endpoint.
 - **Structured Plan Generation**: Generates 7-day personalized workout splits and daily meal plans using Gemini structured JSON schemas validated with Zod.
-- **Automatic Catalog Upserting**: Normalizes and idempotently upserts AI-recommended exercises and foods into the database catalog.
+- **Automatic Catalog Upserting**: Normalizes and idempotently upserts AI-recommended exercises and foods into the database catalog and safely invalidates cached catalog snapshots.
 
 ### 📊 Precision Metrics & Tracking
 - **Mifflin-St Jeor Engine**: Live dynamic computation of BMR (Basal Metabolic Rate) and TDEE (Total Daily Energy Expenditure), deriving age dynamically from Date of Birth.
@@ -44,10 +47,12 @@ A state-of-the-art, full-stack fitness tracking, workout planning, and real-time
 | **Styling & UI** | [Tailwind CSS v4](https://tailwindcss.com/), [Base UI](https://base-ui.com/), [shadcn/ui](https://ui.shadcn.com/), [Lucide React](https://lucide.dev/) |
 | **Data Visualization**| [Recharts 3](https://recharts.org/) |
 | **Database & ODM** | [MongoDB Atlas](https://www.mongodb.com/atlas), [Mongoose 9](https://mongoosejs.com/) (Cached global singleton) |
+| **In-Memory Cache & Limiter** | [Redis 7](https://redis.io/), [ioredis](https://github.com/redis/ioredis) (Lazy connection singleton, Lua atomic rate limiting, versioned cache-aside) |
 | **Validation** | [Zod 4](https://zod.dev/) (Shared across API route handlers and React Hook Form) |
 | **Artificial Intelligence** | [Google Gen AI SDK (`@google/genai`)](https://www.npmjs.com/package/@google/genai) |
 | **State & Data Fetching** | [TanStack React Query v5](https://tanstack.com/query/latest) |
 | **Testing** | [Vitest](https://vitest.dev/) |
+
 
 ---
 
@@ -258,17 +263,71 @@ All API endpoints return a standardized, uniform response envelope:
 
 ---
 
+## ⚡ Redis Infrastructure & Caching Architecture
+
+Fit-PRO uses a centralized Redis infrastructure layer (`src/lib/redis/client.ts` and `src/lib/cache/redis-cache.ts`) designed for resilient high-throughput operations.
+
+### 1. Connection Architecture
+- **Process Singleton**: A single Redis connection is shared across the entire Node.js process.
+- **Lazy Connection & Bounded Retries**: `lazyConnect: true`, `enableOfflineQueue: false`, `maxRetriesPerRequest: 1`, and `commandTimeout: 3000ms` ensure connection attempts fail fast rather than stalling request lifecycles.
+- **Server-Only Boundary**: Redis is used strictly in Node.js server runtimes, never in Edge runtime modules.
+
+### 2. Distributed Rate Limiting & Fail-Open Policy
+- **Atomic Sliding Window**: Evaluated via server-side Redis Lua scripts (`PTTL` + `INCR` + `PEXPIRE`) to guarantee atomicity under high concurrent load.
+- **Fail-Open Policy**: When Redis is unavailable or disconnected, rate limiting fails open (`allowed: true`, remaining quota 1). This architectural trade-off prioritizes end-user availability and prevents transient infrastructure outages from blocking critical user logins or health logging, while logging errors with full observability.
+
+### 3. Catalog Snapshot Caching
+- **Cached Datasets**:
+  - Complete Exercise Catalog (`catalog:exercises:snapshot:v{version}`)
+  - Active Food Items Catalog (`catalog:foods:snapshot:v{version}`)
+- **TTL**: 600 seconds (10 minutes).
+- **Execution Model**: The full dataset snapshot is cached in Redis; client filtering (`q`, `targetMuscle`, `equipment`, `category`, `mealType`, `dietaryPreference`), case-insensitive alias matching, sorting, and pagination are executed in memory with zero MongoDB load on cache hits.
+- **Invalidation Strategy**: O(1) versioned namespace invalidation (`cache:v:catalog:exercises` and `cache:v:catalog:foods`). Invalidation triggers when actual writes occur during:
+  - `scripts/seed-exercises.ts` (live seed only; skipped on dry run)
+  - `scripts/seed-meals.ts` (live seed only; skipped on dry run)
+  - `src/lib/ai/plan-helpers.ts` (when novel exercises or foods are upserted into the catalog)
+
+### 4. User Dashboard Caching
+- **Cached Dataset**: Complete computed dashboard summary (`dashboard:{userId}:v{version}:{timeZone}`).
+- **TTL**: 30 seconds.
+- **Cache Isolation**: Strongly isolated by authenticated user ID and client timezone. Private metrics are never shared across users.
+- **Baseline BMI Auto-Seeding**: Preserves automatic initial Day-1 BMI creation on cache misses when profile metrics are present.
+- **Comprehensive Invalidation Coverage**: Instant O(1) version increment (`cache:v:dashboard:{userId}`) executed across all 9 mutation paths:
+  1. `POST /api/workout`
+  2. `DELETE /api/workout/[id]`
+  3. `POST /api/meal`
+  4. `DELETE /api/meal/[id]`
+  5. `POST /api/water`
+  6. `DELETE /api/water/[id]`
+  7. `POST /api/profile`
+  8. `PATCH /api/profile`
+  9. `POST /api/bmi`
+
+### 5. Redis Outage & Failure Recovery
+- **Transparent MongoDB Fallback**: If Redis reads, writes, or connections fail, the application falls back directly to MongoDB without surfacing errors to users.
+- **Safe Invalidation**: Invalidation failures are caught and logged; they never convert a successfully persisted database write into an HTTP 500 error. The bounded TTL ensures eventual consistency in the worst case.
+
+### 6. Observability & Logging
+- `debug`: `Cache hit` with `key`.
+- `info`: `Cache miss` with `key` and `ttlSeconds`.
+- `info`: `Cache namespace invalidated` with `namespace` and `newVersion`.
+- `warn`: `Cache read error; treating as miss` or `Cache write error`.
+- Sensitive data, tokens, passwords, and serialized bodies are never logged.
+
+---
+
 ## 🧪 Enterprise Testing Suite (Showcase)
 
 This application includes a production-grade testing suite designed to showcase testing maturity and software craftsmanship across all levels of the testing pyramid.
 
 | Layer | Runner & Tools | Test Target | Key Highlights |
 | :--- | :--- | :--- | :--- |
-| **Unit** | Vitest 5 | `tests/unit/` | Zod schema validation boundaries, bcrypt 72-byte caps, Mifflin-St Jeor BMR math, JWT HS256 tokens |
+| **Unit** | Vitest 5 | `tests/unit/` | Zod schema validation boundaries, bcrypt 72-byte caps, Mifflin-St Jeor BMR math, JWT HS256 tokens, Redis cache utility |
 | **Component** | Testing Library + Happy-DOM | `tests/components/` | Form submissions, loading spinners, password visibility toggles, reactive metric cards |
-| **API & Contract** | Vitest 5 | `tests/api/` | Standardized `{ statusCode, success, message, data }` envelopes (200–500), atomic Mongo TTL rate limiting |
-| **DB Integration** | Vitest + Isolated Atlas DB | `tests/integration/` | Real MongoDB persistence, relational cascading, Day-1 initial BMI records, isolated teardown |
+| **API & Contract** | Vitest 5 | `tests/api/` | Standardized envelopes (200–500), atomic Redis rate limiting & fail-open policy, catalog caching, dashboard caching |
+| **DB Integration** | Vitest + Isolated Test DB | `tests/integration/` | Real MongoDB persistence, deterministic exercise reconciliation fixtures, dry-run zero-write validation, isolated teardown |
 | **E2E Journeys** | Playwright 1.64 | `tests/e2e/` | 4 critical user flows: Auth lifecycle, Biometrics & BMI, Daily hydration tracking, Gemini AI Coach |
+
 
 ### Test Commands
 ```bash

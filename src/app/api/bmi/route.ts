@@ -10,6 +10,7 @@ import { formatInTimezone, getUserTimezone } from "@/lib/timezone";
 import { Bmi } from "@/models/bmi";
 import { Profile } from "@/models/profile";
 import { logBmiSchema } from "@/validators/bmi.validator";
+import { invalidateDashboardCache } from "@/lib/cache/redis-cache";
 
 export const POST = withHandler(
   withAuth(async (req: NextRequest, _ctx: unknown, sessionUser: TokenPayload) => {
@@ -33,6 +34,12 @@ export const POST = withHandler(
       { weight: body.weight, height: body.height },
       { runValidators: true }
     );
+
+    try {
+      await invalidateDashboardCache(userId);
+    } catch {
+      // Safe fallback if Redis is unavailable
+    }
 
     return NextResponse.json(
       new ApiResponse(201, "BMI logged successfully.", bmiRecord),

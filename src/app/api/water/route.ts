@@ -7,6 +7,7 @@ import { validateBody } from "@/lib/api/with-validation";
 import { TokenPayload } from "@/lib/auth/jwt";
 import { WaterLog } from "@/models/waterLog";
 import { logWaterSchema } from "@/validators/water.validator";
+import { invalidateDashboardCache } from "@/lib/cache/redis-cache";
 
 export const POST = withHandler(
   withAuth(async (req: NextRequest, _ctx: unknown, sessionUser: TokenPayload) => {
@@ -18,6 +19,12 @@ export const POST = withHandler(
       amountMl: body.amountMl,
       date: body.date || new Date(),
     });
+
+    try {
+      await invalidateDashboardCache(userId);
+    } catch {
+      // Safe fallback if Redis is unavailable
+    }
 
     return NextResponse.json(
       new ApiResponse(201, "Water intake logged successfully", waterLog),

@@ -241,13 +241,17 @@ export async function reconcileLegacyExercises(options?: { dryRun?: boolean }): 
   const exById = new Map(initialExercises.map((e) => [String(e._id), e]));
   const exByName = new Map(initialExercises.map((e) => [e.name.toLowerCase().trim(), e]));
 
-  // Attempt transaction if supported (replica set)
+  // Attempt transaction only if supported (replica set or sharded, not standalone Single)
   let session: mongoose.mongo.ClientSession | null = null;
-  try {
-    session = await mongoose.startSession();
-    session.startTransaction();
-  } catch {
-    session = null;
+  const topologyType = (mongoose.connection as unknown as { client?: { topology?: { description?: { type?: string } } } })?.client?.topology?.description?.type;
+  const supportsTransactions = topologyType && topologyType !== "Single" && topologyType !== "Unknown";
+  if (supportsTransactions) {
+    try {
+      session = await mongoose.startSession();
+      session.startTransaction();
+    } catch {
+      session = null;
+    }
   }
 
   try {

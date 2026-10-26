@@ -4,6 +4,7 @@ import { FoodItem } from "../src/models/foodItem";
 import { MealLog } from "../src/models/mealLog";
 import { formatInTimezone } from "../src/lib/timezone";
 import { catalogFoods, FoodSeedItem } from "../src/lib/catalog/food-catalog-data";
+import { invalidateCatalogCache } from "../src/lib/cache/redis-cache";
 
 export interface SeedReport {
   totalCatalogItems: number;
@@ -16,6 +17,11 @@ export interface SeedReport {
   legacyDeactivated: number;
   backfilledMealLogs: number;
   isDryRun: boolean;
+  wouldInsert: number;
+  wouldUpdate: number;
+  wouldResolveDuplicates: number;
+  wouldDeactivateLegacy: number;
+  wouldBackfillMealLogs: number;
 }
 
 function checkProductionSafety(uri: string) {
@@ -87,6 +93,11 @@ export async function seedMeals(options?: { dryRun?: boolean }): Promise<SeedRep
     legacyDeactivated: 0,
     backfilledMealLogs: 0,
     isDryRun,
+    wouldInsert: 0,
+    wouldUpdate: 0,
+    wouldResolveDuplicates: 0,
+    wouldDeactivateLegacy: 0,
+    wouldBackfillMealLogs: 0,
   };
 
   try {
@@ -125,9 +136,11 @@ export async function seedMeals(options?: { dryRun?: boolean }): Promise<SeedRep
 
         for (const sec of secondary) {
           if (!referencedFoodIds.has(String(sec._id))) {
-            report.duplicatesResolved++;
             removedIds.add(String(sec._id));
-            if (!isDryRun) {
+            if (isDryRun) {
+              report.wouldResolveDuplicates++;
+            } else {
+              report.duplicatesResolved++;
               await FoodItem.deleteOne({ _id: sec._id });
               await FoodItem.updateOne(
                 { _id: primary._id },
@@ -150,8 +163,10 @@ export async function seedMeals(options?: { dryRun?: boolean }): Promise<SeedRep
       const existing = exactMatch || (normMatches.length > 0 ? normMatches[0] : null);
 
       if (!existing) {
-        report.inserted++;
-        if (!isDryRun) {
+        if (isDryRun) {
+          report.wouldInsert++;
+        } else {
+          report.inserted++;
           await FoodItem.create(item);
         }
       } else {
@@ -170,7 +185,7 @@ export async function seedMeals(options?: { dryRun?: boolean }): Promise<SeedRep
           report.unchanged++;
         } else {
           // Check for significant conflict with existing non-AI curated data
-          const isLegacyAI = (existing as any).servingBasis === undefined;
+          const isLegacyAI = (existing as unknown as { servingBasis?: unknown }).servingBasis === undefined;
           if (!isLegacyAI && Math.abs(existing.calories - item.calories) > 50) {
             report.conflicts++;
             console.warn(
@@ -178,8 +193,10 @@ export async function seedMeals(options?: { dryRun?: boolean }): Promise<SeedRep
             );
           }
 
-          report.updated++;
-          if (!isDryRun) {
+          if (isDryRun) {
+            report.wouldUpdate++;
+          } else {
+            report.updated++;
             await FoodItem.updateOne(
               { _id: existing._id },
               {
@@ -198,25 +215,42 @@ export async function seedMeals(options?: { dryRun?: boolean }): Promise<SeedRep
     for (const f of existingFoods) {
       const norm = f.name.toLowerCase().replace(/[^a-z0-9]/g, "");
       if (!curatedNorms.has(norm) && f.isActive !== false) {
-        report.legacyDeactivated++;
-        if (!isDryRun) {
+        if (isDryRun) {
+          report.wouldDeactivateLegacy++;
+        } else {
+          report.legacyDeactivated++;
           await FoodItem.updateOne({ _id: f._id }, { $set: { isActive: false } });
         }
       }
     }
 
-    report.backfilledMealLogs = await backfillLegacyMealLogs(isDryRun);
+    if (isDryRun) {
+      report.wouldBackfillMealLogs = await backfillLegacyMealLogs(true);
+      report.backfilledMealLogs = 0;
+    } else {
+      report.backfilledMealLogs = await backfillLegacyMealLogs(false);
+      report.wouldBackfillMealLogs = 0;
+    }
+
+    // Invalidate cached food catalog snapshot only on actual writes (never on dry-run)
+    if (!isDryRun && (report.inserted > 0 || report.updated > 0 || report.duplicatesResolved > 0 || report.legacyDeactivated > 0)) {
+      try {
+        await invalidateCatalogCache("foods");
+      } catch (err) {
+        console.warn("[seed-meals] Redis cache invalidation skipped or failed:", err);
+      }
+    }
 
     console.log("\n=== MEAL CATALOG SEED REPORT ===");
     console.log(`Dry Run:             ${report.isDryRun ? "YES (No writes performed)" : "NO (Database updated)"}`);
     console.log(`Total Curated:       ${report.totalCatalogItems}`);
-    console.log(`Inserted:            ${report.inserted}`);
-    console.log(`Updated:             ${report.updated}`);
+    console.log(`Inserted:            ${report.inserted}${report.isDryRun ? ` (Would Insert: ${report.wouldInsert})` : ""}`);
+    console.log(`Updated:             ${report.updated}${report.isDryRun ? ` (Would Update: ${report.wouldUpdate})` : ""}`);
     console.log(`Unchanged:           ${report.unchanged}`);
-    console.log(`Duplicates Resolved: ${report.duplicatesResolved}`);
+    console.log(`Duplicates Resolved: ${report.duplicatesResolved}${report.isDryRun ? ` (Would Resolve: ${report.wouldResolveDuplicates})` : ""}`);
     console.log(`Conflicts Handled:   ${report.conflicts}`);
-    console.log(`Legacy Deactivated:  ${report.legacyDeactivated}`);
-    console.log(`Backfilled Logs:     ${report.backfilledMealLogs}`);
+    console.log(`Legacy Deactivated:  ${report.legacyDeactivated}${report.isDryRun ? ` (Would Deactivate: ${report.wouldDeactivateLegacy})` : ""}`);
+    console.log(`Backfilled Logs:     ${report.backfilledMealLogs}${report.isDryRun ? ` (Would Backfill: ${report.wouldBackfillMealLogs})` : ""}`);
     console.log("================================\n");
 
     return report;

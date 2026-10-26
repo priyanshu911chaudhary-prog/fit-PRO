@@ -6,6 +6,7 @@ import { withAuth } from "@/lib/api/with-auth";
 import { withHandler } from "@/lib/api/with-handler";
 import { TokenPayload } from "@/lib/auth/jwt";
 import { WorkoutLog } from "@/models/workoutLog";
+import { invalidateDashboardCache } from "@/lib/cache/redis-cache";
 
 export const DELETE = withHandler(
   withAuth(
@@ -23,6 +24,12 @@ export const DELETE = withHandler(
 
       if (!deleted) {
         throw new ApiError(404, "Workout log not found or unauthorized");
+      }
+
+      try {
+        await invalidateDashboardCache(sessionUser.userId);
+      } catch {
+        // Safe fallback if Redis is unavailable
       }
 
       return NextResponse.json(

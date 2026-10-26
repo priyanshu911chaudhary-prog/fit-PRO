@@ -11,6 +11,7 @@ import { Exercise } from "@/models/exercise";
 import { WorkoutLog } from "@/models/workoutLog";
 import { getUserTimezone, getDayBoundsInTimezone, formatInTimezone } from "@/lib/timezone";
 import { calculateEstimatedCaloriesBurn } from "@/features/workout/lib/calculations";
+import { invalidateDashboardCache } from "@/lib/cache/redis-cache";
 import {
   logWorkoutSchema,
   workoutHistoryQuerySchema,
@@ -45,6 +46,12 @@ export const POST = withHandler(
       "exercises.exerciseId",
       "name targetMuscle category equipment"
     );
+
+    try {
+      await invalidateDashboardCache(userId);
+    } catch {
+      // Safe fallback if Redis is unavailable
+    }
 
     return NextResponse.json(
       new ApiResponse(201, "Workout logged successfully!", populatedLog),

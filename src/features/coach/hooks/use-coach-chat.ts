@@ -1,16 +1,27 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import type { ConversationSummary, ChatMessage } from "../types";
 import { DEFAULT_WELCOME_MESSAGE, LOCAL_STORAGE_ACTIVE_CHAT_KEY } from "../lib/constants";
 
+export const ALLOWED_COACH_INTENT_PROMPTS: Record<string, string> = {
+  "adjust-workout": "Can you help me adapt today's scheduled workout to my current time and energy level?",
+  "protein-ideas": "I need some quick and healthy meal or snack ideas to hit my remaining protein target for today.",
+  "hydration-plan": "Can you give me a simple plan to stay on track with my daily hydration goal?",
+};
+
 export function useCoachChat() {
+  const searchParams = useSearchParams();
+  const intent = searchParams?.get("intent");
+  const initialPrompt = (intent && ALLOWED_COACH_INTENT_PROMPTS[intent]) || "";
+
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [activeTitle, setActiveTitle] = useState<string>("New Consultation");
   const [messages, setMessages] = useState<ChatMessage[]>([DEFAULT_WELCOME_MESSAGE]);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(initialPrompt);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);

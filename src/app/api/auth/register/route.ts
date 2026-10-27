@@ -5,7 +5,7 @@ import { ApiResponse } from "@/lib/api/api-response";
 import { checkRateLimit } from "@/lib/api/rate-limit";
 import { withHandler } from "@/lib/api/with-handler";
 import { validateBody } from "@/lib/api/with-validation";
-import { emailVerificationTemplate, sendEmail } from "@/lib/email";
+import { enqueueEmailVerification } from "@/lib/queues/jobs";
 import { env } from "@/lib/env";
 import { User } from "@/models/user";
 import { registerSchema } from "@/validators/auth.validator";
@@ -45,10 +45,10 @@ export const POST = withHandler(async (req: NextRequest) => {
 
   let emailSent = true;
   try {
-    await sendEmail({
-      email: user.email,
-      subject: "Verify Your Email Address",
-      mailgenContent: emailVerificationTemplate(user.fullName, verificationLink),
+    await enqueueEmailVerification({
+      recipientEmail: user.email,
+      fullName: user.fullName,
+      verificationLink,
     });
   } catch {
     emailSent = false;

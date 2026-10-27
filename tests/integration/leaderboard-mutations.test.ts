@@ -88,7 +88,7 @@ describe("Leaderboard Mutation Triggers & Outbox Resilience (Part D & Part G)", 
     await MealLog.deleteMany({ user: user.id });
     await WaterLog.deleteMany({ user: user.id });
     await WeeklyLeaderboardEntry.deleteMany({ user: user.id });
-    await LeaderboardOutbox.deleteMany({ user: user.id });
+    await LeaderboardOutbox.deleteMany({});
     if (redis) {
       await redis.del(`leaderboard:weekly:${currentWeek.weekStart}`);
     }

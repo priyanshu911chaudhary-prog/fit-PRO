@@ -150,6 +150,35 @@ export const passwordResetTemplate = (username: string, resetLink: string): Mail
   };
 };
 
+export const wellnessEmailTemplate = (
+  username: string,
+  title: string,
+  message: string,
+  actionUrl: string,
+  preferencesUrl: string,
+  unsubscribeUrl?: string
+): MailContent => {
+  const outroText = unsubscribeUrl
+    ? `You are receiving this wellness nudge because you enabled Fit-PRO wellness emails. You can adjust your notification preferences (${preferencesUrl}) or unsubscribe from wellness emails with one click: ${unsubscribeUrl}`
+    : `You are receiving this wellness nudge because you enabled Fit-PRO wellness emails. You can adjust your reminders or unsubscribe at any time: ${preferencesUrl}`;
+
+  return {
+    body: {
+      name: username,
+      intro: message,
+      action: {
+        instructions: "Head over to Fit-PRO to view your progress:",
+        button: {
+          text: title,
+          link: actionUrl,
+          color: "#4F46E5",
+        },
+      },
+      outro: outroText,
+    },
+  };
+};
+
 export interface SendEmailOptions {
   email: string;
   subject: string;

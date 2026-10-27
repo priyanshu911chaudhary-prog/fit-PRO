@@ -12,7 +12,6 @@ import { rebuildRedisLeaderboard } from "@/lib/leaderboard/redis-ranking";
  * Protected by authentication (withAuth).
  * Drains pending outbox jobs and reconstructs Redis rankings from durable MongoDB records.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const POST = withHandler(
   withAuth(async (req: NextRequest, _ctx: unknown, sessionUser: TokenPayload) => {
     let body: { weekStart?: string; drainOutboxOnly?: boolean } = {};

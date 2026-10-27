@@ -20,6 +20,7 @@ import {
 } from "@/validators/meal.validator";
 import { invalidateDashboardCache } from "@/lib/cache/redis-cache";
 import { recalculateUserWeeklyScore } from "@/lib/leaderboard/recomputation";
+import { enqueueLeaderboardRecalculation } from "@/lib/queues/jobs";
 
 export const POST = withHandler(
   withAuth(async (req: NextRequest, _ctx: unknown, sessionUser: TokenPayload) => {
@@ -120,6 +121,24 @@ export const POST = withHandler(
       await recalculateUserWeeklyScore(userId);
     } catch {
       // Safe fallback: failure is queued into LeaderboardOutbox
+    }
+
+    try {
+      await enqueueLeaderboardRecalculation({ userId });
+    } catch {
+      // Safe fallback: handled via durable outbox
+    }
+
+    try {
+      const { enqueueActivityEvaluation } = await import("@/lib/queues/jobs");
+      await enqueueActivityEvaluation({
+        userId,
+        eventType: "meal",
+        logId: newLog._id.toString(),
+        date: consumedDate,
+      });
+    } catch {
+      // Safe fallback
     }
 
     return NextResponse.json(

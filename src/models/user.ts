@@ -11,6 +11,7 @@ export interface IUser extends Document {
   providerId?: string | null;
   password?: string;
   isVerified: boolean;
+  role: "user" | "admin";
   googleId?: string | null;
   microsoftId?: string | null;
   refreshToken?: string;
@@ -56,6 +57,12 @@ const userSchema = new Schema<IUser>(
     providerId: {
       type: String,
       default: null,
+    },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+      index: true,
     },
     password: {
       type: String,
@@ -137,6 +144,7 @@ userSchema.methods.generateAccessToken = async function (hasProfile?: boolean): 
   return await signAccessToken({
     userId: this._id.toString(),
     email: this.email,
+    role: this.role || "user",
     hasProfile: isProfileComplete,
   });
 };

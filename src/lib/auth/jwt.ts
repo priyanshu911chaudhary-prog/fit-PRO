@@ -4,6 +4,7 @@ import { env } from "../env";
 export interface TokenPayload {
   userId: string;
   email: string;
+  role?: string;
   hasProfile?: boolean;
 }
 
@@ -33,6 +34,7 @@ export async function verifyAccessToken(token: string): Promise<TokenPayload> {
   return {
     userId: payload.userId as string,
     email: payload.email as string,
+    role: (payload.role as string) || "user",
     hasProfile: payload.hasProfile as boolean | undefined,
   };
 }

@@ -4,7 +4,7 @@ import { ApiResponse } from "@/lib/api/api-response";
 import { checkRateLimit } from "@/lib/api/rate-limit";
 import { withHandler } from "@/lib/api/with-handler";
 import { validateBody } from "@/lib/api/with-validation";
-import { passwordResetTemplate, sendEmail } from "@/lib/email";
+import { enqueuePasswordReset } from "@/lib/queues/jobs";
 import { env } from "@/lib/env";
 import { User } from "@/models/user";
 import { forgotPasswordSchema } from "@/validators/auth.validator";
@@ -42,10 +42,10 @@ export const POST = withHandler(async (req: NextRequest) => {
 
     const resetLink = `${env.APP_URL}/reset-password/${unhasedToken}`;
 
-    await sendEmail({
-      email: user.email,
-      subject: "Reset Your Password",
-      mailgenContent: passwordResetTemplate(user.fullName, resetLink),
+    await enqueuePasswordReset({
+      recipientEmail: user.email,
+      fullName: user.fullName,
+      resetLink,
     });
   }
 

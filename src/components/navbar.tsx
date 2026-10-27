@@ -34,6 +34,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 
 const NAV_ITEMS = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -119,7 +120,8 @@ export function Navbar() {
             {isLoading ? (
               <div className="size-8 rounded-full bg-muted/60 animate-pulse" />
             ) : isAuthenticated && user ? (
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
+                <NotificationBell />
                 <DropdownMenu>
                   <DropdownMenuTrigger
                     id="user-nav-dropdown"

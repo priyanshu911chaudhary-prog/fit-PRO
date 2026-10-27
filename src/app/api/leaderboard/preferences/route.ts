@@ -10,7 +10,7 @@ import { WeeklyLeaderboardEntry } from "@/models/weeklyLeaderboardEntry";
 import { User } from "@/models/user";
 import { resolveUserTargets } from "@/lib/leaderboard/targets";
 import { getCompetitionWeek, getNextCompetitionWeek } from "@/lib/leaderboard/calendar";
-import { recalculateUserWeeklyScore } from "@/lib/leaderboard/recomputation";
+import { enqueueLeaderboardRecalculation } from "@/lib/queues/jobs";
 import { removeRedisLeaderboardParticipant } from "@/lib/leaderboard/redis-ranking";
 
 export const GET = withHandler(
@@ -134,9 +134,9 @@ export const PATCH = withHandler(
 
     await settings.save();
 
-    // Recompute current week score to apply changes
+    // Recompute current week score to apply changes asynchronously
     if (settings.optIn) {
-      await recalculateUserWeeklyScore(userId, weekStart).catch(() => {});
+      await enqueueLeaderboardRecalculation({ userId, weekStart }).catch(() => {});
     }
 
     return NextResponse.json(

@@ -8,6 +8,7 @@ import { TokenPayload } from "@/lib/auth/jwt";
 import { MealLog } from "@/models/mealLog";
 import { invalidateDashboardCache } from "@/lib/cache/redis-cache";
 import { recalculateUserWeeklyScore } from "@/lib/leaderboard/recomputation";
+import { enqueueLeaderboardRecalculation } from "@/lib/queues/jobs";
 
 export const DELETE = withHandler(
   withAuth(
@@ -37,6 +38,12 @@ export const DELETE = withHandler(
         await recalculateUserWeeklyScore(sessionUser.userId);
       } catch {
         // Safe fallback: failure is queued into LeaderboardOutbox
+      }
+
+      try {
+        await enqueueLeaderboardRecalculation({ userId: sessionUser.userId });
+      } catch {
+        // Safe fallback: handled via durable outbox
       }
 
       return NextResponse.json(

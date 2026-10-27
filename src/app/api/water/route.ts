@@ -9,6 +9,7 @@ import { WaterLog } from "@/models/waterLog";
 import { logWaterSchema } from "@/validators/water.validator";
 import { invalidateDashboardCache } from "@/lib/cache/redis-cache";
 import { recalculateUserWeeklyScore } from "@/lib/leaderboard/recomputation";
+import { enqueueLeaderboardRecalculation } from "@/lib/queues/jobs";
 
 export const POST = withHandler(
   withAuth(async (req: NextRequest, _ctx: unknown, sessionUser: TokenPayload) => {
@@ -31,6 +32,27 @@ export const POST = withHandler(
       await recalculateUserWeeklyScore(userId);
     } catch {
       // Safe fallback: failure is queued into LeaderboardOutbox
+    }
+
+    try {
+      await enqueueLeaderboardRecalculation({ userId });
+    } catch {
+      // Safe fallback: handled via durable outbox
+    }
+
+    try {
+      const userTimezone = req.headers.get("x-timezone")?.trim() || "Asia/Kolkata";
+      const { formatInTimezone } = await import("@/lib/timezone");
+      const localDate = formatInTimezone(waterLog.date, userTimezone);
+      const { enqueueActivityEvaluation } = await import("@/lib/queues/jobs");
+      await enqueueActivityEvaluation({
+        userId,
+        eventType: "water",
+        logId: waterLog._id.toString(),
+        date: localDate,
+      });
+    } catch {
+      // Safe fallback
     }
 
     return NextResponse.json(

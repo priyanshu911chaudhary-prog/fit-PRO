@@ -13,6 +13,7 @@ import { getUserTimezone, getDayBoundsInTimezone, formatInTimezone } from "@/lib
 import { calculateEstimatedCaloriesBurn } from "@/features/workout/lib/calculations";
 import { invalidateDashboardCache } from "@/lib/cache/redis-cache";
 import { recalculateUserWeeklyScore } from "@/lib/leaderboard/recomputation";
+import { enqueueLeaderboardRecalculation } from "@/lib/queues/jobs";
 import {
   logWorkoutSchema,
   workoutHistoryQuerySchema,
@@ -58,6 +59,24 @@ export const POST = withHandler(
       await recalculateUserWeeklyScore(userId);
     } catch {
       // Safe fallback: failure is queued into LeaderboardOutbox
+    }
+
+    try {
+      await enqueueLeaderboardRecalculation({ userId });
+    } catch {
+      // Safe fallback: handled via durable outbox
+    }
+
+    try {
+      const { enqueueActivityEvaluation } = await import("@/lib/queues/jobs");
+      await enqueueActivityEvaluation({
+        userId,
+        eventType: "workout",
+        logId: newLog._id.toString(),
+        date: logDate,
+      });
+    } catch {
+      // Safe fallback
     }
 
     return NextResponse.json(

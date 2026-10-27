@@ -62,6 +62,8 @@ ROUTE_MAP.md
 !/scripts/reconcile-legacy-exercises.ts
 !/scripts/validate-catalog-data.ts
 !/scripts/parse-ledger.js
+!/scripts/build-worker.ts
 /legacy_backend
 
+/dist
 /.agents

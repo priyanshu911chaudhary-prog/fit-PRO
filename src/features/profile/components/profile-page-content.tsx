@@ -8,6 +8,7 @@ import { ProfileHeader } from "./profile-header";
 import { ProfileTelemetryStrip } from "./profile-telemetry-strip";
 import { ProfileBiometricsForm } from "./profile-biometrics-form";
 import { ProfileSecurityCard } from "./profile-security-card";
+import { ProfileNotificationSettingsCard } from "./profile-notification-settings-card";
 
 export function ProfilePageContent() {
   const {
@@ -99,6 +100,9 @@ export function ProfilePageContent() {
         isChangingPassword={isChangingPassword}
         onChangePassword={handleChangePassword}
       />
+
+      {/* 5. Smart Fitness Nudges & Reminders */}
+      <ProfileNotificationSettingsCard />
     </div>
   );
 }

@@ -27,6 +27,13 @@ const envSchema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   EMAIL_FROM: z.string().default("AI Fitness <noreply@ai-fitness.com>"),
+  NEXT_PUBLIC_VAPID_PUBLIC_KEY: z
+    .string()
+    .default("BPKkV4JKJiqgsTNdGFL318UX_TzjvRIV5BFmSdnPtS5IrN9o6u1g5Ea8opRm9n0htPbUhPzXyVnCQevmjSN7CI4"),
+  VAPID_PRIVATE_KEY: z
+    .string()
+    .default("xjmJTDNSlC7ot51P25s8w-EDi0xzrarcJ5SR2xN3rDs"),
+  VAPID_SUBJECT: z.string().default("mailto:support@fitpro.local"),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -91,6 +98,12 @@ export function getEnv(): Env {
       SMTP_USER: process.env.SMTP_USER,
       SMTP_PASS: process.env.SMTP_PASS,
       EMAIL_FROM: process.env.EMAIL_FROM || "AI Fitness <noreply@ai-fitness.com>",
+      NEXT_PUBLIC_VAPID_PUBLIC_KEY:
+        process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
+        "BPKkV4JKJiqgsTNdGFL318UX_TzjvRIV5BFmSdnPtS5IrN9o6u1g5Ea8opRm9n0htPbUhPzXyVnCQevmjSN7CI4",
+      VAPID_PRIVATE_KEY:
+        process.env.VAPID_PRIVATE_KEY || "xjmJTDNSlC7ot51P25s8w-EDi0xzrarcJ5SR2xN3rDs",
+      VAPID_SUBJECT: process.env.VAPID_SUBJECT || "mailto:support@fitpro.local",
     };
     return parsedEnv;
   }

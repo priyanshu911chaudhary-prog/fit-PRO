@@ -87,40 +87,72 @@ export async function removeRedisLeaderboardParticipant(
 
 /**
  * Rebuilds the Redis sorted set from durable MongoDB records for a given week.
+ * Protected by distributed lock and atomic rename to prevent race conditions
+ * or intermediate empty states while re-ranking.
  */
 export async function rebuildRedisLeaderboard(weekStart: string): Promise<number> {
   const redis = getRedisClient();
   const key = getLeaderboardRedisKey(weekStart);
+  const lockKey = `lock:leaderboard:reconcile:${weekStart}`;
+  const tempKey = `${key}:reconcile:${Date.now()}`;
 
-  const eligibleEntries = await WeeklyLeaderboardEntry.find({
-    weekStart,
-    isEligible: true,
-  }).select("user scoreBasisPoints");
-
-  if (eligibleEntries.length === 0) {
-    try {
-      await redis.del(key);
-    } catch {
-      // safe fallback
+  // Acquire concurrency lock (30s TTL) to prevent conflicting parallel rebuilds
+  let acquiredLock = false;
+  try {
+    const lockResult = await redis.set(lockKey, "locked", "PX", 30000, "NX");
+    if (!lockResult) {
+      logger.warn("Reconciliation skipped: another rebuild is already in progress", { weekStart });
+      return 0;
     }
-    return 0;
+    acquiredLock = true;
+  } catch (err) {
+    // If Redis lock fails, proceed with caution or log warning
+    logger.warn("Could not acquire reconciliation lock; proceeding with fallback", {
+      weekStart,
+      error: (err as Error).message,
+    });
   }
 
   try {
-    const pipeline = redis.pipeline();
-    pipeline.del(key);
-    for (const entry of eligibleEntries) {
-      pipeline.zadd(key, entry.scoreBasisPoints, entry.user.toString());
+    const eligibleEntries = await WeeklyLeaderboardEntry.find({
+      weekStart,
+      isEligible: true,
+    }).select("user scoreBasisPoints");
+
+    if (eligibleEntries.length === 0) {
+      try {
+        await redis.del(key);
+      } catch {
+        // safe fallback
+      }
+      return 0;
     }
-    pipeline.expire(key, LEADERBOARD_REDIS_TTL);
-    await pipeline.exec();
-    return eligibleEntries.length;
-  } catch (error) {
-    logger.warn(
-      "Failed to rebuild Redis leaderboard; serving from MongoDB",
-      { weekStart, error: (error as Error).message }
-    );
-    return eligibleEntries.length;
+
+    try {
+      // Rebuild into temporary key first to ensure atomic replacement
+      const pipeline = redis.pipeline();
+      for (const entry of eligibleEntries) {
+        pipeline.zadd(tempKey, entry.scoreBasisPoints, entry.user.toString());
+      }
+      pipeline.expire(tempKey, LEADERBOARD_REDIS_TTL);
+      await pipeline.exec();
+
+      // Atomically replace the active key
+      await redis.rename(tempKey, key);
+      return eligibleEntries.length;
+    } catch (error) {
+      // Clean up temp key on error if possible
+      await redis.del(tempKey).catch(() => {});
+      logger.warn(
+        "Failed to rebuild Redis leaderboard; serving from MongoDB",
+        { weekStart, error: (error as Error).message }
+      );
+      return eligibleEntries.length;
+    }
+  } finally {
+    if (acquiredLock) {
+      await redis.del(lockKey).catch(() => {});
+    }
   }
 }
 

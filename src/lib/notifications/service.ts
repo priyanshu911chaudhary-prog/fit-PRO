@@ -45,11 +45,29 @@ export class NotificationService {
     const { userId, eventType } = params;
     const preferences = await getOrCreateNotificationPreferences(userId);
     const timezone = preferences.timezone || "Asia/Kolkata";
-    const localDate = params.date || formatInTimezone(new Date(), timezone);
+
+    // Resolve event date deterministically from params.date, log entity, or current time
+    let targetDate = new Date();
+    if (params.date) {
+      targetDate = new Date(`${params.date}T12:00:00Z`);
+    } else if (params.logId) {
+      if (eventType === "water") {
+        const log = await WaterLog.findById(params.logId).select("date");
+        if (log?.date) targetDate = log.date;
+      } else if (eventType === "meal") {
+        const log = await MealLog.findById(params.logId).select("consumedDate");
+        if (log?.consumedDate) targetDate = new Date(`${log.consumedDate}T12:00:00Z`);
+      } else if (eventType === "workout") {
+        const log = await WorkoutLog.findById(params.logId).select("date");
+        if (log?.date) targetDate = new Date(`${log.date}T12:00:00Z`);
+      }
+    }
+
+    const localDate = params.date || formatInTimezone(targetDate, timezone);
     const targets = await resolveUserTargets(userId);
 
-    // Compute verified current activity totals from MongoDB
-    const { startOfDay, endOfDay } = getDayBoundsInTimezone(timezone);
+    // Compute verified current activity totals from MongoDB for the evaluated local day
+    const { startOfDay, endOfDay } = getDayBoundsInTimezone(timezone, targetDate);
 
     // 1. Cumulative water
     const waterLogs = await WaterLog.find({

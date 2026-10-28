@@ -201,10 +201,14 @@ describe("Leaderboard API Endpoints & Privacy (Part E & Part G)", () => {
   });
 
   describe("Authentication Requirements", () => {
-    it("rejects unauthenticated requests to GET /api/leaderboard with 401", async () => {
+    it("allows unauthenticated requests to GET /api/leaderboard and returns public rankings without currentUser", async () => {
       const req = new NextRequest("http://localhost:3000/api/leaderboard");
       const res = await getLeaderboardHandler(req, {});
-      expect(res.status).toBe(401);
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.success).toBe(true);
+      expect(json.data.entries).toBeDefined();
+      expect(json.data.currentUser).toBeUndefined();
     });
 
     it("rejects unauthenticated requests to GET /api/leaderboard/preferences with 401", async () => {

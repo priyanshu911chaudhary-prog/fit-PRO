@@ -152,12 +152,10 @@ GEMINI_MODEL=gemini-2.5-flash
 GOOGLE_CLIENT_ID=your_google_client_id
 MICROSOFT_CLIENT_ID=your_microsoft_client_id
 
-# SMTP Email (Mailtrap for development or standard SMTP)
-SMTP_HOST=sandbox.smtp.mailtrap.io
-SMTP_PORT=2525
-SMTP_USER=your_mailtrap_user
-SMTP_PASS=your_mailtrap_pass
-EMAIL_FROM="AI Fitness <noreply@ai-fitness.com>"
+# Email Provider (Mailtrap API)
+EMAIL_PROVIDER=mailtrap
+MAILTRAP_API_TOKEN=your_mailtrap_api_token
+EMAIL_FROM="Fit-PRO <hello@fit-pro.publicvm.com>"
 ```
 
 ### 3. Installation
@@ -344,6 +342,110 @@ npm run test:watch
 For full architecture details, coverage tables, and design decisions, see the dedicated [tests/README.md](tests/README.md).
 
 ---
+
+
+---
+
+## 🚀 Local Development & Setup Workflow
+
+Fit-PRO is designed to run entirely locally without requiring external cloud deployment.
+
+### 1. Prerequisites
+- **Node.js**: v22+ (tested with v24.x)
+- **MongoDB**: Local MongoDB instance (port 27017) or MongoDB Atlas connection string.
+- **Redis**: Redis 7+ instance (port 6379, required for BullMQ queues and Streams).
+- **Docker** (optional): You can run Redis and MongoDB via Docker:
+  ```bash
+  docker run -d --name fit-pro-redis -p 6379:6379 redis:7-alpine
+  ```
+
+### 2. Installation
+```bash
+npm install --legacy-peer-deps
+```
+
+### 3. Environment Configuration
+Copy `.env.example` to `.env`:
+```bash
+cp .env.example .env
+```
+Key configuration variables:
+- `EMAIL_PROVIDER=mock`: Default for tests and local dev. No live API tokens needed.
+- `MONGODB_URI`: Local or cloud MongoDB connection string.
+- `REDIS_URL`: Local Redis connection string (e.g. `redis://127.0.0.1:6379`).
+- `ACCESS_TOKEN_SECRET` / `REFRESH_TOKEN_SECRET`: Minimum 32-character secrets.
+
+### 4. Database Seeding
+Populate the exercise and food catalogs:
+```bash
+npm run seed
+```
+
+### 5. Start the Application
+Start the Next.js development server:
+```bash
+npm run dev
+```
+The application will be available at `http://localhost:3000`.
+
+### 6. Start Background Workers
+In a separate terminal, launch the BullMQ workers:
+```bash
+npm run worker:dev
+```
+Or build and run the production worker bundle:
+```bash
+npm run build:worker
+npm run worker
+```
+
+### 7. Run Automated Tests
+```bash
+# Full test suite (320+ unit, component, API, and integration tests)
+npm test
+
+# Focused test run
+npx vitest run tests/unit/email-provider.test.ts
+
+# Code quality and type validation
+npm run lint
+npx tsc --noEmit
+
+# Production application and worker build
+npm run build
+```
+
+---
+
+## ✉️ Mailtrap API Architecture: Streams & Transport
+
+Fit-PRO uses **Mailtrap's HTTPS API** instead of legacy SMTP to ensure reliable delivery in environments where outbound SMTP ports (25, 465, 587, 2525) are blocked.
+
+### 1. Integration Method: Nodemailer with MailtrapTransport
+Fit-PRO integrates the official `mailtrap` package using its native `MailtrapTransport` adapter for `nodemailer`. This provides:
+- **Zero SMTP Dependency**: All messages are dispatched via HTTPS REST calls (`https://send.api.mailtrap.io/api/send`).
+- **Template Compatibility**: Retains existing Mailgen HTML and plaintext generators without rewrite.
+- **Standard Message Schema**: Standard Nodemailer message options (`from`, `to`, `subject`, `html`, `text`) are preserved.
+
+### 2. Stream Separation: Transactional vs. Bulk
+Mailtrap enforces strict domain reputation isolation across two streams:
+- **Transactional Stream** (`https://send.api.mailtrap.io/api/send`):
+  - Used for **all current Fit-PRO emails**: account verification, password resets, and individual smart fitness/wellness notifications.
+  - Configured as the system-wide default transport. Account and security emails are guaranteed to never route to Bulk.
+- **Bulk Stream** (`https://bulk.api.mailtrap.io/api/send`):
+  - Reserved exclusively for marketing campaigns, announcements, and newsletters.
+  - **Deliberate Scope Decision**: Fit-PRO currently has no marketing newsletter sending subsystem. The Bulk stream is supported via explicit `stream: "bulk"` configuration, but remains unused for all application workflows to prevent accidental routing of critical user messages to marketing channels.
+
+### 3. Environment Modes
+- **Automated Tests & Mock Mode (`EMAIL_PROVIDER=mock`)**:
+  - Automatically active during automated testing or when `MAILTRAP_API_TOKEN` is unset in development.
+  - Simulates deliveries with deterministic message IDs (`mock-{timestamp}-{random}`).
+  - Never executes external HTTP calls or requires real API tokens.
+- **Real Mailtrap API Mode (`EMAIL_PROVIDER=mailtrap`)**:
+  - For live staging or local smoke testing with verified domain (`fit-pro.publicvm.com`).
+  - Requires valid `MAILTRAP_API_TOKEN` and verified `EMAIL_FROM` (e.g. `Fit-PRO <hello@fit-pro.publicvm.com>`).
+  - Missing credentials produce actionable configuration errors instead of silent simulation.
+  - Sensitive tokens are automatically redacted from error logs.
 
 ## 🛡️ Health & Medical Disclaimer
 

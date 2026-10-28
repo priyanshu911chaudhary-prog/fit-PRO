@@ -135,7 +135,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setUser(null);
       toast.success("Logged out successfully");
-      window.location.href = "/login";
+      router.push("/login");
     }
   };
 

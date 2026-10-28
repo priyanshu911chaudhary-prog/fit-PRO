@@ -53,7 +53,7 @@ describe("Integration: Asynchronous Email Delivery, Outbox Durability & Worker R
 
     // Inspect BullMQ queue job data to ensure raw tokens are NOT in Redis
     const queue = getEmailQueue();
-    const job = await queue.getJob(`email:verify:${outboxId}`);
+    const job = await queue.getJob(`email-verify-${outboxId}`);
     expect(job).not.toBeNull();
     expect(job?.data).toEqual({ outboxId });
     expect(JSON.stringify(job?.data)).not.toContain("unhashed-secret-token-xyz");
@@ -61,7 +61,7 @@ describe("Integration: Asynchronous Email Delivery, Outbox Durability & Worker R
 
   it("worker successfully processes job, delivers email, and marks outbox record as sent", async () => {
     const testEmail = `test-email-${Date.now()}@example.com`;
-    const sendEmailSpy = vi.spyOn(emailLib, "sendEmail").mockResolvedValue(undefined);
+    const sendEmailSpy = vi.spyOn(emailLib, "sendEmail").mockResolvedValue({ success: true, messageId: "mt-msg-test-123", simulated: true });
 
     const { outboxId } = await enqueuePasswordReset({
       recipientEmail: testEmail,
@@ -89,12 +89,13 @@ describe("Integration: Asynchronous Email Delivery, Outbox Durability & Worker R
     const updated = await EmailOutbox.findById(outboxId);
     expect(updated?.status).toBe("sent");
     expect(updated?.sentAt).toBeInstanceOf(Date);
+    expect(updated?.messageId).toBe("mt-msg-test-123");
     expect(updated?.attempts).toBe(1);
   });
 
-  it("handles SMTP failure by recording error, setting pending for retry, and throwing for BullMQ backoff", async () => {
+  it("handles provider delivery failure by recording error, setting pending for retry, and throwing for BullMQ backoff", async () => {
     const testEmail = `test-email-${Date.now()}@example.com`;
-    vi.spyOn(emailLib, "sendEmail").mockRejectedValue(new Error("SMTP server connection timeout"));
+    vi.spyOn(emailLib, "sendEmail").mockRejectedValue(new Error("Mailtrap API connection timeout"));
 
     const { outboxId } = await enqueueEmailVerification({
       recipientEmail: testEmail,
@@ -110,12 +111,12 @@ describe("Integration: Asynchronous Email Delivery, Outbox Durability & Worker R
     } as any;
 
     // Worker should re-throw so BullMQ triggers retry
-    await expect(emailProcessor(mockJob)).rejects.toThrow(/SMTP server connection timeout/);
+    await expect(emailProcessor(mockJob)).rejects.toThrow(/Mailtrap API connection timeout/);
 
     const outboxDoc = await EmailOutbox.findById(outboxId);
     expect(outboxDoc?.status).toBe("pending");
     expect(outboxDoc?.attempts).toBe(1);
-    expect(outboxDoc?.lastError).toContain("SMTP server connection timeout");
+    expect(outboxDoc?.lastError).toContain("Mailtrap API connection timeout");
   });
 
   it("marks outbox record as failed when max attempts are exhausted", async () => {
@@ -147,7 +148,7 @@ describe("Integration: Asynchronous Email Delivery, Outbox Durability & Worker R
 
   it("skips already delivered records idempotently without re-sending", async () => {
     const testEmail = `test-email-${Date.now()}@example.com`;
-    const sendEmailSpy = vi.spyOn(emailLib, "sendEmail").mockResolvedValue(undefined);
+    const sendEmailSpy = vi.spyOn(emailLib, "sendEmail").mockResolvedValue({ success: true, messageId: "mt-idem-123" });
 
     const { outboxId } = await enqueueEmailVerification({
       recipientEmail: testEmail,
@@ -172,7 +173,7 @@ describe("Integration: Asynchronous Email Delivery, Outbox Durability & Worker R
 
   it("outbox recovery drains pending records in batches", async () => {
     const testEmail = `test-email-${Date.now()}@example.com`;
-    vi.spyOn(emailLib, "sendEmail").mockResolvedValue(undefined);
+    vi.spyOn(emailLib, "sendEmail").mockResolvedValue({ success: true, messageId: "mt-batch-123" });
 
     await enqueueEmailVerification({
       recipientEmail: testEmail,

@@ -4,7 +4,6 @@ import React, { useEffect } from "react";
 import Link from "next/link";
 import { AlertCircle, RotateCcw, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { FitProLogo } from "@/components/brand/fit-pro-logo";
 
 export default function GlobalErrorPage({
   error,

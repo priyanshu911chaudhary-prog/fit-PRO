@@ -22,11 +22,9 @@ const envSchema = z.object({
   NEXT_PUBLIC_GOOGLE_CLIENT_ID: z.string().optional(),
   MICROSOFT_CLIENT_ID: z.string().optional(),
   MICROSOFT_CLIENT_SECRET: z.string().optional(),
-  SMTP_HOST: z.string().optional().default("sandbox.smtp.mailtrap.io"),
-  SMTP_PORT: z.coerce.number().optional().default(2525),
-  SMTP_USER: z.string().optional(),
-  SMTP_PASS: z.string().optional(),
-  EMAIL_FROM: z.string().default("AI Fitness <noreply@ai-fitness.com>"),
+  MAILTRAP_API_TOKEN: z.string().optional(),
+  EMAIL_PROVIDER: z.enum(["mailtrap", "mock"]).default("mock"),
+  EMAIL_FROM: z.string().default("Fit-PRO <hello@fit-pro.publicvm.com>"),
   NEXT_PUBLIC_VAPID_PUBLIC_KEY: z
     .string()
     .default("BPKkV4JKJiqgsTNdGFL318UX_TzjvRIV5BFmSdnPtS5IrN9o6u1g5Ea8opRm9n0htPbUhPzXyVnCQevmjSN7CI4"),
@@ -56,6 +54,9 @@ export function getEnv(): Env {
 
     // In production runtime or when server starts, fail fast
     if (process.env.NODE_ENV === "production" && !process.env.NEXT_PHASE) {
+      if (process.env.EMAIL_PROVIDER === "mailtrap" && !process.env.MAILTRAP_API_TOKEN) {
+        throw new Error("Environment validation failed: MAILTRAP_API_TOKEN is required when EMAIL_PROVIDER is mailtrap in production");
+      }
       logger.error("Environment validation failed", {
         event: "config.validation.failed",
         issueCount: result.error.issues.length,
@@ -93,11 +94,9 @@ export function getEnv(): Env {
       NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID,
       MICROSOFT_CLIENT_ID: process.env.MICROSOFT_CLIENT_ID,
       MICROSOFT_CLIENT_SECRET: process.env.MICROSOFT_CLIENT_SECRET,
-      SMTP_HOST: process.env.SMTP_HOST || "sandbox.smtp.mailtrap.io",
-      SMTP_PORT: Number(process.env.SMTP_PORT) || 2525,
-      SMTP_USER: process.env.SMTP_USER,
-      SMTP_PASS: process.env.SMTP_PASS,
-      EMAIL_FROM: process.env.EMAIL_FROM || "AI Fitness <noreply@ai-fitness.com>",
+      MAILTRAP_API_TOKEN: process.env.MAILTRAP_API_TOKEN,
+      EMAIL_PROVIDER: (process.env.EMAIL_PROVIDER as "mailtrap" | "mock") || (process.env.MAILTRAP_API_TOKEN ? "mailtrap" : "mock"),
+      EMAIL_FROM: process.env.EMAIL_FROM || "Fit-PRO <hello@fit-pro.publicvm.com>",
       NEXT_PUBLIC_VAPID_PUBLIC_KEY:
         process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
         "BPKkV4JKJiqgsTNdGFL318UX_TzjvRIV5BFmSdnPtS5IrN9o6u1g5Ea8opRm9n0htPbUhPzXyVnCQevmjSN7CI4",

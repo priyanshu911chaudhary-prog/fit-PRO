@@ -12,6 +12,7 @@ export interface IEmailOutbox extends Document {
   attempts: number;
   maxAttempts: number;
   lastError?: string;
+  messageId?: string;
   sentAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -53,6 +54,9 @@ const emailOutboxSchema = new Schema<IEmailOutbox>(
       default: 3,
     },
     lastError: {
+      type: String,
+    },
+    messageId: {
       type: String,
     },
     sentAt: {

@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import Mailgen from "mailgen";
 import nodemailer from "nodemailer";
+import { MailtrapTransport } from "mailtrap";
 import { env } from "../env";
 import { logger } from "../logger";
 
@@ -51,7 +52,7 @@ function getMailGenerator(): Mailgen | null {
           plaintextPath: defaultTxtPath,
         },
         product: {
-          name: "AI Fitness",
+          name: "Fit-PRO",
           link: env.APP_URL,
         },
       });
@@ -84,21 +85,21 @@ function generateFallbackEmail(content: MailContent): { text: string; html: stri
       <head><meta charset="utf-8"></head>
       <body style="font-family: sans-serif; background-color: #f7f9fa; padding: 24px; color: #333;">
         <div style="max-width: 560px; margin: 0 auto; background: white; border-radius: 8px; padding: 32px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-          <h2 style="color: #111; margin-top: 0;">AI Fitness</h2>
+          <h2 style="color: #111; margin-top: 0;">Fit-PRO</h2>
           <p>Hi ${name},</p>
           <p>${intro}</p>
           ${action ? `<p>${action.instructions}</p>` : ""}
           ${buttonHtml}
           ${outro ? `<p style="margin-top: 24px; color: #555;">${outro}</p>` : ""}
           <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
-          <p style="font-size: 12px; color: #999;">&copy; ${new Date().getFullYear()} AI Fitness. All rights reserved.</p>
+          <p style="font-size: 12px; color: #999;">&copy; ${new Date().getFullYear()} Fit-PRO. All rights reserved.</p>
         </div>
       </body>
     </html>
   `;
 
   const text = `
-AI Fitness
+Fit-PRO
 
 Hi ${name},
 
@@ -108,7 +109,7 @@ ${action ? `${action.instructions}\n${action.button.text}: ${action.button.link}
 
 ${outro || ""}
 
-(c) ${new Date().getFullYear()} AI Fitness
+(c) ${new Date().getFullYear()} Fit-PRO
   `.trim();
 
   return { text, html };
@@ -118,7 +119,7 @@ export const emailVerificationTemplate = (username: string, verificationLink: st
   return {
     body: {
       name: username,
-      intro: "Welcome to AI Fitness! We're excited to have you on board.",
+      intro: "Welcome to Fit-PRO! We're excited to have you on board.",
       action: {
         instructions: "To get started, please verify your email address by clicking the button below:",
         button: {
@@ -136,7 +137,7 @@ export const passwordResetTemplate = (username: string, resetLink: string): Mail
   return {
     body: {
       name: username,
-      intro: "You have requested to reset your password for your AI Fitness account.",
+      intro: "You have requested to reset your password for your Fit-PRO account.",
       action: {
         instructions: "To reset your password, please click the button below:",
         button: {
@@ -183,9 +184,20 @@ export interface SendEmailOptions {
   email: string;
   subject: string;
   mailgenContent: MailContent;
+  stream?: "transactional" | "bulk";
 }
 
-export async function sendEmail(options: SendEmailOptions): Promise<void> {
+export interface SendEmailResult {
+  success: boolean;
+  messageId?: string;
+  simulated?: boolean;
+}
+
+/**
+ * Delivers an email through Mailtrap's API transport (or mock simulation in dev/test).
+ * All account verification, password resets, and wellness notifications are strictly Transactional.
+ */
+export async function sendEmail(options: SendEmailOptions): Promise<SendEmailResult> {
   let emailText = "";
   let emailHtml = "";
 
@@ -205,24 +217,29 @@ export async function sendEmail(options: SendEmailOptions): Promise<void> {
     emailHtml = fallback.html;
   }
 
-  // In dev without SMTP credentials, log the email action for instant local verification
-  if (!env.SMTP_USER && env.NODE_ENV !== "production") {
-    logger.info(`[DEV EMAIL SIMULATION] To: ${options.email} | Subject: ${options.subject}`);
-    logger.info(`[DEV EMAIL SIMULATION] Content:\n${emailText}`);
-    return;
+  const isMock = env.EMAIL_PROVIDER === "mock";
+
+  if (isMock) {
+    const mockMessageId = `mock-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    logger.info(`[MOCK EMAIL SIMULATION] To: ${options.email} | Subject: ${options.subject} | ID: ${mockMessageId}`);
+    return {
+      success: true,
+      messageId: mockMessageId,
+      simulated: true,
+    };
   }
 
-  const transporter = nodemailer.createTransport({
-    host: env.SMTP_HOST,
-    port: env.SMTP_PORT,
-    auth:
-      env.SMTP_USER && env.SMTP_PASS
-        ? {
-            user: env.SMTP_USER,
-            pass: env.SMTP_PASS,
-          }
-        : undefined,
-  });
+  if (!env.MAILTRAP_API_TOKEN) {
+    throw new Error("Missing MAILTRAP_API_TOKEN for Mailtrap API delivery");
+  }
+
+  const isBulk = options.stream === "bulk";
+  const transporter = nodemailer.createTransport(
+    MailtrapTransport({
+      token: env.MAILTRAP_API_TOKEN,
+      bulk: isBulk,
+    })
+  );
 
   const mailOptions = {
     from: env.EMAIL_FROM,
@@ -233,13 +250,34 @@ export async function sendEmail(options: SendEmailOptions): Promise<void> {
   };
 
   try {
-    await transporter.sendMail(mailOptions);
-    logger.info(`Email successfully sent to ${options.email}`);
-  } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : String(error);
-    logger.error(`Failed to send email to ${options.email}:`, {
-      error: errorMsg,
+    const info = await transporter.sendMail(mailOptions);
+    let messageId: string | undefined;
+    if ("message_ids" in info && Array.isArray(info.message_ids) && info.message_ids.length > 0) {
+      messageId = info.message_ids[0];
+    } else if ("messageId" in (info as Record<string, unknown>) && typeof (info as Record<string, unknown>).messageId === "string") {
+      messageId = (info as Record<string, unknown>).messageId as string;
+    } else {
+      messageId = `mt-${Date.now()}`;
+    }
+    logger.info(`Email successfully dispatched via Mailtrap API to ${options.email}`, {
+      messageId,
+      stream: isBulk ? "bulk" : "transactional",
     });
-    throw new Error(`Failed to deliver notification email: ${errorMsg}`);
+    return {
+      success: true,
+      messageId,
+      simulated: false,
+    };
+  } catch (error: unknown) {
+    const rawMsg = error instanceof Error ? error.message : String(error);
+    const sanitizedMsg = env.MAILTRAP_API_TOKEN
+      ? rawMsg.replace(new RegExp(env.MAILTRAP_API_TOKEN, "g"), "[REDACTED_TOKEN]")
+      : rawMsg;
+
+    logger.error(`Failed to send email to ${options.email} via Mailtrap API:`, {
+      error: sanitizedMsg,
+      stream: isBulk ? "bulk" : "transactional",
+    });
+    throw new Error(`Failed to deliver email via Mailtrap API: ${sanitizedMsg}`);
   }
 }

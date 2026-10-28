@@ -61,7 +61,7 @@ describe("Integration: Leaderboard Background Worker, Deduplication, and Recover
     });
     expect(result1.enqueued).toBe(true);
 
-    const job = await queue.getJob(`recalc:${testUserId.toString()}:${currentWeek}`);
+    const job = await queue.getJob(`recalc-${testUserId.toString()}-${currentWeek}`);
     expect(job).not.toBeNull();
     expect((job?.data as any).userId).toBe(testUserId.toString());
     expect((job?.data as any).weekStart).toBe(currentWeek);

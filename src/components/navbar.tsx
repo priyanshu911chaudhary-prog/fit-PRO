@@ -6,7 +6,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Dumbbell,
-  Sparkles,
   Menu,
   X,
   Utensils,
@@ -22,7 +21,7 @@ import {
 import { useAuth } from "@/context/auth-context";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { FitProLogo } from "@/components/brand/fit-pro-logo";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "cn";
 import {
   DropdownMenu,

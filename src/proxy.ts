@@ -3,7 +3,6 @@ import type { NextRequest } from "next/server";
 import { verifyAccessToken } from "@/lib/auth/jwt";
 
 const ACCESS_COOKIE_NAME = "accessToken";
-const REFRESH_COOKIE_NAME = "refreshToken";
 
 const SECURITY_HEADERS: Record<string, string> = {
   "X-Content-Type-Options": "nosniff",
@@ -52,8 +51,7 @@ const AUTH_PREFIXES = [
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const accessToken = request.cookies.get(ACCESS_COOKIE_NAME)?.value;
-  const refreshToken = request.cookies.get(REFRESH_COOKIE_NAME)?.value;
-
+  
   const isAppPage = APP_PAGES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
   );

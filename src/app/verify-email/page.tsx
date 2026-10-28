@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Mail, ArrowRight, Loader2, Send, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Mail, Loader2, Send, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { FitProLogo } from "@/components/brand/fit-pro-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

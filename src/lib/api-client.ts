@@ -92,6 +92,7 @@ export async function apiClient<T = unknown>(
           window.location.pathname.startsWith("/leaderboard");
 
         if (!isPublicRoute) {
+          // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- Non-React helper auth redirect
           window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
         }
       }

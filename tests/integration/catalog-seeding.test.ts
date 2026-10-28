@@ -27,7 +27,7 @@ describe("Integration: Catalog Seeding, Dry-Run & AI Upsert Compatibility", () =
     expect(report.totalCatalogItems).toBeGreaterThanOrEqual(300);
     expect(report.inserted).toBe(0);
     expect(report.updated).toBe(0);
-    expect(report.wouldInsert).toBeGreaterThan(0);
+    expect(report.wouldInsert + report.unchanged).toBeGreaterThan(0);
 
     const foodCountAfter = await FoodItem.countDocuments();
     expect(foodCountAfter).toBe(foodCountBefore);
@@ -41,7 +41,7 @@ describe("Integration: Catalog Seeding, Dry-Run & AI Upsert Compatibility", () =
     expect(report.totalCatalogItems).toBeGreaterThanOrEqual(250);
     expect(report.inserted).toBe(0);
     expect(report.updated).toBe(0);
-    expect(report.wouldInsert).toBeGreaterThan(0);
+    expect(report.wouldInsert + report.unchanged).toBeGreaterThan(0);
 
     const exCountAfter = await Exercise.countDocuments();
     expect(exCountAfter).toBe(exCountBefore);

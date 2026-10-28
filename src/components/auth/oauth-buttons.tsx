@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Script from "next/script";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -34,6 +35,7 @@ declare global {
 }
 
 export function OAuthButtons({ onSuccess }: OAuthButtonsProps) {
+  const router = useRouter();
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
   const [gisLoaded, setGisLoaded] = useState(false);
 
@@ -76,7 +78,7 @@ export function OAuthButtons({ onSuccess }: OAuthButtonsProps) {
               if (onSuccess) {
                 onSuccess();
               } else {
-                window.location.href = "/dashboard";
+                router.push("/dashboard");
               }
             } else {
               toast.error(data.message || "Google authentication failed");
@@ -98,15 +100,17 @@ export function OAuthButtons({ onSuccess }: OAuthButtonsProps) {
     } catch {
       // Handled silently
     }
-  }, [gisLoaded, googleClientId, isGoogleConfigured, onSuccess]);
+  }, [gisLoaded, googleClientId, isGoogleConfigured, onSuccess, router]);
 
   const handleGoogleClick = () => {
     setLoadingProvider("google");
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- Full external OAuth redirect
     window.location.href = "/api/auth/google";
   };
 
   const handleMicrosoftClick = () => {
     setLoadingProvider("microsoft");
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- Full external OAuth redirect
     window.location.href = "/api/auth/microsoft";
   };
 

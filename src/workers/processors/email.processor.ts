@@ -53,7 +53,7 @@ async function deliverOutboxRecord(outboxDoc: IEmailOutbox, jobId?: string): Pro
       throw new Error(`Unsupported email template: ${record.template}`);
     }
 
-    await sendEmail({
+    const deliveryResult = await sendEmail({
       email: record.recipientEmail,
       subject: record.subject,
       mailgenContent,
@@ -65,6 +65,7 @@ async function deliverOutboxRecord(outboxDoc: IEmailOutbox, jobId?: string): Pro
         $set: {
           status: "sent",
           sentAt: new Date(),
+          messageId: deliveryResult?.messageId,
           lastError: undefined,
         },
       }

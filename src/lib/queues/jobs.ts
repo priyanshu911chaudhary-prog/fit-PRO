@@ -116,7 +116,7 @@ export async function enqueueEmailVerification(params: {
       EMAIL_JOBS.SEND_VERIFICATION,
       { outboxId },
       {
-        jobId: `email:verify:${outboxId}`,
+        jobId: `email-verify-${outboxId}`,
       }
     );
     enqueued = true;
@@ -162,7 +162,7 @@ export async function enqueuePasswordReset(params: {
       EMAIL_JOBS.SEND_PASSWORD_RESET,
       { outboxId },
       {
-        jobId: `email:reset:${outboxId}`,
+        jobId: `email-reset-${outboxId}`,
       }
     );
     enqueued = true;
@@ -187,7 +187,7 @@ export async function enqueueLeaderboardRecalculation(params: {
 }): Promise<{ enqueued: boolean; outboxCreated?: boolean }> {
   const weekStart = params.weekStart || getCompetitionWeek().weekStart;
   const userId = params.userId;
-  const deterministicJobId = `recalc:${userId}:${weekStart}`;
+  const deterministicJobId = `recalc-${userId}-${weekStart}`;
 
   try {
     const queue = getLeaderboardQueue();
@@ -210,7 +210,7 @@ export async function enqueueLeaderboardRecalculation(params: {
           LEADERBOARD_JOBS.RECALCULATE_USER_SCORE,
           { userId, weekStart },
           {
-            jobId: `${deterministicJobId}:${Date.now()}`,
+            jobId: `${deterministicJobId}-${Date.now()}`,
             delay: 1500,
           }
         );
@@ -255,7 +255,7 @@ export async function enqueueActivityEvaluation(params: {
 }): Promise<{ enqueued: boolean }> {
   try {
     const queue = getNotificationQueue();
-    const jobId = `eval:${params.userId}:${params.eventType}:${params.logId || Date.now()}`;
+    const jobId = `eval-${params.userId}-${params.eventType}-${params.logId || Date.now()}`;
     await queue.add(
       NOTIFICATION_JOBS.EVALUATE_ACTIVITY_EVENT,
       params,

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { useAuth } from "@/context/auth-context";
@@ -21,7 +20,6 @@ import {
 
 export function useOnboardingWizard() {
   const { refreshUser } = useAuth();
-  const router = useRouter();
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -98,7 +96,7 @@ export function useOnboardingWizard() {
       if (res.success) {
         toast.success("Profile created! Baseline metrics calibrated.");
         await refreshUser();
-        router.push("/dashboard");
+        window.location.href = "/dashboard";
       }
     } catch (err: unknown) {
       const msg =

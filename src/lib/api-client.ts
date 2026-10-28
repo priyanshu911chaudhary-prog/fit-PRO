@@ -88,7 +88,8 @@ export async function apiClient<T = unknown>(
           window.location.pathname.startsWith("/register") ||
           window.location.pathname.startsWith("/forgot-password") ||
           window.location.pathname.startsWith("/reset-password") ||
-          window.location.pathname.startsWith("/verify-email");
+          window.location.pathname.startsWith("/verify-email") ||
+          window.location.pathname.startsWith("/leaderboard");
 
         if (!isPublicRoute) {
           window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;

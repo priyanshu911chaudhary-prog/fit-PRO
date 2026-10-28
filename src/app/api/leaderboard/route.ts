@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ApiResponse } from "@/lib/api/api-response";
-import { withAuth } from "@/lib/api/with-auth";
+import { withOptionalAuth } from "@/lib/api/with-auth";
 import { withHandler } from "@/lib/api/with-handler";
 import { validateQuery } from "@/lib/api/with-validation";
 import { TokenPayload } from "@/lib/auth/jwt";
@@ -19,9 +19,9 @@ import { resolveUserTargets } from "@/lib/leaderboard/targets";
 import { LeaderboardApiResponse, LeaderboardParticipantRank } from "@/lib/leaderboard/types";
 
 export const GET = withHandler(
-  withAuth(async (req: NextRequest, _ctx: unknown, sessionUser: TokenPayload) => {
+  withOptionalAuth(async (req: NextRequest, _ctx: unknown, sessionUser: TokenPayload | null) => {
     const query = await validateQuery(req, leaderboardQuerySchema);
-    const userId = sessionUser.userId;
+    const userId = sessionUser?.userId ?? null;
 
     const currentWeek = getCompetitionWeek();
     const isPreviousPeriod = query.period === "previous";
@@ -53,7 +53,7 @@ export const GET = withHandler(
     // Identify current user's entry in the page list
     const enrichedEntries: LeaderboardParticipantRank[] = allEntries.map((entry) => ({
       ...entry,
-      isCurrentUser: entry.userId === userId,
+      isCurrentUser: userId ? entry.userId === userId : false,
     }));
 
     // Derive podium (top positions with ranks <= 3, accommodating ties)
@@ -66,104 +66,106 @@ export const GET = withHandler(
       podium = top3Data.entries.filter((e) => e.rank <= 3);
     }
 
-    // Ensure authenticated user has an entry computed for current week
-    let userEntryDoc = await WeeklyLeaderboardEntry.findOne({
-      user: userId,
-      weekStart,
-    });
+    let userEntryDoc = null;
+    let currentUserData: LeaderboardApiResponse["currentUser"] = undefined;
 
-    if (!userEntryDoc && !isPreviousPeriod) {
-      // Trigger lazy compute for the user
-      await recalculateUserWeeklyScore(userId, weekStart);
+    if (userId) {
       userEntryDoc = await WeeklyLeaderboardEntry.findOne({
         user: userId,
         weekStart,
       });
-    }
 
-    // Fetch user settings and rank
-    const [userSettings, userRankData] = await Promise.all([
-      LeaderboardSettings.findOne({ user: userId }),
-      getUserLeaderboardRank(weekStart, userId),
-    ]);
+      if (!userEntryDoc && !isPreviousPeriod) {
+        // Trigger lazy compute for the user
+        await recalculateUserWeeklyScore(userId, weekStart);
+        userEntryDoc = await WeeklyLeaderboardEntry.findOne({
+          user: userId,
+          weekStart,
+        });
+      }
 
-    let currentUserData: LeaderboardApiResponse["currentUser"] = undefined;
+      // Fetch user settings and rank
+      const [userSettings, userRankData] = await Promise.all([
+        LeaderboardSettings.findOne({ user: userId }),
+        getUserLeaderboardRank(weekStart, userId),
+      ]);
 
-    if (userEntryDoc) {
-      currentUserData = {
-        userId,
-        rank: userRankData.rank,
-        displayScore: userEntryDoc.displayScore,
-        scoreBasisPoints: userEntryDoc.scoreBasisPoints,
-        isEligible: userEntryDoc.isEligible,
-        ineligibilityReason: userEntryDoc.ineligibilityReason,
-        optIn: userSettings?.optIn ?? false,
-        displayName: userEntryDoc.displayNameSnapshot,
-        breakdown: {
-          qualifyingWorkoutsCount: userEntryDoc.qualifyingWorkoutsCount,
-          weeklyWorkoutGoal: userEntryDoc.targetSnapshot.weeklyWorkoutGoal,
-          workoutAttainment: userEntryDoc.workoutComponent,
-          workoutComponentScore: +(userEntryDoc.workoutComponent * 40).toFixed(2),
-
-          dailyProteinValues: {},
-          dailyProteinTarget: userEntryDoc.targetSnapshot.dailyProteinTarget,
-          proteinAttainment: userEntryDoc.proteinComponent,
-          proteinComponentScore: +(userEntryDoc.proteinComponent * 30).toFixed(2),
-
-          dailyWaterValues: {},
-          dailyHydrationTarget: userEntryDoc.targetSnapshot.dailyHydrationTarget,
-          hydrationAttainment: userEntryDoc.hydrationComponent,
-          hydrationComponentScore: +(userEntryDoc.hydrationComponent * 30).toFixed(2),
-
-          trackedDaysCount: userEntryDoc.trackedDaysCount,
+      if (userEntryDoc) {
+        currentUserData = {
+          userId,
+          rank: userRankData.rank,
+          displayScore: userEntryDoc.displayScore,
+          scoreBasisPoints: userEntryDoc.scoreBasisPoints,
           isEligible: userEntryDoc.isEligible,
           ineligibilityReason: userEntryDoc.ineligibilityReason,
+          optIn: userSettings?.optIn ?? false,
+          displayName: userEntryDoc.displayNameSnapshot,
+          breakdown: {
+            qualifyingWorkoutsCount: userEntryDoc.qualifyingWorkoutsCount,
+            weeklyWorkoutGoal: userEntryDoc.targetSnapshot.weeklyWorkoutGoal,
+            workoutAttainment: userEntryDoc.workoutComponent,
+            workoutComponentScore: +(userEntryDoc.workoutComponent * 40).toFixed(2),
 
-          weeklyFitScore: userEntryDoc.displayScore,
-          scoreBasisPoints: userEntryDoc.scoreBasisPoints,
-          displayScore: userEntryDoc.displayScore,
-        },
-      };
-    } else {
-      // User has zero logs this week
-      const defaultTargets = await resolveUserTargets(userId, weekStart);
-      const userDoc = await User.findById(userId).select("fullName");
-      currentUserData = {
-        userId,
-        rank: null,
-        displayScore: 0,
-        scoreBasisPoints: 0,
-        isEligible: false,
-        ineligibilityReason: !userSettings?.optIn
-          ? "Not opted in to public leaderboard"
-          : "Requires activity on at least 4 distinct days this week (currently 0/4)",
-        optIn: userSettings?.optIn ?? false,
-        displayName: userSettings?.displayName || userDoc?.fullName || "Athlete",
-        breakdown: {
-          qualifyingWorkoutsCount: 0,
-          weeklyWorkoutGoal: defaultTargets.weeklyWorkoutGoal,
-          workoutAttainment: 0,
-          workoutComponentScore: 0,
+            dailyProteinValues: {},
+            dailyProteinTarget: userEntryDoc.targetSnapshot.dailyProteinTarget,
+            proteinAttainment: userEntryDoc.proteinComponent,
+            proteinComponentScore: +(userEntryDoc.proteinComponent * 30).toFixed(2),
 
-          dailyProteinValues: {},
-          dailyProteinTarget: defaultTargets.dailyProteinTarget,
-          proteinAttainment: 0,
-          proteinComponentScore: 0,
+            dailyWaterValues: {},
+            dailyHydrationTarget: userEntryDoc.targetSnapshot.dailyHydrationTarget,
+            hydrationAttainment: userEntryDoc.hydrationComponent,
+            hydrationComponentScore: +(userEntryDoc.hydrationComponent * 30).toFixed(2),
 
-          dailyWaterValues: {},
-          dailyHydrationTarget: defaultTargets.dailyHydrationTarget,
-          hydrationAttainment: 0,
-          hydrationComponentScore: 0,
+            trackedDaysCount: userEntryDoc.trackedDaysCount,
+            isEligible: userEntryDoc.isEligible,
+            ineligibilityReason: userEntryDoc.ineligibilityReason,
 
-          trackedDaysCount: 0,
-          isEligible: false,
-          ineligibilityReason: "Requires activity on at least 4 distinct days this week (currently 0/4)",
-
-          weeklyFitScore: 0,
-          scoreBasisPoints: 0,
+            weeklyFitScore: userEntryDoc.displayScore,
+            scoreBasisPoints: userEntryDoc.scoreBasisPoints,
+            displayScore: userEntryDoc.displayScore,
+          },
+        };
+      } else {
+        // User has zero logs this week
+        const defaultTargets = await resolveUserTargets(userId, weekStart);
+        const userDoc = await User.findById(userId).select("fullName");
+        currentUserData = {
+          userId,
+          rank: null,
           displayScore: 0,
-        },
-      };
+          scoreBasisPoints: 0,
+          isEligible: false,
+          ineligibilityReason: !userSettings?.optIn
+            ? "Not opted in to public leaderboard"
+            : "Requires activity on at least 4 distinct days this week (currently 0/4)",
+          optIn: userSettings?.optIn ?? false,
+          displayName: userSettings?.displayName || userDoc?.fullName || "Athlete",
+          breakdown: {
+            qualifyingWorkoutsCount: 0,
+            weeklyWorkoutGoal: defaultTargets.weeklyWorkoutGoal,
+            workoutAttainment: 0,
+            workoutComponentScore: 0,
+
+            dailyProteinValues: {},
+            dailyProteinTarget: defaultTargets.dailyProteinTarget,
+            proteinAttainment: 0,
+            proteinComponentScore: 0,
+
+            dailyWaterValues: {},
+            dailyHydrationTarget: defaultTargets.dailyHydrationTarget,
+            hydrationAttainment: 0,
+            hydrationComponentScore: 0,
+
+            trackedDaysCount: 0,
+            isEligible: false,
+            ineligibilityReason: "Requires activity on at least 4 distinct days this week (currently 0/4)",
+
+            weeklyFitScore: 0,
+            scoreBasisPoints: 0,
+            displayScore: 0,
+          },
+        };
+      }
     }
 
     // Query previous week's winner(s) if viewing current week

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
+import { useAuth } from "@/context/auth-context";
 import { apiClient } from "@/lib/api-client";
 import { LeaderboardApiResponse } from "@/lib/leaderboard/types";
 import { UpdateLeaderboardPreferencesInput } from "@/validators/leaderboard.validator";
@@ -52,8 +53,11 @@ export function useLeaderboard() {
     }
   }, [period, page, limit]);
 
+  const { isAuthenticated } = useAuth();
+
   // Manual or programmatic preference fetch
   const fetchPreferences = useCallback(async () => {
+    if (!isAuthenticated) return;
     setIsLoadingPrefs(true);
     try {
       const res = await apiClient<UserPreferencesData>(`/api/leaderboard/preferences?_t=${Date.now()}`);
@@ -65,7 +69,7 @@ export function useLeaderboard() {
     } finally {
       setIsLoadingPrefs(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   // Primary data load effect
   useEffect(() => {
@@ -97,6 +101,7 @@ export function useLeaderboard() {
 
   // Initial preferences load effect
   useEffect(() => {
+    if (!isAuthenticated) return;
     let isMounted = true;
     apiClient<UserPreferencesData>(`/api/leaderboard/preferences?_t=${Date.now()}`)
       .then((res) => {
@@ -113,7 +118,7 @@ export function useLeaderboard() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [isAuthenticated]);
 
   // Update preferences
   const updatePreferences = async (input: UpdateLeaderboardPreferencesInput) => {

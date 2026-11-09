@@ -96,5 +96,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-artifacts
-          path: tests/e2e/test-results/
+          path: tests/e2e/playwright-artifacts/
           retention-days: 7

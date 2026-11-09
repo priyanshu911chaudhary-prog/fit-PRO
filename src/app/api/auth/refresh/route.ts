@@ -37,13 +37,13 @@ export const POST = withHandler(async (req: NextRequest) => {
     throw new ApiError(401, "User not found");
   }
 
-  const isCurrentToken = incomingToken === user.refreshToken;
+  const isCurrentToken = Boolean(user.refreshToken && incomingToken === user.refreshToken);
   const isGraceToken =
     incomingToken === user.previousRefreshToken &&
     user.previousRefreshTokenExpiry &&
     user.previousRefreshTokenExpiry > new Date();
 
-  if (!isCurrentToken && !isGraceToken) {
+  if (!isCurrentToken && (!isGraceToken || !user.refreshToken)) {
     throw new ApiError(401, "Refresh token is expired or has already been used");
   }
 
@@ -77,11 +77,57 @@ export const POST = withHandler(async (req: NextRequest) => {
   return response;
 });
 
+function getSafeRedirectUrl(target: string | null | undefined, reqUrl: string): URL {
+  const defaultFallback = new URL("/dashboard", reqUrl);
+
+  if (!target || typeof target !== "string") {
+    return defaultFallback;
+  }
+
+  const trimmed = target.trim();
+
+  // Must start with exactly one leading slash; reject protocol-relative (//) and backslash (\)
+  if (
+    !trimmed.startsWith("/") ||
+    trimmed.startsWith("//") ||
+    trimmed.startsWith("/\\") ||
+    trimmed.startsWith("\\")
+  ) {
+    return defaultFallback;
+  }
+
+  try {
+    const candidate = new URL(trimmed, reqUrl);
+    const base = new URL(reqUrl);
+
+    // Strict origin and protocol comparison
+    if (candidate.origin !== base.origin) {
+      return defaultFallback;
+    }
+
+    if (candidate.protocol !== "http:" && candidate.protocol !== "https:") {
+      return defaultFallback;
+    }
+
+    // Ensure username or password is not embedded
+    if (candidate.username || candidate.password) {
+      return defaultFallback;
+    }
+
+    return candidate;
+  } catch {
+    return defaultFallback;
+  }
+}
+
 export const GET = withHandler(async (req: NextRequest) => {
   const url = new URL(req.url);
-  const redirectTarget = url.searchParams.get("redirect") || "/dashboard";
+  const rawRedirectTarget = url.searchParams.get("redirect");
+  const safeRedirectUrl = getSafeRedirectUrl(rawRedirectTarget, req.url);
+  const safeRedirectPath = `${safeRedirectUrl.pathname}${safeRedirectUrl.search}${safeRedirectUrl.hash}`;
+
   const loginTarget = new URL(
-    `/login?redirect=${encodeURIComponent(redirectTarget)}`,
+    `/login?redirect=${encodeURIComponent(safeRedirectPath)}`,
     req.url
   );
 
@@ -108,8 +154,7 @@ export const GET = withHandler(async (req: NextRequest) => {
   user.refreshToken = newRefreshToken;
   await user.save();
 
-  const redirectUrl = new URL(redirectTarget, req.url);
-  const response = NextResponse.redirect(redirectUrl);
+  const response = NextResponse.redirect(safeRedirectUrl);
   setAuthCookies(response, accessToken, newRefreshToken);
   return response;
 });

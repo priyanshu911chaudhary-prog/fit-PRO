@@ -21,14 +21,14 @@ export const GET = withHandler(
 
     const user = await User.findOne({
       emailVerificationToken: hashedToken,
-    });
+    }).select("+emailVerificationTokenExpiry");
 
     if (!user) {
       throw new ApiError(400, "Verification link is invalid or has already been used");
     }
 
     const currentTime = new Date();
-    if (user.emailVerificationTokenExpiry && user.emailVerificationTokenExpiry < currentTime) {
+    if (!user.emailVerificationTokenExpiry || user.emailVerificationTokenExpiry < currentTime) {
       throw new ApiError(400, "Your verification link has expired. Please request a new one.");
     }
 

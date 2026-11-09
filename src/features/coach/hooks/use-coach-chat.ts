@@ -12,6 +12,27 @@ export const ALLOWED_COACH_INTENT_PROMPTS: Record<string, string> = {
   "hydration-plan": "Can you give me a simple plan to stay on track with my daily hydration goal?",
 };
 
+export interface ProcessStreamEventResult {
+  chunk?: string;
+  conversationId?: string;
+  title?: string;
+  error?: string;
+  done?: boolean;
+}
+
+export function parseCoachStreamLine(line: string): ProcessStreamEventResult | null {
+  const trimmed = line.trim();
+  if (!trimmed.startsWith("data: ")) return null;
+  const rawData = trimmed.slice(6).trim();
+  if (rawData === "[DONE]") return { done: true };
+  try {
+    const parsed = JSON.parse(rawData);
+    return parsed;
+  } catch {
+    return { chunk: rawData + " " };
+  }
+}
+
 export function useCoachChat() {
   const searchParams = useSearchParams();
   const intent = searchParams?.get("intent");
@@ -190,6 +211,10 @@ export function useCoachChat() {
       content: m.content.slice(0, 1000),
     }));
 
+    const clientMessageId = `turn-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    let streamStarted = false;
+    let streamFailedWithErrorEvent = false;
+
     try {
       const response = await fetch("/api/coach", {
         method: "POST",
@@ -198,6 +223,7 @@ export function useCoachChat() {
           message: prompt,
           conversationId: activeConversationId,
           history: historyPayload,
+          clientMessageId,
         }),
       });
 
@@ -219,52 +245,71 @@ export function useCoachChat() {
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder("utf-8");
+      let lineBuffer = "";
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
+        streamStarted = true;
 
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n");
+        lineBuffer += decoder.decode(value, { stream: true });
+        const lines = lineBuffer.split("\n");
+        lineBuffer = lines.pop() ?? "";
 
         for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const rawData = line.slice(6).trim();
-            if (rawData === "[DONE]") {
-              break;
-            }
-            try {
-              const parsed = JSON.parse(rawData);
-              if (parsed.chunk) {
-                accumulatedRef.current += parsed.chunk;
-                const updatedContent = accumulatedRef.current;
-                setMessages((prev) =>
-                  prev.map((msg) =>
-                    msg.id === assistantMsgId ? { ...msg, content: updatedContent } : msg
-                  )
-                );
-              }
-              if (parsed.conversationId) {
-                setActiveConversationId(parsed.conversationId);
-                if (typeof window !== "undefined") {
-                  localStorage.setItem(LOCAL_STORAGE_ACTIVE_CHAT_KEY, parsed.conversationId);
-                }
-              }
-              if (parsed.title) {
-                setActiveTitle(parsed.title);
-              }
-            } catch {
-              if (rawData && rawData !== "[DONE]") {
-                accumulatedRef.current += rawData + " ";
-                const updatedContent = accumulatedRef.current;
-                setMessages((prev) =>
-                  prev.map((msg) =>
-                    msg.id === assistantMsgId ? { ...msg, content: updatedContent } : msg
-                  )
-                );
-              }
+          const parsed = parseCoachStreamLine(line);
+          if (!parsed) continue;
+
+          if (parsed.done) {
+            break;
+          }
+
+          if (parsed.error) {
+            streamFailedWithErrorEvent = true;
+            const safeError =
+              typeof parsed.error === "string" &&
+              !parsed.error.toLowerCase().includes("key") &&
+              !parsed.error.toLowerCase().includes("secret")
+                ? parsed.error
+                : "AI service temporarily unavailable";
+            toast.error(safeError);
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === assistantMsgId
+                  ? {
+                      ...msg,
+                      content: "I encountered an issue generating a response. Please try asking again.",
+                    }
+                  : msg
+              )
+            );
+            break;
+          }
+
+          if (parsed.chunk) {
+            accumulatedRef.current += parsed.chunk;
+            const updatedContent = accumulatedRef.current;
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === assistantMsgId ? { ...msg, content: updatedContent } : msg
+              )
+            );
+          }
+
+          if (parsed.conversationId) {
+            setActiveConversationId(parsed.conversationId);
+            if (typeof window !== "undefined") {
+              localStorage.setItem(LOCAL_STORAGE_ACTIVE_CHAT_KEY, parsed.conversationId);
             }
           }
+
+          if (parsed.title) {
+            setActiveTitle(parsed.title);
+          }
+        }
+
+        if (streamFailedWithErrorEvent) {
+          break;
         }
       }
 
@@ -277,41 +322,60 @@ export function useCoachChat() {
         })
         .catch(() => {});
     } catch {
-      try {
-        const jsonRes = await fetch("/api/ai/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            message: prompt,
-            conversationId: activeConversationId,
-          }),
-        });
-        const data = await jsonRes.json();
-        if (data.data?.reply) {
+      if (!streamStarted && !streamFailedWithErrorEvent) {
+        try {
+          const jsonRes = await fetch("/api/ai/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              message: prompt,
+              conversationId: activeConversationId,
+              clientMessageId,
+            }),
+          });
+          const data = await jsonRes.json();
+          if (data.data?.reply) {
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === assistantMsgId ? { ...msg, content: data.data.reply } : msg
+              )
+            );
+            if (data.data.conversationId) {
+              setActiveConversationId(data.data.conversationId);
+              if (typeof window !== "undefined") {
+                localStorage.setItem(LOCAL_STORAGE_ACTIVE_CHAT_KEY, data.data.conversationId);
+              }
+            }
+            if (data.data.title) {
+              setActiveTitle(data.data.title);
+            }
+          } else {
+            throw new Error("No reply from AI service");
+          }
+        } catch {
+          toast.error("AI Coach currently unavailable. Please try again shortly.");
           setMessages((prev) =>
             prev.map((msg) =>
-              msg.id === assistantMsgId ? { ...msg, content: data.data.reply } : msg
+              msg.id === assistantMsgId
+                ? {
+                    ...msg,
+                    content:
+                      "I encountered a temporary connection issue. Please verify your GEMINI_API_KEY and try asking again.",
+                  }
+                : msg
             )
           );
-          if (data.data.conversationId) {
-            setActiveConversationId(data.data.conversationId);
-            if (typeof window !== "undefined") {
-              localStorage.setItem(LOCAL_STORAGE_ACTIVE_CHAT_KEY, data.data.conversationId);
-            }
-          }
-          if (data.data.title) {
-            setActiveTitle(data.data.title);
-          }
         }
-      } catch {
-        toast.error("AI Coach currently unavailable. Please try again shortly.");
+      } else if (!streamFailedWithErrorEvent) {
+        toast.error("Connection to AI Coach was interrupted.");
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === assistantMsgId
               ? {
                   ...msg,
-                  content:
-                    "I encountered a temporary connection issue. Please verify your GEMINI_API_KEY and try asking again.",
+                  content: accumulatedRef.current
+                    ? `${accumulatedRef.current}\n\n[Response interrupted. Please try asking again.]`
+                    : "I encountered a connection interruption. Please try asking again.",
                 }
               : msg
           )

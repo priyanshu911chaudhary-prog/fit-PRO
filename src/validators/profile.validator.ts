@@ -23,11 +23,33 @@ const equipmentTuple = AvailableEquipment as unknown as [Equipment, ...Equipment
 
 export const profileSetupSchema = z.object({
   gender: z.enum(genderTuple),
-  dob: z.coerce.date(),
+  dob: z
+    .preprocess((val) => {
+      if (typeof val === "string" || val instanceof Date) {
+        const d = new Date(val);
+        return isNaN(d.getTime()) ? undefined : d;
+      }
+      return undefined;
+    }, z.date({ message: "Invalid date of birth" }))
+    .refine((d) => d.getTime() <= Date.now(), {
+      message: "Date of birth cannot be in the future",
+    })
+    .refine(
+      (d) => {
+        if (d.getTime() > Date.now()) return true;
+        const today = new Date();
+        let age = today.getFullYear() - d.getFullYear();
+        const m = today.getMonth() - d.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < d.getDate())) age--;
+        return age >= 12;
+      },
+      {
+        message: "You must be at least 12 years old to use Fit-PRO",
+      }
+    ),
   age: z
     .number()
     .min(12, "Age must be at least 12")
-    .max(100, "Age must be less than or equal to 100")
     .optional(),
   height: z
     .number()

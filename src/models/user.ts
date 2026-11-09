@@ -17,6 +17,7 @@ export interface IUser extends Document {
   refreshToken?: string;
   previousRefreshToken?: string;
   previousRefreshTokenExpiry?: Date;
+  tokenVersion?: number;
   forgotPasswordToken?: string;
   forgotPasswordTokenExpiry?: Date;
   emailVerificationToken?: string;
@@ -98,6 +99,10 @@ const userSchema = new Schema<IUser>(
       type: Date,
       select: false,
     },
+    tokenVersion: {
+      type: Number,
+      default: 0,
+    },
     forgotPasswordToken: {
       type: String,
       select: false,
@@ -146,6 +151,7 @@ userSchema.methods.generateAccessToken = async function (hasProfile?: boolean): 
     email: this.email,
     role: this.role || "user",
     hasProfile: isProfileComplete,
+    tokenVersion: typeof this.tokenVersion === "number" ? this.tokenVersion : 0,
   });
 };
 

@@ -13,7 +13,7 @@ import { Profile } from "@/models/profile";
 import { WaterLog } from "@/models/waterLog";
 import { WorkoutLog } from "@/models/workoutLog";
 
-export const DASHBOARD_CACHE_TTL = 30; // 30 seconds
+const DASHBOARD_CACHE_TTL = 30; // 30 seconds
 
 async function computeDashboardStats(userId: string, timeZone: string) {
   const todayStr = formatInTimezone(new Date(), timeZone);
@@ -21,7 +21,7 @@ async function computeDashboardStats(userId: string, timeZone: string) {
     await Promise.all([
       Profile.findOne({ user: userId }),
       Bmi.find({ user: userId }).sort({ date: 1 }).limit(30).select("bmi weight date createdAt -_id"),
-      WorkoutLog.find({ user: userId }).sort({ createdAt: -1 }).select("createdAt"),
+      WorkoutLog.find({ user: userId }).select("date createdAt"),
       WorkoutLog.find({ user: userId }).sort({ createdAt: -1 }).limit(3),
       MealLog.find({ user: userId }).sort({ createdAt: -1 }).limit(3),
       WaterLog.find({ user: userId }).sort({ createdAt: -1, date: -1 }).limit(100),
@@ -47,14 +47,17 @@ async function computeDashboardStats(userId: string, timeZone: string) {
     bmiHistory = [baseline];
   }
 
-  // Timezone-aware streak calculation (Approved Fix 7)
+  // Timezone-aware streak calculation using selected workout date with createdAt fallback
   let streak = 0;
   if (allWorkoutLogs && allWorkoutLogs.length > 0) {
-    const dates = [
-      ...new Set(
-        allWorkoutLogs.map((log) => formatInTimezone(log.createdAt, timeZone))
-      ),
-    ];
+    const rawDates = allWorkoutLogs.map((log) => {
+      if (log.date && typeof log.date === "string" && log.date.trim()) {
+        return log.date.trim();
+      }
+      return formatInTimezone(log.createdAt, timeZone);
+    });
+
+    const dates = [...new Set(rawDates)].sort().reverse();
 
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);

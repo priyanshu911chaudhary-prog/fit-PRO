@@ -11,21 +11,49 @@ export async function GET(req: NextRequest) {
   const code = searchParams.get("code");
   const error = searchParams.get("error");
   const errorDescription = searchParams.get("error_description");
+  const state = searchParams.get("state");
+  const storedState = req.cookies.get("ms_oauth_state")?.value;
+  const verifier = req.cookies.get("ms_code_verifier")?.value;
+
+  // Enforce state CSRF validation: both query state and stored cookie state must be present and match
+  if (!storedState || !state || state !== storedState) {
+    const res = NextResponse.redirect(
+      new URL("/login?error=Invalid+or+missing+OAuth+state+parameter", env.APP_URL)
+    );
+    res.cookies.delete("ms_oauth_state");
+    res.cookies.delete("ms_code_verifier");
+    return res;
+  }
+
+  // Enforce PKCE verifier requirement
+  if (!verifier) {
+    const res = NextResponse.redirect(
+      new URL("/login?error=Missing+PKCE+code+verifier", env.APP_URL)
+    );
+    res.cookies.delete("ms_oauth_state");
+    res.cookies.delete("ms_code_verifier");
+    return res;
+  }
 
   if (error || !code) {
     const errorMsg = errorDescription || error || "Microsoft sign-in was cancelled";
-    return NextResponse.redirect(
+    const res = NextResponse.redirect(
       new URL(`/login?error=${encodeURIComponent(errorMsg)}`, env.APP_URL)
     );
+    res.cookies.delete("ms_oauth_state");
+    res.cookies.delete("ms_code_verifier");
+    return res;
   }
 
   if (!env.MICROSOFT_CLIENT_ID) {
-    return NextResponse.redirect(
+    const res = NextResponse.redirect(
       new URL("/login?error=Microsoft+authentication+is+not+configured+on+this+server", env.APP_URL)
     );
+    res.cookies.delete("ms_oauth_state");
+    res.cookies.delete("ms_code_verifier");
+    return res;
   }
 
-  const verifier = req.cookies.get("ms_code_verifier")?.value;
   const redirectUri = `${env.APP_URL}/api/auth/microsoft/callback`;
 
   try {
@@ -34,9 +62,7 @@ export async function GET(req: NextRequest) {
     tokenParams.set("grant_type", "authorization_code");
     tokenParams.set("code", code);
     tokenParams.set("redirect_uri", redirectUri);
-    if (verifier) {
-      tokenParams.set("code_verifier", verifier);
-    }
+    tokenParams.set("code_verifier", verifier);
     const clientSecret = process.env.MICROSOFT_CLIENT_SECRET || env.MICROSOFT_CLIENT_SECRET;
     if (clientSecret) {
       tokenParams.set("client_secret", clientSecret);
@@ -57,9 +83,12 @@ export async function GET(req: NextRequest) {
       if (typeof errMsg === "string" && errMsg.includes("AADSTS70002")) {
         errMsg = "Microsoft App requires MICROSOFT_CLIENT_SECRET in your .env, or configure the Azure App platform as Single-Page Application (SPA) with PKCE.";
       }
-      return NextResponse.redirect(
+      const res = NextResponse.redirect(
         new URL(`/login?error=${encodeURIComponent(errMsg)}`, env.APP_URL)
       );
+      res.cookies.delete("ms_oauth_state");
+      res.cookies.delete("ms_code_verifier");
+      return res;
     }
 
     // Extract user profile from id_token and/or Microsoft Graph
@@ -104,9 +133,12 @@ export async function GET(req: NextRequest) {
     }
 
     if (!sub && !email) {
-      return NextResponse.redirect(
+      const res = NextResponse.redirect(
         new URL("/login?error=Could+not+retrieve+user+profile+from+Microsoft", env.APP_URL)
       );
+      res.cookies.delete("ms_code_verifier");
+      res.cookies.delete("ms_oauth_state");
+      return res;
     }
 
     const uniqueMicrosoftId = tid ? `${tid}:${sub}` : sub;
@@ -138,17 +170,18 @@ export async function GET(req: NextRequest) {
     }
 
     const accessToken = await user.generateAccessToken();
-    const refreshToken = await user.generateRefreshToken();
+    const newRefreshToken = await user.generateRefreshToken();
 
-    user.refreshToken = refreshToken;
+    user.refreshToken = newRefreshToken;
     await user.save();
 
     const profile = await Profile.findOne({ user: user._id });
     const targetPath = isNewUser || !profile ? "/onboarding" : "/dashboard";
 
     const response = NextResponse.redirect(new URL(targetPath, env.APP_URL));
-    setAuthCookies(response, accessToken, refreshToken);
+    setAuthCookies(response, accessToken, newRefreshToken);
     response.cookies.delete("ms_code_verifier");
+    response.cookies.delete("ms_oauth_state");
 
     return response;
   } catch (err: unknown) {
@@ -158,8 +191,11 @@ export async function GET(req: NextRequest) {
       errorName: err instanceof Error ? err.name : "UnknownError",
     });
     const msg = err instanceof Error ? err.message : "Microsoft authentication failed";
-    return NextResponse.redirect(
+    const res = NextResponse.redirect(
       new URL(`/login?error=${encodeURIComponent(msg)}`, env.APP_URL)
     );
+    res.cookies.delete("ms_code_verifier");
+    res.cookies.delete("ms_oauth_state");
+    return res;
   }
 }

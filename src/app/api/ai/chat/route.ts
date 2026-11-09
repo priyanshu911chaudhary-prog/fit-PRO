@@ -35,6 +35,7 @@ export const POST = withHandler(
     const message = (body.message as string)?.trim();
     const clientHistory = (body.history as AIChatMessage[]) || [];
     let conversationId = (body.conversationId as string)?.trim();
+    const clientMessageId = (body.clientMessageId as string)?.trim();
 
     if (!message) {
       throw new ApiError(400, "Message is required");
@@ -68,13 +69,23 @@ export const POST = withHandler(
       conversation.title = titleSnippet;
     }
 
-    // Save user message to conversation
-    conversation.messages.push({
-      role: "user",
-      content: message,
-      createdAt: new Date(),
-    });
-    await conversation.save();
+    // Save user message to conversation idempotently using clientMessageId
+    const alreadyExists = Boolean(
+      clientMessageId &&
+      conversation.messages.some(
+        (m) => m.clientMessageId && m.clientMessageId === clientMessageId
+      )
+    );
+
+    if (!alreadyExists) {
+      conversation.messages.push({
+        role: "user",
+        content: message,
+        createdAt: new Date(),
+        clientMessageId: clientMessageId || undefined,
+      });
+      await conversation.save();
+    }
 
     // Concurrently gather profile, BMI, and recent activity
     const [profile, bmi, recentWorkouts, recentMeals] = await Promise.all([

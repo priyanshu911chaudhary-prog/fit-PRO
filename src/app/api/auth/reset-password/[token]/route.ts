@@ -25,20 +25,24 @@ export const POST = withHandler(
 
     const user = await User.findOne({
       forgotPasswordToken: hashedToken,
-    });
+    }).select("+forgotPasswordTokenExpiry +refreshToken +previousRefreshToken +previousRefreshTokenExpiry");
 
     if (!user) {
       throw new ApiError(400, "Reset token is invalid or has expired");
     }
 
     const currentTime = new Date();
-    if (user.forgotPasswordTokenExpiry && user.forgotPasswordTokenExpiry < currentTime) {
+    if (!user.forgotPasswordTokenExpiry || user.forgotPasswordTokenExpiry < currentTime) {
       throw new ApiError(400, "Your reset token has expired. Please request a new one.");
     }
 
     user.password = body.newPassword;
     user.forgotPasswordToken = undefined;
     user.forgotPasswordTokenExpiry = undefined;
+    user.refreshToken = undefined;
+    user.previousRefreshToken = undefined;
+    user.previousRefreshTokenExpiry = undefined;
+    user.tokenVersion = (user.tokenVersion ?? 0) + 1;
     await user.save();
 
     return NextResponse.json(

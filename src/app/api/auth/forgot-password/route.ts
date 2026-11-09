@@ -27,6 +27,7 @@ export const POST = withHandler(async (req: NextRequest) => {
     limit: 3,
     windowSeconds: 15 * 60,
     message: "Too many password reset requests for this email. Please wait 15 minutes before requesting again.",
+    failClosed: true,
   });
 
   const user = await User.findOne({ email: body.email });

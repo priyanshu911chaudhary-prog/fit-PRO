@@ -15,7 +15,12 @@ export const POST = withHandler(async (req: NextRequest) => {
     try {
       const decoded = await verifyAccessToken(token);
       await User.findByIdAndUpdate(decoded.userId, {
-        $unset: { refreshToken: 1 },
+        $inc: { tokenVersion: 1 },
+        $unset: {
+          refreshToken: 1,
+          previousRefreshToken: 1,
+          previousRefreshTokenExpiry: 1,
+        },
       });
     } catch {
       // If token is invalid or expired, still clear cookies cleanly

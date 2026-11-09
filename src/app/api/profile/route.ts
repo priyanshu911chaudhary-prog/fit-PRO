@@ -96,7 +96,13 @@ export const POST = withHandler(
     const user = await User.findById(userId);
     const newAccessToken = user
       ? await user.generateAccessToken(true)
-      : await signAccessToken({ userId: userId.toString(), email: sessionUser.email, hasProfile: true });
+      : await signAccessToken({
+          userId: userId.toString(),
+          email: sessionUser.email,
+          role: sessionUser.role,
+          hasProfile: true,
+          tokenVersion: sessionUser.tokenVersion,
+        });
 
     try {
       await invalidateDashboardCache(userId);

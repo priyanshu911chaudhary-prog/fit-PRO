@@ -110,7 +110,22 @@ async function deliverOutboxRecord(outboxDoc: IEmailOutbox, jobId?: string): Pro
 export async function processEmailOutbox(limit = 20): Promise<number> {
   const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
 
-  // Reset stalled "processing" records back to "pending"
+  // 1. Mark exhausted stalled "processing" records as "failed"
+  await EmailOutbox.updateMany(
+    {
+      status: "processing",
+      updatedAt: { $lt: fiveMinutesAgo },
+      attempts: { $gte: 3 },
+    },
+    {
+      $set: {
+        status: "failed",
+        lastError: "Delivery timed out and max retry attempts exhausted",
+      },
+    }
+  );
+
+  // 2. Reset stalled "processing" records back to "pending" if retry attempts remain
   await EmailOutbox.updateMany(
     {
       status: "processing",

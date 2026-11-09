@@ -9,7 +9,7 @@ import { setAuthCookies } from "@/lib/auth/cookies";
 import { env } from "@/lib/env";
 import { User } from "@/models/user";
 
-export const MS_JWKS = createRemoteJWKSet(
+const MS_JWKS = createRemoteJWKSet(
   new URL("https://login.microsoftonline.com/common/discovery/v2.0/keys")
 );
 
@@ -36,6 +36,8 @@ export async function GET() {
     .replace(/\//g, "_")
     .replace(/=+$/, "");
 
+  const state = crypto.randomBytes(16).toString("hex");
+
   const redirectUri = `${env.APP_URL}/api/auth/microsoft/callback`;
   const authUrl = new URL("https://login.microsoftonline.com/common/oauth2/v2.0/authorize");
   authUrl.searchParams.set("client_id", env.MICROSOFT_CLIENT_ID);
@@ -43,12 +45,20 @@ export async function GET() {
   authUrl.searchParams.set("redirect_uri", redirectUri);
   authUrl.searchParams.set("response_mode", "query");
   authUrl.searchParams.set("scope", "openid profile email offline_access");
+  authUrl.searchParams.set("state", state);
   authUrl.searchParams.set("code_challenge", challenge);
   authUrl.searchParams.set("code_challenge_method", "S256");
   authUrl.searchParams.set("prompt", "select_account");
 
   const response = NextResponse.redirect(authUrl.toString());
   response.cookies.set("ms_code_verifier", verifier, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 10 * 60,
+  });
+  response.cookies.set("ms_oauth_state", state, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",

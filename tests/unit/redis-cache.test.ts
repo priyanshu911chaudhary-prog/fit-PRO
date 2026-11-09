@@ -151,6 +151,31 @@ describe("Redis Cache Utility (Unit Tests)", () => {
     expect(cached).toBeNull();
   });
 
+  it("coalesces concurrent requests during cache miss (cache stampede protection)", async () => {
+    const key = `test:cache:stampede:${Date.now()}`;
+    let loaderExecutions = 0;
+
+    const slowLoader = async () => {
+      loaderExecutions++;
+      await new Promise((r) => setTimeout(r, 50));
+      return { value: "coalesced" };
+    };
+
+    // Fire 5 simultaneous requests for the same cold key
+    const results = await Promise.all([
+      getCachedOrFetch(key, 60, slowLoader),
+      getCachedOrFetch(key, 60, slowLoader),
+      getCachedOrFetch(key, 60, slowLoader),
+      getCachedOrFetch(key, 60, slowLoader),
+      getCachedOrFetch(key, 60, slowLoader),
+    ]);
+
+    expect(loaderExecutions).toBe(1);
+    for (const res of results) {
+      expect(res.data).toEqual({ value: "coalesced" });
+    }
+  });
+
   it("deleteCached removes single keys explicitly", async () => {
     const key = `test:cache:del:${Date.now()}`;
     await setCached(key, { val: 123 }, 60);

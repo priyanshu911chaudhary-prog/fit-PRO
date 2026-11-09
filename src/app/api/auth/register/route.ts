@@ -17,6 +17,7 @@ export const POST = withHandler(async (req: NextRequest) => {
     limit: 20,
     windowSeconds: 60 * 60,
     message: "Too many registration attempts. Please try again after an hour.",
+    failClosed: true,
   });
 
   const body = await validateBody(req, registerSchema);

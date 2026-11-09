@@ -1,5 +1,19 @@
-import { build } from "esbuild";
+import { build, Plugin } from "esbuild";
 import path from "path";
+
+const emptyServerOnlyPlugin: Plugin = {
+  name: "empty-server-only",
+  setup(buildCtx) {
+    buildCtx.onResolve({ filter: /^server-only$/ }, (args) => ({
+      path: args.path,
+      namespace: "empty-server-only-ns",
+    }));
+    buildCtx.onLoad({ filter: /.*/, namespace: "empty-server-only-ns" }, () => ({
+      contents: "module.exports = {};",
+      loader: "js",
+    }));
+  },
+};
 
 async function run() {
   await build({
@@ -11,8 +25,8 @@ async function run() {
     outfile: path.resolve(process.cwd(), "dist/worker.cjs"),
     alias: {
       "@": path.resolve(process.cwd(), "src"),
-      "server-only": path.resolve(process.cwd(), "tests/mocks/server-only.ts"),
     },
+    plugins: [emptyServerOnlyPlugin],
     packages: "external",
     sourcemap: true,
   });

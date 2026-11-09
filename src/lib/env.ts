@@ -11,6 +11,7 @@ const envSchema = z.object({
   APP_URL: z.string().url().default("http://localhost:3000"),
   MONGODB_URI: z.string().min(1, "MONGODB_URI is required"),
   MONGODB_URI_TEST: z.string().optional(),
+  REDIS_URL: z.string().default("redis://127.0.0.1:6379"),
   ACCESS_TOKEN_SECRET: z.string().min(16, "ACCESS_TOKEN_SECRET must be at least 16 characters"),
   ACCESS_TOKEN_EXPIRATION: z.string().default("15m"),
   REFRESH_TOKEN_SECRET: z.string().min(16, "REFRESH_TOKEN_SECRET must be at least 16 characters"),
@@ -25,6 +26,8 @@ const envSchema = z.object({
   MAILTRAP_API_TOKEN: z.string().optional(),
   EMAIL_PROVIDER: z.enum(["mailtrap", "mock"]).default("mock"),
   EMAIL_FROM: z.string().default("Fit-PRO <hello@fit-pro.publicvm.com>"),
+  EMAIL_PAYLOAD_SECRET: z.string().min(16).optional(),
+  ADMIN_API_KEY: z.string().optional(),
   NEXT_PUBLIC_VAPID_PUBLIC_KEY: z
     .string()
     .default("BPKkV4JKJiqgsTNdGFL318UX_TzjvRIV5BFmSdnPtS5IrN9o6u1g5Ea8opRm9n0htPbUhPzXyVnCQevmjSN7CI4"),
@@ -83,6 +86,7 @@ export function getEnv(): Env {
       NODE_ENV: (process.env.NODE_ENV as "development" | "test" | "production") || "development",
       APP_URL: process.env.APP_URL || "http://localhost:3000",
       MONGODB_URI: process.env.MONGODB_URI || process.env.MONGO_URI || "mongodb://127.0.0.1:27017/fit-pro",
+      REDIS_URL: process.env.REDIS_URL || "redis://127.0.0.1:6379",
       ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET || "default_dev_access_token_secret_12345",
       ACCESS_TOKEN_EXPIRATION: process.env.ACCESS_TOKEN_EXPIRATION || "15m",
       REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET || "default_dev_refresh_token_secret_12345",
@@ -97,6 +101,8 @@ export function getEnv(): Env {
       MAILTRAP_API_TOKEN: process.env.MAILTRAP_API_TOKEN,
       EMAIL_PROVIDER: (process.env.EMAIL_PROVIDER as "mailtrap" | "mock") || (process.env.MAILTRAP_API_TOKEN ? "mailtrap" : "mock"),
       EMAIL_FROM: process.env.EMAIL_FROM || "Fit-PRO <hello@fit-pro.publicvm.com>",
+      EMAIL_PAYLOAD_SECRET: process.env.EMAIL_PAYLOAD_SECRET,
+      ADMIN_API_KEY: process.env.ADMIN_API_KEY,
       NEXT_PUBLIC_VAPID_PUBLIC_KEY:
         process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
         "BPKkV4JKJiqgsTNdGFL318UX_TzjvRIV5BFmSdnPtS5IrN9o6u1g5Ea8opRm9n0htPbUhPzXyVnCQevmjSN7CI4",

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { User } from "@/models/user";
 import { ACCESS_COOKIE_NAME } from "../auth/cookies";
 import { TokenPayload, verifyAccessToken } from "../auth/jwt";
 import { ApiError } from "./api-error";
@@ -36,6 +37,11 @@ export function withAuth<T = unknown>(
       throw new ApiError(401, "Invalid or expired access token");
     }
 
+    const dbUser = await User.findById(user.userId).select("tokenVersion").lean();
+    if (!dbUser || (dbUser.tokenVersion ?? 0) !== (user.tokenVersion ?? 0)) {
+      throw new ApiError(401, "Invalid or expired access token");
+    }
+
     return await handler(req, context, user);
   };
 }
@@ -56,6 +62,10 @@ export function withOptionalAuth<T = unknown>(
     if (token) {
       try {
         user = await verifyAccessToken(token);
+        const dbUser = await User.findById(user.userId).select("tokenVersion").lean();
+        if (!dbUser || (dbUser.tokenVersion ?? 0) !== (user.tokenVersion ?? 0)) {
+          user = null;
+        }
       } catch {
         user = null;
       }

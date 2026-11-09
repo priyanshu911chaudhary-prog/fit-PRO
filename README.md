@@ -146,7 +146,7 @@ REFRESH_TOKEN_EXPIRATION=7d
 
 # Google Gemini AI
 GEMINI_API_KEY=your_gemini_api_key_here
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-3.5-flash
 
 # OAuth (Optional / Feature Flagged)
 GOOGLE_CLIENT_ID=your_google_client_id
@@ -175,12 +175,23 @@ npm run seed:exercises
 npm run seed:meals
 ```
 
-### 5. Running the Development Server
-Start the Next.js Turbopack development server:
+### 5. Running the Application & Background Worker
+#### Option A: Running Locally (Development)
+In Terminal 1 (Next.js Application Server):
 ```bash
 npm run dev
 ```
+In Terminal 2 (BullMQ Background Worker):
+```bash
+npm run worker:dev
+```
 Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+#### Option B: Running via Docker Compose
+Ensure Docker Desktop is running, then:
+```bash
+docker compose up -d
+```
 
 ---
 
@@ -189,10 +200,23 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 Run the automated test suite and code quality gates:
 
 ```bash
-# Run Vitest unit tests (Calculations, Tokens, Envelope)
+# 1. Main Vitest Suite (Unit, Component, API, and Integration - 323 tests)
 npm test
 
-# Run ESLint validation
+
+# 2. Focused Phase 2E Regression Suite (14 tests)
+npm run test:quality:phase2e
+
+# 3. Complete Independent Quality Regressions (68 tests across Auth, Phase 2B, Phase 2E)
+npm run test:quality
+
+# 4. Playwright End-to-End User Journeys (25 journeys across 9 suites)
+npm run test:quality:e2e
+
+# 5. ESLint Code Standards Validation
+
+
+
 npm run lint
 
 # Run TypeScript strict type-checking
@@ -201,6 +225,13 @@ npx tsc --noEmit
 # Build production bundle (Validates 45 static and dynamic routes)
 npm run build
 ```
+
+---
+
+## 📚 Documentation Reference
+
+- **[Configuration Guide](docs/configuration.md)**: Environment variable definitions, test database safety, email providers, and troubleshooting.
+- **[Deployment Runbook](docs/deployment.md)**: Production prerequisites, container builds, system architecture, catalog seeding, and deployment verification checklist.
 
 ---
 
@@ -330,7 +361,7 @@ This application includes a production-grade testing suite designed to showcase 
 ### Test Commands
 ```bash
 # Run all Unit, Component, API, and Integration suites (100% pass)
-npm test
+
 
 # Run Playwright End-to-End browser journeys
 npm run test:e2e
@@ -402,7 +433,7 @@ npm run worker
 ### 7. Run Automated Tests
 ```bash
 # Full test suite (320+ unit, component, API, and integration tests)
-npm test
+
 
 # Focused test run
 npx vitest run tests/unit/email-provider.test.ts

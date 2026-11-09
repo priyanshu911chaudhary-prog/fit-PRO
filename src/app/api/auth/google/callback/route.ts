@@ -13,10 +13,10 @@ export async function GET(req: NextRequest) {
   const state = searchParams.get("state");
   const storedState = req.cookies.get("google_oauth_state")?.value;
 
-  // Verify OAuth state if one was issued
-  if (storedState && state && state !== storedState) {
+  // Enforce OAuth CSRF protection: both query state and stored state cookie must be present and match
+  if (!storedState || !state || state !== storedState) {
     const res = NextResponse.redirect(
-      new URL("/login?error=Invalid+OAuth+state+parameter", env.APP_URL)
+      new URL("/login?error=Invalid+or+missing+OAuth+state+parameter", env.APP_URL)
     );
     res.cookies.delete("google_oauth_state");
     return res;

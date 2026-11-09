@@ -6,13 +6,15 @@ export interface TokenPayload {
   email: string;
   role?: string;
   hasProfile?: boolean;
+  tokenVersion?: number;
 }
 
 const accessSecret = new TextEncoder().encode(env.ACCESS_TOKEN_SECRET);
 const refreshSecret = new TextEncoder().encode(env.REFRESH_TOKEN_SECRET);
 
 export async function signAccessToken(payload: TokenPayload): Promise<string> {
-  return await new SignJWT({ ...payload })
+  const tokenVersion = typeof payload.tokenVersion === "number" ? payload.tokenVersion : 0;
+  return await new SignJWT({ ...payload, tokenVersion })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(env.ACCESS_TOKEN_EXPIRATION || "7d")
@@ -22,6 +24,7 @@ export async function signAccessToken(payload: TokenPayload): Promise<string> {
 export async function signRefreshToken(payload: TokenPayload): Promise<string> {
   return await new SignJWT({ ...payload })
     .setProtectedHeader({ alg: "HS256" })
+    .setJti(crypto.randomUUID())
     .setIssuedAt()
     .setExpirationTime(env.REFRESH_TOKEN_EXPIRATION || "30d")
     .sign(refreshSecret);
@@ -36,6 +39,7 @@ export async function verifyAccessToken(token: string): Promise<TokenPayload> {
     email: payload.email as string,
     role: (payload.role as string) || "user",
     hasProfile: payload.hasProfile as boolean | undefined,
+    tokenVersion: typeof payload.tokenVersion === "number" ? payload.tokenVersion : undefined,
   };
 }
 

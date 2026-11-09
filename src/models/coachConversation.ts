@@ -6,6 +6,7 @@ export interface ICoachMessage {
   role: ChatRole;
   content: string;
   createdAt: Date;
+  clientMessageId?: string;
 }
 
 export interface ICoachConversation extends Document {
@@ -31,6 +32,10 @@ const coachMessageSchema = new Schema<ICoachMessage>(
     createdAt: {
       type: Date,
       default: Date.now,
+    },
+    clientMessageId: {
+      type: String,
+      required: false,
     },
   },
   { _id: true }

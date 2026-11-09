@@ -157,4 +157,26 @@ describe("API Tests -> Distributed Rate Limiting (Redis Backend)", () => {
 
     evalSpy.mockRestore();
   });
+
+  it("follows fail-closed policy on sensitive routes when failClosed is enabled", async () => {
+    const redis = getRedisClient();
+    const evalSpy = vi.spyOn(redis, "eval").mockRejectedValueOnce(new Error("Redis connection dropped"));
+
+    const testId = `user_${Date.now()}_failclosed`;
+    const mockReq = new Request("http://localhost:3000/api/auth/login", {
+      headers: { "x-forwarded-for": "127.0.0.1" },
+    });
+
+    await expect(
+      checkRateLimit(mockReq, {
+        keyPrefix: "auth:login:email",
+        identifier: testId,
+        limit: 3,
+        windowSeconds: 60,
+        failClosed: true,
+      })
+    ).rejects.toThrow(ApiError);
+
+    evalSpy.mockRestore();
+  });
 });

@@ -125,11 +125,15 @@ export async function deleteCached(key: string): Promise<boolean> {
   }
 }
 
+// In-flight loader promises map to prevent cache stampede (thundering herd)
+const inFlightLoaders = new Map<string, Promise<unknown>>();
+
 /**
- * High-level Cache-Aside pattern helper:
+ * High-level Cache-Aside pattern helper with singleflight cache-stampede protection:
  * 1. Checks cache for the given key.
  * 2. On hit: returns cached data with hit: true.
- * 3. On miss / error: calls loader(), saves result with TTL, and returns with hit: false.
+ * 3. On miss / error: coalesces concurrent in-flight calls to the same key into a single
+ *    loader execution, saves result with TTL, and returns with hit: false.
  * Errors in loader are never swallowed or cached.
  */
 export async function getCachedOrFetch<T>(
@@ -143,12 +147,31 @@ export async function getCachedOrFetch<T>(
     return { data: cached, hit: true };
   }
 
+  // Check if an identical loader is already in flight for this key
+  const existingInFlight = inFlightLoaders.get(key);
+  if (existingInFlight) {
+    logger.debug("Cache stampede prevented; joining in-flight loader", { key });
+    const joinedData = (await existingInFlight) as T;
+    return { data: joinedData, hit: false };
+  }
+
   logger.info("Cache miss", { key, ttlSeconds });
-  const freshData = await loader();
 
-  // Write asynchronously or await safely without breaking if Redis write fails
-  await setCached(key, freshData, ttlSeconds);
+  // Initiate single in-flight execution
+  const loaderPromise = (async () => {
+    try {
+      const freshData = await loader();
+      // Write asynchronously or await safely without breaking if Redis write fails
+      await setCached(key, freshData, ttlSeconds);
+      return freshData;
+    } finally {
+      inFlightLoaders.delete(key);
+    }
+  })();
 
+  inFlightLoaders.set(key, loaderPromise);
+
+  const freshData = await loaderPromise;
   return { data: freshData, hit: false };
 }
 

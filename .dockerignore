@@ -6,6 +6,12 @@ node_modules
 coverage
 playwright-report
 test-results
+quality-tests
+tests
+docs
+scratch
+dump.rdb
+.agents
 
 .env*
 !.env.example

@@ -52,7 +52,6 @@ const profileSchema = new Schema<IProfile>(
     age: {
       type: Number,
       min: [12, "Age must be at least 12"],
-      max: [100, "Age must be at most 100"],
     },
     height: {
       type: Number,

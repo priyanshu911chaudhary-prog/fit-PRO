@@ -10,11 +10,12 @@ export interface RateLimitOptions {
   windowSeconds: number;
   identifier?: string;
   message?: string;
+  failClosed?: boolean;
 }
 
 /**
  * Derive the client IP from trusted proxy headers.
- * Raw x-forwarded-for is only accepted outside production.
+ * Extracts x-real-ip or the first hop in x-forwarded-for.
  */
 export function getTrustedClientIp(req: Request): string {
   const realIp = req.headers.get("x-real-ip");
@@ -22,10 +23,11 @@ export function getTrustedClientIp(req: Request): string {
     return realIp.trim();
   }
 
-  if (process.env.NODE_ENV !== "production") {
-    const forwarded = req.headers.get("x-forwarded-for");
-    if (forwarded) {
-      return forwarded.split(",")[0].trim();
+  const forwarded = req.headers.get("x-forwarded-for");
+  if (forwarded) {
+    const firstIp = forwarded.split(",")[0].trim();
+    if (firstIp) {
+      return firstIp;
     }
   }
 
@@ -96,8 +98,20 @@ export async function checkRateLimit(
       throw error;
     }
 
+    if (options.failClosed) {
+      logger.error("Rate limiter Redis check failed on sensitive fail-closed route", {
+        keyPrefix: options.keyPrefix,
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+      throw new ApiError(
+        503,
+        "Security validation service is temporarily unavailable. Please try again shortly.",
+        ["Rate limiter backend store unreachable"]
+      );
+    }
+
     // Preserve the existing fail-open behavior if the rate-limit
-    // store is unavailable. Revisit this policy for sensitive routes.
+    // store is unavailable for non-sensitive routes.
     logger.error("Rate limiter Redis check failed", {
       error: error instanceof Error ? error.message : "Unknown error",
     });

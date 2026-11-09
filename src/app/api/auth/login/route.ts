@@ -31,6 +31,7 @@ export const POST = withHandler(async (req: NextRequest) => {
     limit: 10,
     windowSeconds: 15 * 60,
     message: "Too many login attempts for this account. Please wait 15 minutes before trying again.",
+    failClosed: true,
   });
 
   const user = await User.findOne({ email: body.email }).select("+password");

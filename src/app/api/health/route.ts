@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { connectDB } from "@/lib/db";
 import { isRedisReady, ensureRedisConnected } from "@/lib/redis/client";
 import { logger } from "@/lib/logger";
 
-export async function GET(_req: NextRequest) {
+export async function GET() {
   let dbStatus = "disconnected";
   let redisStatus = "disconnected";
 

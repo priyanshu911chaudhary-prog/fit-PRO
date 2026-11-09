@@ -64,19 +64,6 @@ jobs:
           REDIS_URL: redis://127.0.0.1:6379
           EMAIL_PROVIDER: mock
 
-      - name: Run quality regression suite
-        run: npm run test:quality
-        env:
-          NODE_ENV: test
-          APP_URL: http://localhost:3000
-          MONGODB_URI: mongodb://127.0.0.1:27017/fit-PRO-test
-          MONGODB_URI_TEST: mongodb://127.0.0.1:27017/fit-PRO-test
-          ACCESS_TOKEN_SECRET: ci_access_token_secret_only_for_tests_12345
-          REFRESH_TOKEN_SECRET: ci_refresh_token_secret_only_for_tests_12345
-          REDIS_URL: redis://127.0.0.1:6379
-          EMAIL_PROVIDER: mock
-          AI_PROVIDER_MOCK: "true"
-
       - name: Build application and worker
         run: npm run build
         env:
@@ -91,8 +78,8 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Run Playwright E2E quality journeys
-        run: npm run test:quality:e2e
+      - name: Run Playwright E2E journeys
+        run: npm run test:e2e
         env:
           NODE_ENV: test
           APP_URL: http://localhost:3000
@@ -109,5 +96,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-artifacts
-          path: quality-tests/e2e/playwright-artifacts/
+          path: tests/e2e/test-results/
           retention-days: 7

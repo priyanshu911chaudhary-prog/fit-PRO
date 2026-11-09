@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
 import { GET } from "@/app/api/health/route";
-import { NextRequest } from "next/server";
 import mongoose from "mongoose";
 
 describe("Health Check API (/api/health)", () => {
@@ -12,8 +11,7 @@ describe("Health Check API (/api/health)", () => {
       configurable: true,
     });
 
-    const req = new NextRequest("http://localhost:3000/api/health");
-    const response = await GET(req);
+    const response = await GET();
     const data = await response.json();
 
     expect(response.status).toBe(200);
@@ -39,8 +37,7 @@ describe("Health Check API (/api/health)", () => {
     const dbModule = await import("@/lib/db");
     const connectSpy = vi.spyOn(dbModule, "connectDB").mockRejectedValueOnce(new Error("DB Down"));
 
-    const req = new NextRequest("http://localhost:3000/api/health");
-    const response = await GET(req);
+    const response = await GET();
     const data = await response.json();
 
     expect(response.status).toBe(503);

@@ -21,6 +21,7 @@ export interface WorkoutExerciseEntry {
 }
 
 export interface WorkoutExerciseLogItem {
+  setDetails?: { reps: number; weight: number }[];
   exerciseId?: {
     _id?: string;
     name?: string;

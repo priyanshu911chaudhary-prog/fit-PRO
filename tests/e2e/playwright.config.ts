@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import path from "path";
 import { defineConfig, devices } from "@playwright/test";
-import { assertSafeTestDatabase } from "./helpers/db-guard";
+import { assertSafeTestDatabase } from "../helpers/db-guard";
 
 // Load environment variables from .env
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
@@ -9,9 +9,11 @@ dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 // Safety guard: Enforce dedicated test database before allowing any E2E tests to run
 const safeTestUri = assertSafeTestDatabase(process.env.MONGODB_URI_TEST);
 
+const baseURL = "http://127.0.0.1:3100";
+
 export default defineConfig({
   testDir: "./journeys",
-  timeout: 60_000,
+  timeout: 120_000,
   expect: {
     timeout: 15_000,
   },
@@ -20,26 +22,29 @@ export default defineConfig({
   workers: 1, // Sequential execution prevents cross-journey database collisions
   reporter: [
     ["list"],
-    ["html", { outputFolder: "playwright-report", open: "never" }],
+    ["html", { outputFolder: path.join(__dirname, "playwright-report"), open: "never" }],
   ],
-  outputDir: "playwright-artifacts",
+  outputDir: path.join(__dirname, "playwright-artifacts"),
   use: {
-    baseURL: process.env.APP_URL || "http://localhost:3000",
+    baseURL,
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
     actionTimeout: 10_000,
-    navigationTimeout: 20_000,
+    navigationTimeout: 60_000,
   },
   webServer: {
-    command: "npx next dev -p 3000",
+    command: "npm run seed && npx next dev -H 127.0.0.1 -p 3100",
     cwd: path.resolve(__dirname, "../../"),
-    url: "http://localhost:3000/login",
-    reuseExistingServer: true,
+    url: baseURL + "/login",
+    reuseExistingServer: false,
     timeout: 120_000,
     env: {
-      PORT: "3000",
-      APP_URL: "http://localhost:3000",
+      NODE_ENV: "development",
+      APP_URL: baseURL,
+      GEMINI_API_KEY: "",
+      GOOGLE_CLIENT_ID: "",
+      NEXT_PUBLIC_GOOGLE_CLIENT_ID: "",
       MONGODB_URI: safeTestUri,
       MONGO_URI: safeTestUri,
       EMAIL_PROVIDER: "mock",

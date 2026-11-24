@@ -448,6 +448,9 @@ export async function generateCoachChatJSON(
   context: AICoachContext,
   history: AIChatMessage[] = []
 ): Promise<string> {
+  if (process.env.NODE_ENV !== "production" && process.env.AI_PROVIDER_MOCK === "true") {
+    return "Test coach response.";
+  }
   const ai = getGenAIClient();
   const primaryModel = env.GEMINI_MODEL || "gemini-3.5-flash";
   const fallbackModel = "gemini-3.1-flash-lite";
@@ -495,6 +498,10 @@ export async function* streamCoachChat(
   context: AICoachContext,
   history: AIChatMessage[] = []
 ): AsyncGenerator<string> {
+  if (process.env.NODE_ENV !== "production" && process.env.AI_PROVIDER_MOCK === "true") {
+    yield "Test coach response.";
+    return;
+  }
   const ai = getGenAIClient();
   const primaryModel = env.GEMINI_MODEL || "gemini-3.5-flash";
   const fallbackModel = "gemini-3.1-flash-lite";

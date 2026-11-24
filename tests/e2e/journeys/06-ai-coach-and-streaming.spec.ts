@@ -56,12 +56,14 @@ test.describe("Journey 06: AI Coach Conversations, Streaming, and Plan Managemen
     expect(userMessages.length).toBe(1);
     expect(userMessages[0].content).toBe(promptText);
 
+    await expect(page.getByRole("log").getByText("Test coach response.", { exact: true })).toBeVisible();
+
     // 3. Reload conversation page: verify history loads without duplicate bubbles
     await page.reload();
     await page.waitForLoadState("networkidle");
 
-    const messageCount = await page.locator(".whitespace-pre-wrap", { hasText: promptText }).count();
-    expect(messageCount).toBe(1);
+    await expect(page.getByRole("log").getByText(promptText, { exact: true })).toHaveCount(1);
+    await expect(page.getByRole("log").getByText("Test coach response.", { exact: true })).toBeVisible();
 
     // 4. Delete conversation via API and verify cleanup
     const deleteRes = await fetch(`${baseURL || "http://localhost:3000"}/api/coach/conversations/${savedConv!._id}`, {

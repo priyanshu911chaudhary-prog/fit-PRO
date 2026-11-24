@@ -1,5 +1,7 @@
 "use client";
 
+import { afterLogin } from "@/lib/auth/redirect";
+
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api-client";
@@ -95,12 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         hasProfile,
       });
       toast.success(res.message || "Logged in successfully");
-      const dest =
-        !hasProfile
-          ? "/onboarding"
-          : redirectUrl && !redirectUrl.startsWith("/login")
-          ? (redirectUrl.startsWith("/") ? redirectUrl : `/${redirectUrl}`)
-          : "/dashboard";
+      const dest = afterLogin(hasProfile, redirectUrl);
       window.location.href = dest;
     }
   };

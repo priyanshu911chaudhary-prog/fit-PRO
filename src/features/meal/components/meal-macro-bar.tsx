@@ -14,10 +14,10 @@ export function MealMacroBar({ macros }: MealMacroBarProps) {
   if (totalCalories <= 0) return null;
 
   return (
-    <div className="p-3.5 rounded-xl border border-border/70 bg-[#0B0F0E]/80 backdrop-blur-md space-y-2">
+    <div className="p-3.5 rounded-xl border border-border/70 bg-card  space-y-2">
       <div className="flex justify-between text-xs font-mono text-muted-foreground">
-        <span>Macronutrient Ratio Breakdown</span>
-        <span className="text-foreground">100% Caloric Coverage</span>
+        <span>Macro breakdown</span>
+
       </div>
       <div className="h-2 w-full rounded-full bg-muted/30 overflow-hidden flex">
         <div
@@ -36,16 +36,16 @@ export function MealMacroBar({ macros }: MealMacroBarProps) {
           title={`Fats: ${fatPct}%`}
         />
       </div>
-      <div className="flex items-center justify-between text-[11px] font-mono pt-0.5">
-        <span className="flex items-center gap-1.5 text-cyan-400">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs pt-0.5">
+        <span className="flex items-center gap-1.5 text-cyan-700 dark:text-cyan-400">
           <span className="size-2 rounded-full bg-cyan-400" />
           Protein: {proteinPct}% ({totalProtein}g)
         </span>
-        <span className="flex items-center gap-1.5 text-amber-400">
+        <span className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400">
           <span className="size-2 rounded-full bg-amber-400" />
           Carbs: {carbsPct}% ({totalCarbs}g)
         </span>
-        <span className="flex items-center gap-1.5 text-purple-400">
+        <span className="flex items-center gap-1.5 text-purple-700 dark:text-purple-400">
           <span className="size-2 rounded-full bg-purple-400" />
           Fats: {fatPct}% ({totalFat}g)
         </span>

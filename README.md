@@ -1,232 +1,51 @@
-# AI Fitness (fit-PRO) 🏋️‍♂️🤖
+# fit-PRO
 
-A state-of-the-art, full-stack fitness tracking, workout planning, and real-time AI coaching platform. Built with **Next.js 16 (App Router)**, **React 19**, **TypeScript (Strict Mode)**, **Tailwind CSS v4**, **shadcn/ui (Base UI)**, **MongoDB Atlas (Mongoose)**, and the official **Google Gemini AI SDK (`@google/genai`)**.
+A personal training journal for logging workouts, meals, hydration, and body measurements. The dashboard shows recorded activity and progress over time. Optional Gemini coaching and meal and workout plans use the athlete’s profile.
 
----
+## Run locally
 
-## 🌟 Key Features
+Use Node.js 24, MongoDB, and Redis. From the repository root:
 
-### 🔐 Enterprise-Grade Authentication & Security
-- **Dual-Token Architecture**: Short-lived Access Token (15m) and long-lived Refresh Token (7d) stored in hardened `httpOnly`, `secure`, `sameSite: "lax"` cookies.
-- **Single-Flight Refresh Loop**: Client-side API client deduplicates concurrent 401s into a single refresh request with token rotation grace windows.
-- **Server Component Handlers**: Dedicated `/api/auth/refresh` redirect handler ensures expired Server Component navigations refresh credentials without desync.
-- **Algorithm Pinning**: JWT signing and verification pinned strictly to `HS256`.
-- **Hashed Refresh Storage & Bcrypt**: Refresh tokens are SHA-256 hashed at rest; passwords verified via `bcryptjs` strictly capped at 72 bytes.
-- **Secure OAuth**: Google OAuth ID token validation via `google-auth-library` (audience check and `email_verified` enforcement); Microsoft OAuth verification via JWKS (`oid`/`sub` + `tid` identification).
-- **Non-Enumerating Auth**: Forgot-password, login, and registration endpoints return uniform timing and messaging, eliminating account enumeration.
-
-### 🛡️ Distributed Redis Rate Limiting & Caching
-- **Distributed Atomic Rate Limiter**: High-performance sliding-window rate limiting backed by Redis and executed atomically via Redis Lua scripting (`ioredis`). Supports IP-level and account/email-level limits.
-- **Fail-Open Policy & Availability Trade-off**: If Redis is offline or encounters a connection error, the rate limiter fails open (`allowed: true`) to preserve critical application availability while logging centralized errors for observability.
-- **Catalog Snapshot Caching**: Shared Redis snapshots for complete exercise and active food catalogs (~10m TTL) with in-memory filtering, alias resolution, and pagination.
-- **Per-User Dashboard Caching**: Complete computed dashboard results cached for 30s isolated per authenticated user ID and timezone, with instant versioned invalidation on data mutations.
-- **Graceful Fallback**: If Redis is unreachable, all catalog and dashboard reads transparently fall back to direct MongoDB queries without throwing errors.
-
-### 🤖 AI Coach & Smart Plan Generation
-- **Official Google Gemini SDK**: Uses `@google/genai` with model configurable via `GEMINI_MODEL` (defaults to `gemini-2.5-flash`).
-- **Real-Time Streaming Coach**: Interactive SSE streaming endpoint (`/api/coach`) providing immediate conversational feedback, formatted markdown, and mandatory health disclaimers.
-- **Legacy AI Chat Contract**: Full backward compatibility with the Express `POST /api/ai/chat` endpoint.
-- **Structured Plan Generation**: Generates 7-day personalized workout splits and daily meal plans using Gemini structured JSON schemas validated with Zod.
-- **Automatic Catalog Upserting**: Normalizes and idempotently upserts AI-recommended exercises and foods into the database catalog and safely invalidates cached catalog snapshots.
-
-### 📊 Precision Metrics & Tracking
-- **Mifflin-St Jeor Engine**: Live dynamic computation of BMR (Basal Metabolic Rate) and TDEE (Total Daily Energy Expenditure), deriving age dynamically from Date of Birth.
-- **BMI Trajectory & Day-1 Recording**: Onboarding automatically logs the initial Day-1 BMI entry; continuous logging provides interactive Recharts trend visualizations.
-- **Timezone-Aware Day Logic**: Water intake resets, streak calculations, and date filters respect the client's IANA timezone transmitted via the `X-Timezone` header.
-- **Hydration Tracker**: Real-time water tracker with circular progress ring, one-click quick logging (+250ml, +500ml, +750ml, +1L), and immediate undo.
-- **Workout & Meal Loggers**: Deep catalog search with muscle group and meal type filters, dynamic set/rep/weight rows, and server-side macro calculations.
-
----
-
-## 🏗️ Technology Stack
-
-| Layer | Technologies |
-| :--- | :--- |
-| **Framework** | [Next.js 16](https://nextjs.org/) (App Router, Turbopack, Partial Prerendering) |
-| **Frontend** | [React 19](https://react.dev/), [TypeScript Strict Mode](https://www.typescriptlang.org/) |
-| **Styling & UI** | [Tailwind CSS v4](https://tailwindcss.com/), [Base UI](https://base-ui.com/), [shadcn/ui](https://ui.shadcn.com/), [Lucide React](https://lucide.dev/) |
-| **Data Visualization**| [Recharts 3](https://recharts.org/) |
-| **Database & ODM** | [MongoDB Atlas](https://www.mongodb.com/atlas), [Mongoose 9](https://mongoosejs.com/) (Cached global singleton) |
-| **In-Memory Cache & Limiter** | [Redis 7](https://redis.io/), [ioredis](https://github.com/redis/ioredis) (Lazy connection singleton, Lua atomic rate limiting, versioned cache-aside) |
-| **Validation** | [Zod 4](https://zod.dev/) (Shared across API route handlers and React Hook Form) |
-| **Artificial Intelligence** | [Google Gen AI SDK (`@google/genai`)](https://www.npmjs.com/package/@google/genai) |
-| **State & Data Fetching** | [TanStack React Query v5](https://tanstack.com/query/latest) |
-| **Testing** | [Vitest](https://vitest.dev/) |
-
-
----
-
-## 📁 Project Structure
-
-```
-fit-PRO/
-├── scripts/
-│   ├── seed-exercises.ts       # Idempotent exercise catalog seeder (tsx)
-│   └── seed-meals.ts           # Idempotent food catalog seeder (tsx)
-├── src/
-│   ├── app/                    # Next.js App Router (Pages & Route Handlers)
-│   │   ├── (auth)/             # Auth pages: /login, /register, /forgot-password, /verify-email
-│   │   ├── api/                # Unified Route Handlers (JSON REST & SSE Streaming)
-│   │   │   ├── ai/chat/        # Legacy JSON AI chat endpoint
-│   │   │   ├── auth/           # Login, register, refresh, me, oauth, passwords
-│   │   │   ├── bmi/            # BMI logging and historical trend
-│   │   │   ├── coach/          # Real-time SSE streaming AI coach
-│   │   │   ├── dashboard/      # Timezone-aware stats and streak calculation
-│   │   │   ├── exercises/      # Catalog search with muscle/equipment filters
-│   │   │   ├── foods/          # Catalog search with dietary/type filters
-│   │   │   ├── meal/           # Meal logging, history, and AI generation
-│   │   │   ├── profile/        # Profile onboarding, viewing, and patching
-│   │   │   ├── water/          # Water logging, today query, and deletion
-│   │   │   └── workout/        # Workout logging, history, and AI generation
-│   │   ├── bmi/                # BMI log & trajectory chart page
-│   │   ├── coach/              # Real-time AI coach chat interface
-│   │   ├── dashboard/          # Central fitness dashboard & metrics
-│   │   ├── meal/               # Meal logging interface & history
-│   │   ├── onboarding/         # Multi-step profile setup wizard
-│   │   ├── plans/              # Saved AI workout & meal plans
-│   │   ├── profile/            # User profile view and update settings
-│   │   ├── water/              # Interactive water tracker
-│   │   ├── workout/            # Workout logger with exercise catalog picker
-│   │   ├── layout.tsx          # Root layout with providers, navbar, and footer
-│   │   └── page.tsx            # High-conversion landing page
-│   ├── components/             # Reusable UI & Layout components
-│   │   ├── navbar.tsx          # Responsive navigation bar with auth state
-│   │   ├── footer.tsx          # Application footer with health disclaimer
-│   │   ├── theme-toggle.tsx    # Dark / Light mode toggle
-│   │   ├── providers.tsx       # QueryClient, ThemeProvider, AuthProvider, Sonner
-│   │   └── ui/                 # Accessible primitives (button, card, input, dialog)
-│   ├── constants/              # Global enums, boundaries, and system constants
-│   ├── context/                # Client Auth Context & Session state
-│   ├── lib/                    # Core backend and frontend utilities
-│   │   ├── api/                # withHandler, withAuth, withValidation, rate-limit
-│   │   ├── ai/                 # Gemini SDK client, schemas, prompts, stream parser
-│   │   ├── api-client.ts       # Single-flight refresh, auto X-Timezone HTTP client
-│   │   ├── db.ts               # Global Mongoose cached connection
-│   │   ├── env.ts              # Zod environment variable validation
-│   │   ├── fitness-calc.ts     # BMR, TDEE, BMI, and Age derivation calculations
-│   │   └── token.ts            # HS256 JWT sign/verify, cookies, crypto hashes
-│   ├── models/                 # 10 Strict Mongoose models with compound indexes
-│   └── validators/             # Shared Zod validation schemas
-├── tests/                      # Vitest unit test suite (calculations, tokens, envelope)
-├── MIGRATION_AUDIT.md          # Comprehensive audit of legacy Express codebase
-├── MIGRATION_REPORT.md         # Full architectural migration report and deviations log
-├── next.config.ts              # Next.js production configuration
-└── package.json                # Project dependencies and operational scripts
-```
-
----
-
-## 🚀 Getting Started
-
-### 1. Prerequisites
-- **Node.js**: `v20.x` or higher
-- **MongoDB**: MongoDB Atlas URI or local MongoDB instance (`>= 6.0`)
-- **Google Gemini API Key**: Obtainable from [Google AI Studio](https://aistudio.google.com/)
-
-### 2. Environment Configuration
-Copy `.env.example` to `.env`:
-```bash
+```sh
+npm ci
 cp .env.example .env
 ```
 
-Populate the required environment variables:
-```env
-# Application
-NODE_ENV=development
-APP_URL=http://localhost:3000
+In PowerShell, use `Copy-Item .env.example .env` for the second command. Configure the database URI, Redis URL, and separate access and refresh token secrets. Set `APP_URL` to the address you use in the browser. Mailtrap handles verification emails for real accounts. Mock email is available for automated tests.
 
-# Database
-MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/fit-pro?retryWrites=true&w=majority
-
-# JWT Authentication (HS256 - Secrets must be at least 32 characters)
-ACCESS_TOKEN_SECRET=your_access_token_secret_min_32_characters_long_for_security
-ACCESS_TOKEN_EXPIRATION=15m
-REFRESH_TOKEN_SECRET=your_refresh_token_secret_min_32_characters_long_for_security
-REFRESH_TOKEN_EXPIRATION=7d
-
-# Google Gemini AI
-GEMINI_API_KEY=your_gemini_api_key_here
-GEMINI_MODEL=gemini-3.5-flash
-
-# OAuth (Optional / Feature Flagged)
-GOOGLE_CLIENT_ID=your_google_client_id
-MICROSOFT_CLIENT_ID=your_microsoft_client_id
-
-# Email Provider (Mailtrap API)
-EMAIL_PROVIDER=mailtrap
-MAILTRAP_API_TOKEN=your_mailtrap_api_token
-EMAIL_FROM="Fit-PRO <hello@fit-pro.publicvm.com>"
-```
-
-### 3. Installation
-Install all dependencies:
-```bash
-npm install
-```
-
-### 4. Database Seeding
-Populate the exercise and food catalogs with idempotent seed data:
-```bash
-# Seed both catalogs
+```sh
+docker compose up -d mongodb redis
 npm run seed
-
-# Or run individually:
-npm run seed:exercises
-npm run seed:meals
-```
-
-### 5. Running the Application & Background Worker
-#### Option A: Running Locally (Development)
-In Terminal 1 (Next.js Application Server):
-```bash
 npm run dev
 ```
-In Terminal 2 (BullMQ Background Worker):
-```bash
-npm run worker:dev
-```
-Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-#### Option B: Running via Docker Compose
-Ensure Docker Desktop is running, then:
-```bash
-docker compose up -d
-```
+Open the app at [localhost:3000](http://localhost:3000). Start `npm run worker:dev` in another terminal for queued email, notifications, and leaderboard jobs. Configure `GEMINI_API_KEY` to use live AI features.
 
----
+## Project layout
 
-## 🧪 Testing & Verification
+| Directory | Responsibility |
+| --- | --- |
+| `src/app` | Next.js pages and API route handlers |
+| `src/features` | Feature UI, hooks, and calculations |
+| `src/components` | Shared navigation, providers, and shadcn components |
+| `src/models` and `src/validators` | MongoDB models and request schemas |
+| `src/lib` | Authentication, providers, caching, and queue integrations |
+| `src/workers` | Background processors and schedules |
+| `scripts` | Catalog seeds, reconciliation, and worker build |
+| `tests` | Unit, component, API, integration, and browser tests |
 
-Run the automated test suite and code quality gates:
+## Verify a change
 
-```bash
-# 1. Main Vitest Suite (Unit, Component, API, and Integration - 323 tests)
-npm test
+Set `MONGODB_URI_TEST` to a dedicated database such as `mongodb://127.0.0.1:27017/fit-pro-test`. Use a disposable Redis instance for integration and browser tests. Playwright seeds the test catalog and starts its own web server on port 3100.
 
-
-# 2. Focused Phase 2E Regression Suite (14 tests)
-npm run test:quality:phase2e
-
-# 3. Complete Independent Quality Regressions (68 tests across Auth, Phase 2B, Phase 2E)
-npm run test:quality
-
-# 4. Playwright End-to-End User Journeys (25 journeys across 9 suites)
-npm run test:quality:e2e
-
-# 5. ESLint Code Standards Validation
-
-
-
+```sh
 npm run lint
-
-# Run TypeScript strict type-checking
 npx tsc --noEmit
-
-# Build production bundle (Validates 45 static and dynamic routes)
+npm test
+npx playwright install chromium
+npm run test:e2e
 npm run build
 ```
-
----
 
 ## 📚 Documentation Reference
 

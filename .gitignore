@@ -47,7 +47,6 @@ yarn-error.log*
 next-env.d.ts
 
 # documentation & migration reports
-AGENTS.md
 DEPLOY_CHECKLIST.md
 MIGRATION_AUDIT.md
 MIGRATION_REPORT.md
@@ -55,16 +54,6 @@ ROUTE_MAP.md
 
 # local analysis & scratch
 /scratch
-
-# scripts & legacy
-/scripts/*
-!/scripts/seed-meals.ts
-!/scripts/seed-exercises.ts
-!/scripts/reconcile-legacy-exercises.ts
-!/scripts/validate-catalog-data.ts
-!/scripts/parse-ledger.js
-!/scripts/build-worker.ts
-/legacy_backend
 
 /dist
 /.agents

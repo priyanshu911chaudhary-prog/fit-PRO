@@ -37,24 +37,24 @@ export function BiometricProgressionCard({
   metricDelta,
 }: BiometricProgressionCardProps) {
   return (
-    <Card className="lg:col-span-8 border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl shadow-lg relative overflow-hidden">
+    <Card className="lg:col-span-8 border-border/70 bg-card  shadow-lg relative overflow-hidden">
       <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 gap-3 border-b border-border/40">
         <div>
           <div className="flex items-center gap-2">
             <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-              <Activity className="size-4 text-emerald-400" />
-              Biometric Progression Curve
+              <Activity className="size-4 text-emerald-700 dark:text-emerald-400" />
+              Measurement history
             </CardTitle>
             {metricDelta && (
               <Badge
                 variant="outline"
                 className={cn(
-                  "text-[10px] font-mono px-2 py-0.5",
+                  "text-xs font-mono px-2 py-0.5",
                   metricDelta.isPositive
-                    ? "border-amber-500/30 text-amber-400 bg-amber-500/10"
+                    ? "border-amber-500/30 text-amber-700 dark:text-amber-400 bg-amber-500/10"
                     : metricDelta.isZero
                       ? "border-muted-foreground/30 text-muted-foreground"
-                      : "border-emerald-500/30 text-emerald-400 bg-emerald-500/10"
+                      : "border-emerald-500/30 text-emerald-700 dark:text-emerald-400 bg-emerald-500/10"
                 )}
               >
                 {metricDelta.isPositive ? `+${metricDelta.diff}` : metricDelta.diff}{" "}
@@ -64,8 +64,8 @@ export function BiometricProgressionCard({
           </div>
           <CardDescription className="text-xs text-muted-foreground mt-0.5">
             {chartMetric === "weight"
-              ? "Historical weight trend curve with variance baselines"
-              : "Body Mass Index trajectory calibrated against WHO thresholds"}
+              ? "Your recorded weight over time"
+              : "Your recorded BMI over time"}
           </CardDescription>
         </div>
 
@@ -107,7 +107,7 @@ export function BiometricProgressionCard({
                 type="button"
                 onClick={() => onTimeRangeChange(r)}
                 className={cn(
-                  "px-2 py-1 rounded-md text-[11px] font-mono uppercase font-semibold transition-all cursor-pointer",
+                  "px-2 py-1 rounded-md text-xs font-mono uppercase font-semibold transition-all cursor-pointer",
                   timeRange === r
                     ? "bg-muted text-foreground shadow-xs"
                     : "text-muted-foreground hover:text-foreground"
@@ -122,7 +122,7 @@ export function BiometricProgressionCard({
             href="/bmi"
             className={cn(
               buttonVariants({ variant: "ghost", size: "sm" }),
-              "text-xs font-semibold text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 h-7 px-2"
+              "text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/10 h-7 px-2"
             )}
           >
             Log Entry
@@ -175,8 +175,8 @@ export function BiometricProgressionCard({
                   content={({ active, payload, label }) => {
                     if (active && payload && payload.length) {
                       return (
-                        <div className="rounded-xl border border-border/80 bg-[#0B0F0E]/95 p-3 shadow-2xl backdrop-blur-md">
-                          <p className="text-[11px] font-mono text-muted-foreground">
+                        <div className="rounded-xl border border-border/80 bg-card p-3 shadow-sm ">
+                          <p className="text-xs font-mono text-muted-foreground">
                             {formatSafeDate(String(label))}
                           </p>
                           <div className="flex items-center gap-2 mt-1">
@@ -228,8 +228,8 @@ export function BiometricProgressionCard({
             </div>
             <div className="space-y-1">
               <p className="font-semibold text-foreground">No biometric records in this cycle</p>
-              <p className="text-[11px] text-muted-foreground">
-                Record your initial weigh-in to plot telemetry progression.
+              <p className="text-xs text-muted-foreground">
+                Log a measurement to start your chart.
               </p>
             </div>
             <Link

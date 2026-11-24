@@ -58,7 +58,7 @@ export function OnboardingFooter({
           {isSubmitting ? (
             <>
               <Loader2 className="size-4 mr-2 animate-spin" />
-              Calibrating Protocol...
+              Saving profile…
             </>
           ) : (
             <>

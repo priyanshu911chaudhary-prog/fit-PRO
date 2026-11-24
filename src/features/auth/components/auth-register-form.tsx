@@ -1,5 +1,4 @@
 import React from "react";
-import { motion } from "framer-motion";
 import { ArrowRight, Eye, EyeOff, Loader2, Lock, Mail, User as UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,12 +38,8 @@ export function AuthRegisterForm({
   onSubmit,
 }: AuthRegisterFormProps) {
   return (
-    <motion.form
+    <form
       key="register-form"
-      initial={{ opacity: 0, x: 10 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -10 }}
-      transition={{ duration: 0.15 }}
       onSubmit={onSubmit}
       className="space-y-3.5"
     >
@@ -143,7 +138,7 @@ export function AuthRegisterForm({
         />
         <Label
           htmlFor="agreeTerms"
-          className="text-[11px] text-muted-foreground font-normal leading-relaxed cursor-pointer"
+          className="text-xs text-muted-foreground font-normal leading-relaxed cursor-pointer"
         >
           I agree to the Terms of Service and acknowledge consulting a physician before training.
         </Label>
@@ -167,6 +162,6 @@ export function AuthRegisterForm({
           </>
         )}
       </Button>
-    </motion.form>
+    </form>
   );
 }

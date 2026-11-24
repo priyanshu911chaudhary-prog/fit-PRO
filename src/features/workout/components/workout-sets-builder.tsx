@@ -33,18 +33,18 @@ export function WorkoutSetsBuilder({
   onSubmit,
 }: WorkoutSetsBuilderProps) {
   return (
-    <Card className="border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl shadow-lg">
+    <Card className="border-border/70 bg-card  shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-border/40">
         <div>
           <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-            <Activity className="size-4 text-emerald-400" />
+            <Activity className="size-4 text-emerald-700 dark:text-emerald-400" />
             Working Sets & Tonnage
           </CardTitle>
           <CardDescription className="text-xs text-muted-foreground">
             Configure reps, weight plates, and track calculated 1RM
           </CardDescription>
         </div>
-        <Badge variant="outline" className="text-xs font-mono border-emerald-500/30 text-emerald-400 bg-emerald-500/10">
+        <Badge variant="outline" className="text-xs font-mono border-emerald-500/30 text-emerald-700 dark:text-emerald-400 bg-emerald-500/10">
           {workoutExercises.length} Movements Staged
         </Badge>
       </CardHeader>
@@ -57,7 +57,7 @@ export function WorkoutSetsBuilder({
             </div>
             <div className="space-y-1">
               <p className="font-semibold text-foreground text-sm">No exercises staged yet</p>
-              <p className="text-[11px] text-muted-foreground max-w-sm">
+              <p className="text-xs text-muted-foreground max-w-sm">
                 Pick exercises from the catalog on the left to start logging reps, weights, and overload volume.
               </p>
             </div>
@@ -77,7 +77,7 @@ export function WorkoutSetsBuilder({
                 {/* Movement Header */}
                 <div className="flex items-center justify-between border-b border-border/40 pb-2.5">
                   <div className="flex items-center gap-2.5">
-                    <div className="size-7 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center">
+                    <div className="size-7 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center">
                       <Dumbbell className="size-3.5" />
                     </div>
                     <div>
@@ -85,7 +85,7 @@ export function WorkoutSetsBuilder({
                         {item.name}
                       </span>
                       {item.targetMuscle && (
-                        <span className="ml-2 text-[10px] font-mono uppercase text-emerald-400">
+                        <span className="ml-2 text-xs font-mono uppercase text-emerald-700 dark:text-emerald-400">
                           {item.targetMuscle.replace(/_/g, " ")}
                         </span>
                       )}
@@ -93,7 +93,7 @@ export function WorkoutSetsBuilder({
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-mono text-muted-foreground mr-1">
+                    <span className="text-xs font-mono text-muted-foreground mr-1">
                       Vol: <strong className="text-foreground">{movementVolume} kg</strong>
                     </span>
                     <Button
@@ -101,7 +101,7 @@ export function WorkoutSetsBuilder({
                       size="sm"
                       variant="outline"
                       onClick={() => onAddSet(item.exerciseId)}
-                      className="h-7 px-2.5 text-xs font-medium border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 cursor-pointer"
+                      className="h-7 px-2.5 text-xs font-medium border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 cursor-pointer"
                     >
                       <Plus className="size-3 mr-1" />
                       Add Set
@@ -111,7 +111,7 @@ export function WorkoutSetsBuilder({
                       size="icon"
                       variant="ghost"
                       onClick={() => onRemoveExercise(item.exerciseId)}
-                      className="size-7 text-muted-foreground hover:text-rose-400 transition-colors cursor-pointer"
+                      className="size-7 text-muted-foreground hover:text-rose-700 dark:text-rose-400 transition-colors cursor-pointer"
                       aria-label="Remove movement"
                     >
                       <Trash2 className="size-3.5" />
@@ -121,7 +121,7 @@ export function WorkoutSetsBuilder({
 
                 {/* Sets Table */}
                 <div className="space-y-2">
-                  <div className="grid grid-cols-12 gap-2 text-[10px] text-muted-foreground font-mono uppercase px-2">
+                  <div className="grid grid-cols-12 gap-2 text-xs text-muted-foreground font-mono uppercase px-2">
                     <div className="col-span-2">Set</div>
                     <div className="col-span-4">Reps</div>
                     <div className="col-span-4">Load (kg)</div>
@@ -178,7 +178,7 @@ export function WorkoutSetsBuilder({
                           <button
                             type="button"
                             onClick={() => onAdjustSet(item.exerciseId, setIdx, "weight", -2.5)}
-                            className="h-7 px-1.5 rounded border border-border/80 bg-muted/30 hover:bg-muted/70 flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer text-[10px] font-mono"
+                            className="h-7 px-1.5 rounded border border-border/80 bg-muted/30 hover:bg-muted/70 flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer text-xs font-mono"
                             title="-2.5 kg"
                           >
                             -2.5
@@ -202,7 +202,7 @@ export function WorkoutSetsBuilder({
                           <button
                             type="button"
                             onClick={() => onAdjustSet(item.exerciseId, setIdx, "weight", 2.5)}
-                            className="h-7 px-1.5 rounded border border-border/80 bg-muted/30 hover:bg-muted/70 flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer text-[10px] font-mono"
+                            className="h-7 px-1.5 rounded border border-border/80 bg-muted/30 hover:bg-muted/70 flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer text-xs font-mono"
                             title="+2.5 kg"
                           >
                             +2.5
@@ -211,14 +211,14 @@ export function WorkoutSetsBuilder({
 
                         {/* 1RM + Delete */}
                         <div className="col-span-2 flex items-center justify-end gap-1.5">
-                          <span className="text-[10px] font-mono text-emerald-400 font-semibold">
+                          <span className="text-xs font-mono text-emerald-700 dark:text-emerald-400 font-semibold">
                             {est1RM > 0 ? `${est1RM}kg` : "--"}
                           </span>
                           {item.sets.length > 1 && (
                             <button
                               type="button"
                               onClick={() => onRemoveSet(item.exerciseId, setIdx)}
-                              className="text-muted-foreground hover:text-rose-400 transition-colors p-1"
+                              className="text-muted-foreground hover:text-rose-700 dark:text-rose-400 transition-colors p-1"
                               aria-label="Remove set"
                             >
                               <Trash2 className="size-3" />
@@ -237,7 +237,7 @@ export function WorkoutSetsBuilder({
         {workoutExercises.length > 0 && (
           <div className="pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-border/40">
             <div className="text-xs text-muted-foreground font-mono">
-              Total Tonnage: <strong className="text-emerald-400 font-bold">{totalVolumeTonnage} kg</strong> across {totalSetsCount} sets
+              Total Tonnage: <strong className="text-emerald-700 dark:text-emerald-400 font-bold">{totalVolumeTonnage} kg</strong> across {totalSetsCount} sets
             </div>
 
             <Button

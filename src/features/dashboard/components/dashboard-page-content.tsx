@@ -4,9 +4,9 @@ import React from "react";
 import { Activity } from "lucide-react";
 import { useDashboard } from "../hooks/use-dashboard";
 import { DashboardHeader } from "./dashboard-header";
-import { DashboardMetricHud } from "./dashboard-metric-hud";
+import { DashboardMetrics } from "./dashboard-metrics";
 import { BiometricProgressionCard } from "./biometric-progression-card";
-import { TacticalLaunchpad } from "./tactical-launchpad";
+import { QuickActions } from "./quick-actions";
 import { RecentActivityLedgers } from "./recent-activity-ledgers";
 
 export function DashboardPageContent() {
@@ -35,27 +35,32 @@ export function DashboardPageContent() {
         <div className="relative">
           <div className="size-12 rounded-full border-2 border-emerald-500/20 border-t-emerald-400 animate-spin" />
           <div className="absolute inset-0 flex items-center justify-center">
-            <Activity className="size-5 text-emerald-400 animate-pulse" />
+            <Activity className="size-5 text-emerald-700 dark:text-emerald-400 animate-pulse" />
           </div>
         </div>
         <p className="text-xs uppercase tracking-widest text-muted-foreground font-mono">
-          Calibrating Telemetry Cockpit...
+          Loading your dashboard…
         </p>
       </div>
     );
   }
 
+  if (!stats) {
+    return <div role="alert" className="mx-auto my-12 space-y-3 text-center"><p>Your dashboard could not be loaded.</p>
+      <button className="underline" onClick={() => window.location.reload()}>Try again</button></div>;
+  }
+
   return (
-    <div className="container mx-auto max-w-7xl px-4 py-8 space-y-8">
+    <div className="container mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-9 space-y-6">
       {/* 1. Athlete Live Status Header */}
       <DashboardHeader
         greeting={greeting}
-        userName={user?.name}
+        userName={user?.fullName || user?.name}
         streak={streak}
       />
 
       {/* 2. Four Telemetry HUD Metric Cards */}
-      <DashboardMetricHud
+      <DashboardMetrics
         water={water}
         metrics={metrics}
         addingWater={addingWater}
@@ -63,7 +68,7 @@ export function DashboardPageContent() {
         onNavigate={router.push}
       />
 
-      {/* 3. Middle Bento Grid: Progression Telemetry & Tactical Launchpad */}
+      {/* 3. Middle Bento Grid: Progression Telemetry & Quick actions */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <BiometricProgressionCard
           filteredChartData={filteredChartData}
@@ -74,7 +79,7 @@ export function DashboardPageContent() {
           metricDelta={metricDelta}
         />
 
-        <TacticalLaunchpad
+        <QuickActions
           waterTotalMl={water?.totalMl || 0}
           addingWater={addingWater}
           onQuickAddWater={handleQuickAddWater}

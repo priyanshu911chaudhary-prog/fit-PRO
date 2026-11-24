@@ -38,7 +38,7 @@ export function CoachPageContent() {
       <CoachDisclaimer />
 
       {/* Main Terminal: Sidebar + Chat Box */}
-      <div className="flex flex-1 gap-3 overflow-hidden min-h-0">
+      <div className="relative flex flex-1 flex-col md:flex-row gap-3 overflow-hidden min-h-0">
         {/* Previous Conversations Sidebar */}
         <CoachSidebar
           sidebarOpen={sidebarOpen}
@@ -46,13 +46,13 @@ export function CoachPageContent() {
           activeConversationId={activeConversationId}
           isLoadingConversations={isLoadingConversations}
           isStreaming={isStreaming}
-          onSelectConversation={loadConversation}
+          onSelectConversation={(id) => { void loadConversation(id); if (window.innerWidth < 768) setSidebarOpen(false); }}
           onNewChat={handleNewChat}
           onDeleteConversation={handleDeleteConversation}
         />
 
         {/* Main Chat Terminal */}
-        <Card className="flex flex-col flex-1 border-border/70 bg-[#0B0F0E]/85 backdrop-blur-2xl shadow-2xl overflow-hidden min-w-0 min-h-0">
+        <Card className="flex flex-col flex-1 border-border/70 bg-card  shadow-sm overflow-hidden min-w-0 min-h-0">
           {/* Chat Window Header */}
           <CoachChatHeader
             sidebarOpen={sidebarOpen}
@@ -63,11 +63,11 @@ export function CoachPageContent() {
           />
 
           {/* Messages Stream Container */}
-          <CardContent className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 min-h-0 custom-scrollbar">
+          <CardContent role="log" aria-label="Conversation messages" className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 min-h-0 custom-scrollbar">
             {isLoadingMessages ? (
               <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-3">
-                <Loader2 className="size-7 text-emerald-400 animate-spin" />
-                <span className="text-xs font-mono">Loading protocol history...</span>
+                <Loader2 className="size-7 text-emerald-700 dark:text-emerald-400 animate-spin" />
+                <span className="text-xs font-mono">Loading conversations…</span>
               </div>
             ) : (
               messages.map((msg) => (

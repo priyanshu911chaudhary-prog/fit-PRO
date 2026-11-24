@@ -59,7 +59,7 @@ export function OnboardingPageContent() {
 
   return (
     <div className="w-full max-w-3xl mx-auto py-8 px-4 sm:px-6">
-      <div className="rounded-3xl border border-border/70 bg-card/85 dark:bg-card/75 backdrop-blur-2xl p-6 sm:p-10 shadow-2xl space-y-8 relative overflow-hidden">
+      <div className="rounded-3xl border border-border/70 bg-card/85 dark:bg-card/75  p-6 sm:p-10 shadow-sm space-y-8 relative overflow-hidden">
         {/* Subtle Ambient Radial Highlight */}
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-96 h-96 bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none -z-10" />
 

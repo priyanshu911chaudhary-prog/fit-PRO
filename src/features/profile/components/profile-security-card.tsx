@@ -34,10 +34,10 @@ export function ProfileSecurityCard({
   onChangePassword,
 }: ProfileSecurityCardProps) {
   return (
-    <Card className="border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl shadow-lg">
+    <Card className="border-border/70 bg-card  shadow-lg">
       <CardHeader className="pb-3 border-b border-border/40">
         <div className="flex items-center gap-2">
-          <Lock className="size-4 text-emerald-400" />
+          <Lock className="size-4 text-emerald-700 dark:text-emerald-400" />
           <CardTitle className="text-base font-bold text-foreground">
             Security & Authentication
           </CardTitle>
@@ -53,7 +53,7 @@ export function ProfileSecurityCard({
         {isOAuthUser ? (
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/5">
             <div className="flex items-start gap-3">
-              <div className="flex size-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0 mt-0.5">
+              <div className="flex size-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 shrink-0 mt-0.5">
                 <ShieldCheck className="size-5" />
               </div>
               <div className="space-y-1">
@@ -63,7 +63,7 @@ export function ProfileSecurityCard({
                   </span>
                   <Badge
                     variant="outline"
-                    className="text-[10px] uppercase font-mono border-emerald-500/40 text-emerald-400 bg-emerald-500/10"
+                    className="text-xs uppercase font-mono border-emerald-500/40 text-emerald-700 dark:text-emerald-400 bg-emerald-500/10"
                   >
                     {effectiveAuthProvider === "google"
                       ? "Google Account"
@@ -78,7 +78,7 @@ export function ProfileSecurityCard({
               </div>
             </div>
             <div className="shrink-0 flex items-center">
-              <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 font-mono px-3 py-1.5 rounded-lg border border-emerald-500/20 bg-background/50">
+              <span className="inline-flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400 font-mono px-3 py-1.5 rounded-lg border border-emerald-500/20 bg-background/50">
                 <CheckCircle2 className="size-3.5" />
                 SSO Secured
               </span>
@@ -148,7 +148,7 @@ export function ProfileSecurityCard({
                 id="change-password-btn"
                 disabled={isChangingPassword}
                 variant="outline"
-                className="border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-400 text-xs h-9 px-4 cursor-pointer font-medium"
+                className="border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs h-9 px-4 cursor-pointer font-medium"
               >
                 {isChangingPassword ? (
                   <>

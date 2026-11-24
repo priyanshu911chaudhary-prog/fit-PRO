@@ -33,14 +33,14 @@ export function BmiMeasurementForm({
   onSubmit,
 }: BmiMeasurementFormProps) {
   return (
-    <Card className="border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl shadow-lg">
+    <Card className="border-border/70 bg-card  shadow-lg">
       <CardHeader className="pb-3 border-b border-border/40">
         <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-          <Scale className="size-4 text-emerald-400" />
+          <Scale className="size-4 text-emerald-700 dark:text-emerald-400" />
           Log Body Measurement
         </CardTitle>
         <CardDescription className="text-xs text-muted-foreground">
-          Enter current stature & mass to re-index your metabolic baseline
+          Enter your height and weight to calculate your BMI.
         </CardDescription>
       </CardHeader>
 
@@ -52,7 +52,7 @@ export function BmiMeasurementForm({
               <Label htmlFor="height" className="text-muted-foreground font-medium">
                 Standing Height (cm)
               </Label>
-              <span className="font-mono text-emerald-400 font-bold">{height} cm</span>
+              <span className="font-mono text-emerald-700 dark:text-emerald-400 font-bold">{height} cm</span>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -88,7 +88,7 @@ export function BmiMeasurementForm({
               <Label htmlFor="weight" className="text-muted-foreground font-medium">
                 Body Weight (kg)
               </Label>
-              <span className="font-mono text-emerald-400 font-bold">{weight} kg</span>
+              <span className="font-mono text-emerald-700 dark:text-emerald-400 font-bold">{weight} kg</span>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -122,10 +122,10 @@ export function BmiMeasurementForm({
           {/* Live Computed Dial HUD */}
           <div className="rounded-xl border border-border/70 bg-card/40 p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-mono text-muted-foreground uppercase">
+              <span className="text-xs font-mono text-muted-foreground uppercase">
                 Live Computed Score
               </span>
-              <Badge variant="outline" className={cn("text-[10px] font-mono font-bold capitalize px-2 py-0.5", categoryColor)}>
+              <Badge variant="outline" className={cn("text-xs font-mono font-bold capitalize px-2 py-0.5", categoryColor)}>
                 {liveBMI.category}
               </Badge>
             </div>
@@ -137,7 +137,7 @@ export function BmiMeasurementForm({
                   BMI score
                 </span>
               </div>
-              <div className="text-right text-[11px] font-mono text-muted-foreground">
+              <div className="text-right text-xs font-mono text-muted-foreground">
                 BMR: <strong className="text-foreground">{estBmr} kcal</strong>
               </div>
             </div>
@@ -161,11 +161,11 @@ export function BmiMeasurementForm({
                 </div>
               </div>
 
-              <div className="flex justify-between text-[10px] font-mono text-muted-foreground pt-0.5">
-                <span className="text-cyan-400">&lt;18.5</span>
-                <span className="text-emerald-400 font-bold">18.5 – 24.9</span>
-                <span className="text-amber-400">25.0 – 29.9</span>
-                <span className="text-rose-400">30.0+</span>
+              <div className="flex justify-between text-xs font-mono text-muted-foreground pt-0.5">
+                <span className="text-cyan-700 dark:text-cyan-400">&lt;18.5</span>
+                <span className="text-emerald-700 dark:text-emerald-400 font-bold">18.5 – 24.9</span>
+                <span className="text-amber-700 dark:text-amber-400">25.0 – 29.9</span>
+                <span className="text-rose-700 dark:text-rose-400">30.0+</span>
               </div>
             </div>
           </div>
@@ -178,12 +178,12 @@ export function BmiMeasurementForm({
             {isSubmitting ? (
               <>
                 <Loader2 className="size-4 mr-2 animate-spin" />
-                Calibrating & Recording...
+                Saving…
               </>
             ) : (
               <>
                 <CheckCircle2 className="size-4 mr-2" />
-                Commit Anthropometric Log
+                Save measurement
               </>
             )}
           </Button>

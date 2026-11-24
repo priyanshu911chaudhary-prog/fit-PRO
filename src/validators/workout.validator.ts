@@ -8,16 +8,13 @@ export const workoutExerciseItemSchema = z.preprocess((val: unknown) => {
     const exerciseId = item.exerciseId || item.exercise;
 
     // If sets is provided as an array of set rows: [{ reps, weight }]
-    if (Array.isArray(item.sets) && item.sets.length > 0) {
-      const setsCount = item.sets.length;
-      const firstSet = item.sets[0] as Record<string, unknown>;
-      const reps = Number(firstSet.reps) || 10;
-      const weight = Number(firstSet.weight) || 0;
+    if (Array.isArray(item.sets)) {
       return {
         exerciseId,
-        sets: setsCount,
-        reps,
-        weight,
+        sets: item.sets.length,
+        reps: item.sets[0]?.reps,
+        weight: item.sets[0]?.weight ?? 0,
+        setDetails: item.sets,
       };
     }
 
@@ -30,6 +27,10 @@ export const workoutExerciseItemSchema = z.preprocess((val: unknown) => {
   }
   return val;
 }, z.object({
+  setDetails: z.array(z.object({
+    reps: z.coerce.number().int().min(1).max(500),
+    weight: z.coerce.number().min(0).max(500).default(0),
+  })).min(1).max(100).optional(),
   exerciseId: z
     .string()
     .regex(objectIdRegex, "Invalid exercise ID format"),

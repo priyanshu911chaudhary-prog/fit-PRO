@@ -30,7 +30,7 @@ export const GET = withHandler(async () => {
   const env = getEnv();
   const publicKey = env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
-  if (!publicKey) {
+  if (!publicKey || !env.VAPID_PRIVATE_KEY) {
     throw new ApiError(503, "Push notifications are not configured: VAPID public key missing");
   }
 

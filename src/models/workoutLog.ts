@@ -2,6 +2,7 @@ import mongoose, { Document, Model, Schema } from "mongoose";
 
 export interface IWorkoutLogExercise {
   exerciseId: mongoose.Types.ObjectId;
+  setDetails?: { reps: number; weight: number }[];
   sets?: number;
   reps?: number;
   weight?: number;
@@ -46,6 +47,10 @@ const workoutLogSchema = new Schema<IWorkoutLog>(
           type: Schema.Types.ObjectId,
           ref: "Exercise",
           required: true,
+        },
+        setDetails: {
+          type: [new Schema({ reps: Number, weight: Number }, { _id: false })],
+          default: undefined,
         },
         sets: {
           type: Number,

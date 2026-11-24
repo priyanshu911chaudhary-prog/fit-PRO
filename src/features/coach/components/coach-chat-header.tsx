@@ -37,10 +37,9 @@ export function CoachChatHeader({
         <div className="min-w-0">
           <CardTitle className="text-sm font-bold flex items-center gap-2 truncate text-foreground">
             <span className="truncate">{activeTitle}</span>
-            <span className="size-2 rounded-full bg-emerald-400 inline-block animate-pulse shrink-0" />
           </CardTitle>
-          <p className="text-[10px] text-muted-foreground font-mono truncate">
-            fit-PRO Biomechanics Engine • Gemini High-Throughput
+          <p className="text-xs text-muted-foreground font-mono truncate">
+            AI coach
           </p>
         </div>
       </div>
@@ -50,10 +49,10 @@ export function CoachChatHeader({
         size="sm"
         onClick={onNewChat}
         disabled={isStreaming}
-        className="text-xs h-8 px-3 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 cursor-pointer hidden sm:flex items-center gap-1.5 font-medium"
+        className="text-xs h-8 px-3 border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 cursor-pointer hidden sm:flex items-center gap-1.5 font-medium"
       >
         <Plus className="size-3.5" />
-        New Consultation
+        New chat
       </Button>
     </CardHeader>
   );

@@ -123,6 +123,7 @@ describe("Showcase: Unit Tests -> Zod Validation Schemas", () => {
         ],
       });
       expect(valid.success).toBe(true);
+      expect(valid.data?.exercises[0].setDetails).toEqual([{ reps: 10, weight: 100 }, { reps: 8, weight: 110 }]);
     });
   });
 

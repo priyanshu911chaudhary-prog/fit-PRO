@@ -22,12 +22,12 @@ export function RecentActivityLedgers({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Left Column: Recent Workouts */}
-      <Card className="border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl shadow-lg">
+      <Card className="border-border/70 bg-card  shadow-lg">
         <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-border/40">
           <div>
             <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-              <Dumbbell className="size-4 text-emerald-400" />
-              Training Session Ledger
+              <Dumbbell className="size-4 text-emerald-700 dark:text-emerald-400" />
+              Recent workouts
             </CardTitle>
             <CardDescription className="text-xs text-muted-foreground">
               Verified athletic workouts & volume load
@@ -37,7 +37,7 @@ export function RecentActivityLedgers({
             href="/workout"
             className={cn(
               buttonVariants({ variant: "ghost", size: "sm" }),
-              "text-xs font-semibold text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 h-7 px-2"
+              "text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/10 h-7 px-2"
             )}
           >
             View All
@@ -54,14 +54,14 @@ export function RecentActivityLedgers({
                   className="py-3 flex items-center justify-between group hover:bg-muted/10 px-2 rounded-lg transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="size-8 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <div className="size-8 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center group-hover:scale-105 transition-transform">
                       <CheckCircle2 className="size-4" />
                     </div>
                     <div>
-                      <div className="text-sm font-semibold text-foreground group-hover:text-emerald-400 transition-colors">
+                      <div className="text-sm font-semibold text-foreground group-hover:text-emerald-700 dark:text-emerald-400 transition-colors">
                         {wk.workoutType}
                       </div>
-                      <div className="text-[11px] text-muted-foreground flex items-center gap-2 mt-0.5">
+                      <div className="text-xs text-muted-foreground flex items-center gap-2 mt-0.5">
                         <span>{wk.exercisesCount} exercises</span>
                         <span>•</span>
                         <span className="flex items-center gap-1">
@@ -73,7 +73,7 @@ export function RecentActivityLedgers({
                   </div>
                   <Badge
                     variant="outline"
-                    className="text-[11px] font-mono border-border/80 text-muted-foreground"
+                    className="text-xs font-mono border-border/80 text-muted-foreground"
                   >
                     {formatSafeDate(wk.date)}
                   </Badge>
@@ -87,8 +87,8 @@ export function RecentActivityLedgers({
               </div>
               <div className="space-y-1">
                 <p className="font-semibold text-foreground">No workouts recorded this cycle</p>
-                <p className="text-[11px] text-muted-foreground">
-                  Log your exercises to trigger progression telemetry.
+                <p className="text-xs text-muted-foreground">
+                  Your logged workouts will appear here.
                 </p>
               </div>
               <Link
@@ -107,12 +107,12 @@ export function RecentActivityLedgers({
       </Card>
 
       {/* Right Column: Recent Meals */}
-      <Card className="border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl shadow-lg">
+      <Card className="border-border/70 bg-card  shadow-lg">
         <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-border/40">
           <div>
             <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-              <Utensils className="size-4 text-cyan-400" />
-              Nutrition & Fuel Ledger
+              <Utensils className="size-4 text-cyan-700 dark:text-cyan-400" />
+              Recent meals
             </CardTitle>
             <CardDescription className="text-xs text-muted-foreground">
               Macronutrient intake and caloric burn balance
@@ -122,7 +122,7 @@ export function RecentActivityLedgers({
             href="/meal"
             className={cn(
               buttonVariants({ variant: "ghost", size: "sm" }),
-              "text-xs font-semibold text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 h-7 px-2"
+              "text-xs font-semibold text-cyan-700 dark:text-cyan-400 hover:text-cyan-700 dark:text-cyan-300 hover:bg-cyan-500/10 h-7 px-2"
             )}
           >
             View All
@@ -139,21 +139,21 @@ export function RecentActivityLedgers({
                   className="py-3 flex items-center justify-between group hover:bg-muted/10 px-2 rounded-lg transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="size-8 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <div className="size-8 rounded-lg bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/20 flex items-center justify-center group-hover:scale-105 transition-transform">
                       <Utensils className="size-4" />
                     </div>
                     <div>
-                      <div className="text-sm font-semibold text-foreground group-hover:text-cyan-400 transition-colors">
+                      <div className="text-sm font-semibold text-foreground group-hover:text-cyan-700 dark:text-cyan-400 transition-colors">
                         {meal.mealType}
                       </div>
-                      <div className="text-[11px] font-mono text-cyan-400/90 mt-0.5">
+                      <div className="text-xs font-mono text-cyan-400/90 mt-0.5">
                         {meal.totalCalories} kcal logged
                       </div>
                     </div>
                   </div>
                   <Badge
                     variant="outline"
-                    className="text-[11px] font-mono border-border/80 text-muted-foreground"
+                    className="text-xs font-mono border-border/80 text-muted-foreground"
                   >
                     {formatSafeDate(meal.date)}
                   </Badge>
@@ -167,7 +167,7 @@ export function RecentActivityLedgers({
               </div>
               <div className="space-y-1">
                 <p className="font-semibold text-foreground">No nutrition logged today</p>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Record your meals to balance against your active TDEE budget.
                 </p>
               </div>

@@ -51,7 +51,9 @@ export async function sendPushNotification(
     subscription.keys.p256dh.startsWith("mock") ||
     subscription.endpoint.includes("example.com");
 
-  if (!isReady || isMockOrTest) {
+  if (!isReady && !isMockOrTest) throw new Error("Web Push requires configured VAPID keys");
+
+  if (isMockOrTest) {
     logger.info("[PUSH NOTIFICATION SIMULATION]", {
       endpoint: subscription.endpoint.slice(0, 40) + "...",
       title: payload.title,
@@ -72,8 +74,8 @@ export async function sendPushNotification(
   const stringifiedPayload = JSON.stringify({
     title: payload.title,
     body: payload.body,
-    icon: payload.icon || "/icons/icon-192x192.png",
-    badge: payload.badge || "/icons/badge-72x72.png",
+    icon: payload.icon || "/fit-pro-logo.png",
+    badge: payload.badge || "/favicon.ico",
     tag: payload.tag || "fitpro-nudge",
     data: {
       url: payload.url || "/dashboard",

@@ -1,6 +1,5 @@
 import React from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { ArrowRight, Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,12 +27,8 @@ export function AuthLoginForm({
   onSubmit,
 }: AuthLoginFormProps) {
   return (
-    <motion.form
+    <form
       key="login-form"
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 10 }}
-      transition={{ duration: 0.15 }}
       onSubmit={onSubmit}
       className="space-y-4"
     >
@@ -112,6 +107,6 @@ export function AuthLoginForm({
           </>
         )}
       </Button>
-    </motion.form>
+    </form>
   );
 }

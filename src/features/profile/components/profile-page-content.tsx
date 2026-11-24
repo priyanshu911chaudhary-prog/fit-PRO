@@ -49,9 +49,9 @@ export function ProfilePageContent() {
   if (isLoading) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center p-8 space-y-3">
-        <Loader2 className="size-8 text-emerald-400 animate-spin" />
+        <Loader2 className="size-8 text-emerald-700 dark:text-emerald-400 animate-spin" />
         <p className="text-xs font-mono text-muted-foreground animate-pulse">
-          Calibrating athlete bio-passport...
+          Loading profile…
         </p>
       </div>
     );

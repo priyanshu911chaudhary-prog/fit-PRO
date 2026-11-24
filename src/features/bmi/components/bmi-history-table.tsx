@@ -12,18 +12,18 @@ interface BmiHistoryTableProps {
 
 export function BmiHistoryTable({ history, isLoading }: BmiHistoryTableProps) {
   return (
-    <Card className="border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl shadow-lg">
+    <Card className="border-border/70 bg-card  shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-border/40">
         <div>
           <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-            <History className="size-4 text-emerald-400" />
+            <History className="size-4 text-emerald-700 dark:text-emerald-400" />
             Anthropometric Measurement Archive
           </CardTitle>
           <CardDescription className="text-xs text-muted-foreground">
             Verified chronological records of weight, stature, and computed body composition
           </CardDescription>
         </div>
-        <Badge variant="outline" className="text-xs font-mono border-emerald-500/30 text-emerald-400 bg-emerald-500/10">
+        <Badge variant="outline" className="text-xs font-mono border-emerald-500/30 text-emerald-700 dark:text-emerald-400 bg-emerald-500/10">
           {history.length} Entries Recorded
         </Badge>
       </CardHeader>
@@ -31,7 +31,7 @@ export function BmiHistoryTable({ history, isLoading }: BmiHistoryTableProps) {
       <CardContent className="pt-4">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center p-12 space-y-3">
-            <Loader2 className="size-8 text-emerald-400 animate-spin" />
+            <Loader2 className="size-8 text-emerald-700 dark:text-emerald-400 animate-spin" />
             <p className="text-xs font-mono text-muted-foreground">
               Retrieving biometric archive...
             </p>
@@ -43,7 +43,7 @@ export function BmiHistoryTable({ history, isLoading }: BmiHistoryTableProps) {
             </div>
             <div className="space-y-1">
               <p className="font-semibold text-foreground text-sm">No measurements recorded</p>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Use the measurement station above to log your current stature and mass.
               </p>
             </div>
@@ -51,7 +51,7 @@ export function BmiHistoryTable({ history, isLoading }: BmiHistoryTableProps) {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
-              <thead className="border-b border-border/40 text-muted-foreground uppercase text-[10px] font-mono tracking-wider">
+              <thead className="border-b border-border/40 text-muted-foreground uppercase text-xs font-mono tracking-wider">
                 <tr>
                   <th className="py-3 px-3">Date</th>
                   <th className="py-3 px-3">Stature</th>
@@ -78,11 +78,11 @@ export function BmiHistoryTable({ history, isLoading }: BmiHistoryTableProps) {
                   }
 
                   const badgeTone = {
-                    underweight: "border-cyan-500/30 text-cyan-400 bg-cyan-500/10",
-                    normal: "border-emerald-500/30 text-emerald-400 bg-emerald-500/10",
-                    overweight: "border-amber-500/30 text-amber-400 bg-amber-500/10",
-                    obese: "border-rose-500/30 text-rose-400 bg-rose-500/10",
-                  }[record.category?.toLowerCase()] || "border-emerald-500/30 text-emerald-400 bg-emerald-500/10";
+                    underweight: "border-cyan-500/30 text-cyan-700 dark:text-cyan-400 bg-cyan-500/10",
+                    normal: "border-emerald-500/30 text-emerald-700 dark:text-emerald-400 bg-emerald-500/10",
+                    overweight: "border-amber-500/30 text-amber-700 dark:text-amber-400 bg-amber-500/10",
+                    obese: "border-rose-500/30 text-rose-700 dark:text-rose-400 bg-rose-500/10",
+                  }[record.category?.toLowerCase()] || "border-emerald-500/30 text-emerald-700 dark:text-emerald-400 bg-emerald-500/10";
 
                   return (
                     <tr
@@ -92,9 +92,9 @@ export function BmiHistoryTable({ history, isLoading }: BmiHistoryTableProps) {
                       <td className="py-3 px-3 text-muted-foreground font-medium">{displayDate}</td>
                       <td className="py-3 px-3 text-foreground">{record.height} cm</td>
                       <td className="py-3 px-3 font-bold text-foreground">{record.weight} kg</td>
-                      <td className="py-3 px-3 font-extrabold text-emerald-400">{record.bmi}</td>
+                      <td className="py-3 px-3 font-extrabold text-emerald-700 dark:text-emerald-400">{record.bmi}</td>
                       <td className="py-3 px-3">
-                        <Badge variant="outline" className={cn("text-[10px] capitalize px-2 py-0.5 font-semibold", badgeTone)}>
+                        <Badge variant="outline" className={cn("text-xs capitalize px-2 py-0.5 font-semibold", badgeTone)}>
                           {record.category}
                         </Badge>
                       </td>

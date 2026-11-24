@@ -1,50 +1,32 @@
-"use client";
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowUpRight, Dumbbell, GlassWater, Utensils } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
 
-import React, { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/auth-context";
-import { FitProLogo } from "@/components/brand/fit-pro-logo";
-import { useHomeSimulators } from "../hooks/use-home-simulators";
-import { HeroSection } from "./hero-section";
-import { BentoGrid } from "./bento-grid";
-import { FeaturePillars } from "./feature-pillars";
-import { CtaSection } from "./cta-section";
+const journal = [
+  { icon: Dumbbell, title: "Training", detail: "Record exercises, sets and reps, then revisit each session." },
+  { icon: Utensils, title: "Nutrition", detail: "Build meals from the food catalog and see your daily macros." },
+  { icon: GlassWater, title: "Hydration", detail: "Log a glass of water and follow your daily intake." },
+];
 
 export function HomePageContent() {
-  const router = useRouter();
-  const { user, isAuthenticated, isLoading } = useAuth();
-
-  useEffect(() => {
-    if (!isLoading && isAuthenticated && user) {
-      const dest = user.hasProfile ? "/dashboard" : "/onboarding";
-      router.replace(dest);
-    }
-  }, [isLoading, isAuthenticated, user, router]);
-
-  const simulators = useHomeSimulators();
-
-  if (!isLoading && isAuthenticated && user) {
-    return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center p-8 space-y-4">
-        <div className="size-11 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center animate-pulse text-emerald-400 shadow-lg shadow-emerald-500/10">
-          <FitProLogo size={24} />
-        </div>
-        <p className="text-xs font-mono text-muted-foreground tracking-widest uppercase">
-          Routing to Command Center...
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col flex-1 w-full bg-background text-foreground overflow-hidden">
-      {/* Background Ambient Athletic Glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[650px] pointer-events-none opacity-30 blur-[140px] -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-500/30 via-cyan-500/10 to-transparent" />
-
-      <HeroSection />
-      <BentoGrid {...simulators} />
-      <FeaturePillars />
-      <CtaSection />
+    <div className="home-frame">
+      <section className="home-hero">
+        <div className="hero-copy">
+          <h1>Your training<br /><em>journal.</em></h1>
+          <p>Workouts, meals, and water in one place. Keep a record of your day and see how your training adds up.</p>
+          <Link href="/register" className={buttonVariants({ size: "lg" })}>Start your journal <ArrowUpRight /></Link>
+        </div>
+        <div className="hero-photo">
+          <Image src="/training-run.jpg" alt="Runner training outdoors" fill sizes="(max-width: 720px) 100vw, 50vw" preload style={{ objectFit: "cover" }} />
+        </div>
+      </section>
+      <section aria-label="What you can track" className="journal-features">
+        {journal.map(({ icon: Icon, title, detail }) => (
+          <article key={title}><Icon aria-hidden="true" size={22} /><div><h2>{title}</h2><p>{detail}</p></div></article>
+        ))}
+      </section>
     </div>
   );
 }

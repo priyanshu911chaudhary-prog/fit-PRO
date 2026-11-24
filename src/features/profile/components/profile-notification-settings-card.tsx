@@ -239,9 +239,9 @@ export function ProfileNotificationSettingsCard() {
 
   if (isLoading) {
     return (
-      <Card id="notifications" className="border-border/70 bg-[#0B0F0E]/85 backdrop-blur-2xl p-6">
+      <Card id="notifications" className="border-border/70 bg-card  p-6">
         <div className="flex items-center gap-3">
-          <Loader2 className="size-5 text-emerald-400 animate-spin" />
+          <Loader2 className="size-5 text-emerald-700 dark:text-emerald-400 animate-spin" />
           <span className="text-xs font-mono text-muted-foreground">Loading notification settings...</span>
         </div>
       </Card>
@@ -249,11 +249,11 @@ export function ProfileNotificationSettingsCard() {
   }
 
   return (
-    <Card id="notifications" className="border-border/70 bg-[#0B0F0E]/85 backdrop-blur-2xl shadow-xl overflow-hidden">
+    <Card id="notifications" className="border-border/70 bg-card  shadow-sm overflow-hidden">
       <CardHeader className="border-b border-border/60 bg-muted/20 pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+            <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400">
               <Bell className="size-5" />
             </div>
             <div>
@@ -285,7 +285,7 @@ export function ProfileNotificationSettingsCard() {
               <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
                 Proactive Daily Check-In
               </span>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
+              <p className="text-xs text-muted-foreground leading-relaxed">
                 Receive at most one personalized reminder per day at your scheduled time if you are behind on hydration, workout, or nutrition.
               </p>
             </div>
@@ -303,7 +303,7 @@ export function ProfileNotificationSettingsCard() {
               <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
                 Activity Milestone Achievements
               </span>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
+              <p className="text-xs text-muted-foreground leading-relaxed">
                 Celebrate hitting your daily water target, protein goal, or logging a qualifying workout.
               </p>
             </div>
@@ -335,7 +335,7 @@ export function ProfileNotificationSettingsCard() {
                 }
                 className="size-3.5 rounded border-border accent-emerald-500 cursor-pointer"
               />
-              <Droplet className="size-4 text-cyan-400" />
+              <Droplet className="size-4 text-cyan-700 dark:text-cyan-400" />
               <span className="text-xs font-medium text-foreground">Hydration</span>
             </label>
 
@@ -351,7 +351,7 @@ export function ProfileNotificationSettingsCard() {
                 }
                 className="size-3.5 rounded border-border accent-emerald-500 cursor-pointer"
               />
-              <Dumbbell className="size-4 text-amber-400" />
+              <Dumbbell className="size-4 text-amber-700 dark:text-amber-400" />
               <span className="text-xs font-medium text-foreground">Workouts</span>
             </label>
 
@@ -367,7 +367,7 @@ export function ProfileNotificationSettingsCard() {
                 }
                 className="size-3.5 rounded border-border accent-emerald-500 cursor-pointer"
               />
-              <Utensils className="size-4 text-emerald-400" />
+              <Utensils className="size-4 text-emerald-700 dark:text-emerald-400" />
               <span className="text-xs font-medium text-foreground">Nutrition & Protein</span>
             </label>
           </div>
@@ -386,7 +386,7 @@ export function ProfileNotificationSettingsCard() {
               onChange={(e) => setPrefs({ ...prefs, checkInTime: e.target.value })}
               className="w-full h-9 px-3 rounded-lg border border-border/70 bg-card text-xs text-foreground focus:ring-1 focus:ring-emerald-500 focus:outline-none"
             />
-            <p className="text-[10px] text-muted-foreground">Default is 18:00 (6:00 PM) in your local timezone.</p>
+            <p className="text-xs text-muted-foreground">Default is 18:00 (6:00 PM) in your local timezone.</p>
           </div>
 
           <div className="space-y-2">
@@ -398,7 +398,7 @@ export function ProfileNotificationSettingsCard() {
               <button
                 type="button"
                 onClick={handleAutoDetectTimezone}
-                className="text-[11px] text-emerald-400 hover:underline"
+                className="text-xs text-emerald-700 dark:text-emerald-400 hover:underline"
               >
                 Auto-detect
               </button>
@@ -439,13 +439,13 @@ export function ProfileNotificationSettingsCard() {
               className="size-4 rounded border-border accent-emerald-500 cursor-pointer"
             />
           </div>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             No external push or email notifications will be sent during your quiet hours.
           </p>
           {prefs.quietHours.enabled && (
             <div className="grid grid-cols-2 gap-3 pt-1">
               <div>
-                <span className="text-[10px] text-muted-foreground block mb-1">Quiet Start (Sleep)</span>
+                <span className="text-xs text-muted-foreground block mb-1">Quiet Start (Sleep)</span>
                 <input
                   type="time"
                   value={prefs.quietHours.start}
@@ -459,7 +459,7 @@ export function ProfileNotificationSettingsCard() {
                 />
               </div>
               <div>
-                <span className="text-[10px] text-muted-foreground block mb-1">Quiet End (Wake)</span>
+                <span className="text-xs text-muted-foreground block mb-1">Quiet End (Wake)</span>
                 <input
                   type="time"
                   value={prefs.quietHours.end}
@@ -486,10 +486,10 @@ export function ProfileNotificationSettingsCard() {
             <div className="p-3.5 rounded-xl border border-border/60 bg-card/60 flex items-start justify-between">
               <div className="space-y-0.5">
                 <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                  <Bell className="size-3.5 text-emerald-400" />
+                  <Bell className="size-3.5 text-emerald-700 dark:text-emerald-400" />
                   In-App Notification Center
                 </span>
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Persistent notification center in the navigation header.
                 </p>
               </div>
@@ -510,10 +510,10 @@ export function ProfileNotificationSettingsCard() {
             <div className="p-3.5 rounded-xl border border-border/60 bg-card/60 flex items-start justify-between">
               <div className="space-y-0.5">
                 <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                  <Mail className="size-3.5 text-cyan-400" />
+                  <Mail className="size-3.5 text-cyan-700 dark:text-cyan-400" />
                   Wellness Emails
                 </span>
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Optional reminder emails sent to your registered address.
                 </p>
               </div>
@@ -535,21 +535,21 @@ export function ProfileNotificationSettingsCard() {
               <div className="space-y-0.5">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                    <Smartphone className="size-3.5 text-amber-400" />
+                    <Smartphone className="size-3.5 text-amber-700 dark:text-amber-400" />
                     Browser Web Push
                   </span>
                   <span
                     className={cn(
-                      "text-[9px] font-bold px-1.5 py-0.5 rounded-full",
+                      "text-xs font-bold px-1.5 py-0.5 rounded-full",
                       prefs.channels.push
-                        ? "bg-emerald-500/20 text-emerald-400"
+                        ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
                         : "bg-muted text-muted-foreground"
                     )}
                   >
                     {prefs.channels.push ? "Active" : "Disabled"}
                   </span>
                 </div>
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Timely desktop or mobile web push alerts.
                 </p>
               </div>
@@ -573,8 +573,8 @@ export function ProfileNotificationSettingsCard() {
           </div>
         </div>
 
-        <div className="p-3 rounded-lg border border-border/40 bg-muted/10 flex items-start gap-2.5 text-[11px] text-muted-foreground">
-          <Info className="size-4 text-emerald-400 shrink-0 mt-0.5" />
+        <div className="p-3 rounded-lg border border-border/40 bg-muted/10 flex items-start gap-2.5 text-xs text-muted-foreground">
+          <Info className="size-4 text-emerald-700 dark:text-emerald-400 shrink-0 mt-0.5" />
           <p>
             External channels (Email and Browser Push) strictly respect your quiet hours and are capped at a maximum of 2 external nudges per day to prevent spam.
           </p>

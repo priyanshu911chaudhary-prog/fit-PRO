@@ -24,7 +24,7 @@ test.describe("Journey 02: Dashboard and BMI Metrics", () => {
     await page.waitForLoadState("networkidle");
 
     // Check greeting and header load cleanly without client errors
-    await expect(page.locator("h1")).toContainText(/Athlete|Welcome|Back/i);
+    await expect(page.locator("h1")).toContainText("Ordinary User");
 
     // Verify Telemetry HUD shows BMI metric matching fixture (24.1)
     await expect(page.getByText("Body Mass Index")).toBeVisible({ timeout: 10_000 });
@@ -42,9 +42,10 @@ test.describe("Journey 02: Dashboard and BMI Metrics", () => {
     // Fill in new anthropometric measurement: 85kg at 180cm -> BMI = 85 / (1.80^2) = 26.2 (Overweight)
     const weightInput = page.locator('input#weight');
     await expect(weightInput).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("input#height")).toHaveValue("180");
     await weightInput.fill("85");
 
-    const submitBtn = page.getByRole("button", { name: /Commit Anthropometric Log/i });
+    const submitBtn = page.getByRole("button", { name: /Save measurement/i });
     await expect(submitBtn).toBeVisible();
 
     const [postRes] = await Promise.all([

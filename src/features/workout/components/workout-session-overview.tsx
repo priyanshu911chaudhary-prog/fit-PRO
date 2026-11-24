@@ -24,10 +24,10 @@ export function WorkoutSessionOverview({
   onDurationChange,
 }: WorkoutSessionOverviewProps) {
   return (
-    <Card className="border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl shadow-lg">
+    <Card className="border-border/70 bg-card  shadow-lg">
       <CardHeader className="pb-3 border-b border-border/40">
         <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-          <Zap className="size-4 text-emerald-400" />
+          <Zap className="size-4 text-emerald-700 dark:text-emerald-400" />
           Session Overview
         </CardTitle>
         <CardDescription className="text-xs text-muted-foreground">
@@ -71,9 +71,9 @@ export function WorkoutSessionOverview({
                 type="button"
                 onClick={() => onWorkoutTypeChange(split)}
                 className={cn(
-                  "text-[10px] font-medium px-2 py-1 rounded-md border transition-all cursor-pointer",
+                  "text-xs font-medium px-2 py-1 rounded-md border transition-all cursor-pointer",
                   workoutType === split
-                    ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400 font-semibold"
+                    ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-semibold"
                     : "border-border/60 bg-muted/20 text-muted-foreground hover:bg-muted/40"
                 )}
               >
@@ -88,7 +88,7 @@ export function WorkoutSessionOverview({
             <Label htmlFor="duration" className="text-xs font-medium text-muted-foreground">
               Duration
             </Label>
-            <span className="text-xs font-mono font-bold text-emerald-400">
+            <span className="text-xs font-mono font-bold text-emerald-700 dark:text-emerald-400">
               {duration} mins
             </span>
           </div>
@@ -110,9 +110,9 @@ export function WorkoutSessionOverview({
                   type="button"
                   onClick={() => onDurationChange(mins)}
                   className={cn(
-                    "px-2.5 py-1.5 rounded-md text-[11px] font-mono border transition-all cursor-pointer",
+                    "px-2.5 py-1.5 rounded-md text-xs font-mono border transition-all cursor-pointer",
                     duration === mins
-                      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400 font-bold"
+                      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-bold"
                       : "border-border/60 bg-muted/20 text-muted-foreground hover:bg-muted/40"
                   )}
                 >

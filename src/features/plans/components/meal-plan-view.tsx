@@ -22,7 +22,7 @@ export function MealPlanView({
   if (isLoadingMeal) {
     return (
       <div className="flex flex-col items-center justify-center p-16 space-y-3">
-        <Loader2 className="size-8 text-cyan-400 animate-spin" />
+        <Loader2 className="size-8 text-cyan-700 dark:text-cyan-400 animate-spin" />
         <p className="text-xs font-mono text-muted-foreground">
           Retrieving active nutrition plan...
         </p>
@@ -32,8 +32,8 @@ export function MealPlanView({
 
   if (!mealPlan) {
     return (
-      <Card className="border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl text-center p-14 space-y-4">
-        <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+      <Card className="border-border/70 bg-card  text-center p-14 space-y-4">
+        <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/20">
           <Utensils className="size-7" />
         </div>
         <div className="space-y-1">
@@ -55,7 +55,7 @@ export function MealPlanView({
           ) : (
             <>
               <Sparkles className="size-4 mr-2" />
-              Formulate Nutrition Protocol
+              Generate meal plan
             </>
           )}
         </Button>
@@ -68,19 +68,16 @@ export function MealPlanView({
   return (
     <div className="space-y-6">
       {/* Plan Header Card */}
-      <Card className="border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl shadow-lg">
+      <Card className="border-border/70 bg-card  shadow-lg">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 gap-3 border-b border-border/40">
           <div className="space-y-1">
             <div className="flex items-center gap-2.5">
               <CardTitle className="text-xl font-bold text-foreground">
                 {mealPlan.planName}
               </CardTitle>
-              <Badge variant="outline" className="border-cyan-500/30 text-cyan-400 bg-cyan-500/10 text-[10px] font-mono font-bold">
-                ACTIVE DIETARY FUEL
-              </Badge>
             </div>
             <CardDescription className="text-xs text-muted-foreground flex items-center gap-3 font-mono">
-              <span>{mealDays.length} Feeding Days</span>
+              <span>{mealDays.length} days</span>
               <span>•</span>
               <span>
                 Formulated{" "}
@@ -102,18 +99,18 @@ export function MealPlanView({
         {mealDays.map((day) => (
           <Card
             key={day.dayNumber}
-            className="border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl hover:border-cyan-500/40 transition-all flex flex-col shadow-lg"
+            className="border-border/70 bg-card  hover:border-cyan-500/40 transition-all flex flex-col shadow-lg"
           >
             <CardHeader className="pb-3 border-b border-border/40">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-sm text-foreground flex items-center gap-2">
-                  <span className="flex size-7 items-center justify-center rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 text-xs font-mono font-bold">
+                  <span className="flex size-7 items-center justify-center rounded-lg bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/20 text-xs font-mono font-bold">
                     0{day.dayNumber}
                   </span>
                   {day.dayName}
                 </span>
                 {day.totalCalories > 0 && (
-                  <Badge variant="outline" className="border-emerald-500/30 text-emerald-400 bg-emerald-500/10 text-[10px] font-mono font-bold">
+                  <Badge variant="outline" className="border-emerald-500/30 text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 text-xs font-mono font-bold">
                     {day.totalCalories} kcal Total
                   </Badge>
                 )}
@@ -125,7 +122,7 @@ export function MealPlanView({
                 if (meal.items && Array.isArray(meal.items) && meal.items.length > 0) {
                   return (
                     <div key={mealIdx} className="space-y-1.5">
-                      <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-wider block">
+                      <span className="text-xs font-mono font-bold text-muted-foreground uppercase tracking-wider block">
                         {meal.mealType || `Feeding Window ${mealIdx + 1}`}
                       </span>
                       <div className="space-y-1.5">
@@ -136,20 +133,20 @@ export function MealPlanView({
                           >
                             <div className="flex items-center justify-between">
                               <p className="font-semibold text-foreground">{item.name}</p>
-                              <span className="text-xs font-mono font-bold text-cyan-400">
+                              <span className="text-xs font-mono font-bold text-cyan-700 dark:text-cyan-400">
                                 {item.calories ?? 0} kcal
                               </span>
                             </div>
                             {item.servingSize && (
-                              <p className="text-[10px] text-muted-foreground">{item.servingSize}</p>
+                              <p className="text-xs text-muted-foreground">{item.servingSize}</p>
                             )}
                             {(item.protein !== undefined || item.carbs !== undefined || item.fat !== undefined) && (
-                              <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground pt-0.5">
-                                <span className="text-cyan-400">P:{item.protein ?? 0}g</span>
+                              <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground pt-0.5">
+                                <span className="text-cyan-700 dark:text-cyan-400">P:{item.protein ?? 0}g</span>
                                 <span>•</span>
-                                <span className="text-amber-400">C:{item.carbs ?? 0}g</span>
+                                <span className="text-amber-700 dark:text-amber-400">C:{item.carbs ?? 0}g</span>
                                 <span>•</span>
-                                <span className="text-purple-400">F:{item.fat ?? 0}g</span>
+                                <span className="text-purple-700 dark:text-purple-400">F:{item.fat ?? 0}g</span>
                               </div>
                             )}
                           </div>
@@ -166,20 +163,20 @@ export function MealPlanView({
                   >
                     <div className="flex items-center justify-between">
                       <p className="font-semibold text-foreground">{meal.name || `Fuel Item ${mealIdx + 1}`}</p>
-                      <span className="text-xs font-mono font-bold text-cyan-400">
+                      <span className="text-xs font-mono font-bold text-cyan-700 dark:text-cyan-400">
                         {meal.calories ?? 0} kcal
                       </span>
                     </div>
                     {meal.servingSize && (
-                      <p className="text-[10px] text-muted-foreground">{meal.servingSize}</p>
+                      <p className="text-xs text-muted-foreground">{meal.servingSize}</p>
                     )}
                     {(meal.protein !== undefined || meal.carbs !== undefined || meal.fat !== undefined) && (
-                      <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground pt-0.5">
-                        <span className="text-cyan-400">P:{meal.protein ?? 0}g</span>
+                      <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground pt-0.5">
+                        <span className="text-cyan-700 dark:text-cyan-400">P:{meal.protein ?? 0}g</span>
                         <span>•</span>
-                        <span className="text-amber-400">C:{meal.carbs ?? 0}g</span>
+                        <span className="text-amber-700 dark:text-amber-400">C:{meal.carbs ?? 0}g</span>
                         <span>•</span>
-                        <span className="text-purple-400">F:{meal.fat ?? 0}g</span>
+                        <span className="text-purple-700 dark:text-purple-400">F:{meal.fat ?? 0}g</span>
                       </div>
                     )}
                   </div>

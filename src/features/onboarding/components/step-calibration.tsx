@@ -30,7 +30,7 @@ export function StepCalibration({
     <div className="space-y-6">
       <div className="space-y-1">
         <h3 className="text-lg font-bold tracking-tight text-foreground">
-          Calibration Dossier
+          Review your profile
         </h3>
         <p className="text-xs text-muted-foreground">
           Review your biometric metrics before initializing your 3-day split program.
@@ -48,7 +48,7 @@ export function StepCalibration({
 
         <div className="flex justify-between items-center pb-2 border-b border-border/40">
           <span className="text-muted-foreground">Target Objective:</span>
-          <span className="font-bold text-emerald-400 capitalize">
+          <span className="font-bold text-emerald-700 dark:text-emerald-400 capitalize">
             {fitnessGoal.replace(/_/g, " ")}
           </span>
         </div>
@@ -62,7 +62,7 @@ export function StepCalibration({
 
         <div className="flex justify-between items-center pb-2 border-b border-border/40">
           <span className="text-muted-foreground">Nutrition Preference:</span>
-          <span className="font-bold text-cyan-400 capitalize">
+          <span className="font-bold text-cyan-700 dark:text-cyan-400 capitalize">
             {dietaryPreference.replace(/_/g, " ")}
           </span>
         </div>
@@ -76,11 +76,11 @@ export function StepCalibration({
       </div>
 
       {/* Macro Target Projection Banner */}
-      <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-start gap-3 text-xs text-emerald-400">
+      <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-start gap-3 text-xs text-emerald-700 dark:text-emerald-400">
         <Sparkles className="size-4 shrink-0 mt-0.5" />
         <div className="space-y-1">
           <span className="font-bold text-foreground">Automatic Day-1 Seeding Enabled</span>
-          <p className="text-[11px] text-muted-foreground leading-relaxed">
+          <p className="text-xs text-muted-foreground leading-relaxed">
             Launching will initialize your 3-day workout split, set your daily {tdee} kcal target, and
             calibrate your progressive overload tracking.
           </p>

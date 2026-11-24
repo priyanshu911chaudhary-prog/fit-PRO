@@ -2,20 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
 
-  output:"standalone",
-  /* config options here */
-  cacheComponents: true,
-  partialPrefetching: true,
+  output: "standalone",
+  serverExternalPackages: ["bullmq"],
   reactCompiler: true,
   allowedDevOrigins: ["127.0.0.1", "localhost"],
-  turbopack: {
-    rules: {
-      "*.css": {
-        loaders: ["@tailwindcss/turbopack"],
-        as: "*.css",
-      },
-    },
-  },
   async rewrites() {
     return [
       // Legacy /api/v1 specific endpoint mappings

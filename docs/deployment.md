@@ -134,9 +134,8 @@ Before routing live traffic to the deployment:
 
 - [ ] `npm run lint`: Clean (0 errors, 0 warnings).
 - [ ] `npx tsc --noEmit`: Clean (0 diagnostic errors).
-- [ ] `npm test`: 323 / 323 unit and integration tests passing.
-- [ ] `npm run test:quality`: 68 / 68 quality and regression tests passing.
-- [ ] `npm run test:quality:e2e`: 25 / 25 Playwright journey tests passing.
+- [ ] `npm test`: Unit, component, API, and integration suites pass.
+- [ ] `npm run test:e2e`: Playwright journeys pass.
 - [ ] `npm run build`: Successfully generated standalone build and `dist/worker.cjs`.
 - [ ] `docker compose config`: Exits with code 0.
 - [ ] `.env` file verified excluded from Git (`git status --ignored`).

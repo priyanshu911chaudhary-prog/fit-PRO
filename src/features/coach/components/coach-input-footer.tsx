@@ -33,7 +33,8 @@ export function CoachInputFooter({
           value={input}
           onChange={(e) => onInputChange(e.target.value)}
           onKeyDown={onKeyDown}
-          placeholder="Ask about workout sets, form biomechanics, macro deficits, or deload periods... (Enter to send, Shift+Enter for new line)"
+          aria-label="Message your coach"
+          placeholder="Ask about your training…"
           className="min-h-[46px] max-h-32 text-xs resize-none bg-background/50 border-border/70 focus-visible:ring-emerald-500/30 text-foreground py-3"
           rows={1}
         />
@@ -41,6 +42,7 @@ export function CoachInputFooter({
         <Button
           type="submit"
           id="coach-chat-send-btn"
+          aria-label="Send message"
           disabled={!input.trim() || isStreaming}
           className="size-11 shrink-0 bg-primary text-primary-foreground rounded-xl shadow-md shadow-emerald-500/20 hover:shadow-emerald-500/30 cursor-pointer transition-all"
         >

@@ -3,28 +3,28 @@ import { Activity, Flame, Layers, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 
-interface WorkoutTelemetryHudProps {
+interface WorkoutSummaryProps {
   totalVolumeTonnage: number;
   exercisesCount: number;
   totalSetsCount: number;
   estimatedCaloriesBurn: number;
 }
 
-export function WorkoutTelemetryHud({
+export function WorkoutSummary({
   totalVolumeTonnage,
   exercisesCount,
   totalSetsCount,
   estimatedCaloriesBurn,
-}: WorkoutTelemetryHudProps) {
+}: WorkoutSummaryProps) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      <Card id="hud-volume-tonnage" className="border-border/60 bg-[#0B0F0E]/70 backdrop-blur-md p-4 space-y-1">
+      <Card id="hud-volume-tonnage" className="border-border/60 bg-card  p-4 space-y-1">
         <div className="flex items-center justify-between text-muted-foreground text-xs font-medium">
           <span className="flex items-center gap-1.5">
-            <TrendingUp className="size-3.5 text-emerald-400" />
+            <TrendingUp className="size-3.5 text-emerald-700 dark:text-emerald-400" />
             Volume Tonnage
           </span>
-          <Badge variant="outline" className="text-[10px] font-mono border-emerald-500/30 text-emerald-400">
+          <Badge variant="outline" className="text-xs font-mono border-emerald-500/30 text-emerald-700 dark:text-emerald-400">
             DAY TOTAL
           </Badge>
         </div>
@@ -32,52 +32,52 @@ export function WorkoutTelemetryHud({
           {totalVolumeTonnage.toLocaleString()}{" "}
           <span className="text-xs font-sans text-muted-foreground font-normal">kg</span>
         </div>
-        <p className="text-[11px] text-muted-foreground/80">Cumulative day sets × reps load</p>
+        <p className="text-xs text-muted-foreground/80">Cumulative day sets × reps load</p>
       </Card>
 
-      <Card id="hud-planned-exercises" className="border-border/60 bg-[#0B0F0E]/70 backdrop-blur-md p-4 space-y-1">
+      <Card id="hud-planned-exercises" className="border-border/60 bg-card  p-4 space-y-1">
         <div className="flex items-center justify-between text-muted-foreground text-xs font-medium">
           <span className="flex items-center gap-1.5">
-            <Layers className="size-3.5 text-cyan-400" />
+            <Layers className="size-3.5 text-cyan-700 dark:text-cyan-400" />
             Planned Exercises
           </span>
-          <span className="text-[10px] font-mono text-cyan-400">DAY TOTAL</span>
+          <span className="text-xs font-mono text-cyan-700 dark:text-cyan-400">DAY TOTAL</span>
         </div>
         <div className="text-2xl font-extrabold font-mono text-foreground">
           {exercisesCount}{" "}
           <span className="text-xs font-sans text-muted-foreground font-normal">movements</span>
         </div>
-        <p className="text-[11px] text-muted-foreground/80">Distinct day exercises</p>
+        <p className="text-xs text-muted-foreground/80">Distinct day exercises</p>
       </Card>
 
-      <Card id="hud-total-sets" className="border-border/60 bg-[#0B0F0E]/70 backdrop-blur-md p-4 space-y-1">
+      <Card id="hud-total-sets" className="border-border/60 bg-card  p-4 space-y-1">
         <div className="flex items-center justify-between text-muted-foreground text-xs font-medium">
           <span className="flex items-center gap-1.5">
-            <Activity className="size-3.5 text-amber-400" />
+            <Activity className="size-3.5 text-amber-700 dark:text-amber-400" />
             Total Sets
           </span>
-          <span className="text-[10px] font-mono text-amber-400">OUTPUT</span>
+          <span className="text-xs font-mono text-amber-700 dark:text-amber-400">OUTPUT</span>
         </div>
         <div className="text-2xl font-extrabold font-mono text-foreground">
           {totalSetsCount}{" "}
           <span className="text-xs font-sans text-muted-foreground font-normal">sets</span>
         </div>
-        <p className="text-[11px] text-muted-foreground/80">Daily working stimulus brackets</p>
+        <p className="text-xs text-muted-foreground/80">Daily working stimulus brackets</p>
       </Card>
 
-      <Card id="hud-estimated-burn" className="border-border/60 bg-[#0B0F0E]/70 backdrop-blur-md p-4 space-y-1">
+      <Card id="hud-estimated-burn" className="border-border/60 bg-card  p-4 space-y-1">
         <div className="flex items-center justify-between text-muted-foreground text-xs font-medium">
           <span className="flex items-center gap-1.5">
-            <Flame className="size-3.5 text-purple-400" />
+            <Flame className="size-3.5 text-purple-700 dark:text-purple-400" />
             Estimated Burn
           </span>
-          <span className="text-[10px] font-mono text-purple-400">EXPENDITURE</span>
+          <span className="text-xs font-mono text-purple-700 dark:text-purple-400">EXPENDITURE</span>
         </div>
         <div className="text-2xl font-extrabold font-mono text-foreground">
           ~{estimatedCaloriesBurn}{" "}
           <span className="text-xs font-sans text-muted-foreground font-normal">kcal</span>
         </div>
-        <p className="text-[11px] text-muted-foreground/80">Daily metabolic expenditure</p>
+        <p className="text-xs text-muted-foreground/80">Daily metabolic expenditure</p>
       </Card>
     </div>
   );

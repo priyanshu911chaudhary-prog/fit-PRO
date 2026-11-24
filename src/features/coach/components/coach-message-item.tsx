@@ -19,7 +19,7 @@ export function CoachMessageItem({ message, isStreaming }: CoachMessageItemProps
       )}
     >
       {!isUser && (
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mt-0.5">
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 mt-0.5">
           <Sparkles className="size-4" />
         </div>
       )}
@@ -32,20 +32,20 @@ export function CoachMessageItem({ message, isStreaming }: CoachMessageItemProps
             : "bg-card/60 border border-border/70 text-foreground shadow-sm"
         )}
       >
-        <div className="whitespace-pre-wrap font-sans">
+        <div className="whitespace-pre-wrap break-words font-sans text-sm">
           {message.content}
           {!isUser && isStreaming && message.content && (
             <span className="inline-block size-2 rounded-full bg-emerald-400 ml-1.5 animate-pulse" />
           )}
           {!isUser && isStreaming && !message.content && (
             <span className="text-muted-foreground font-mono animate-pulse">
-              Synthesizing biomechanical protocol...
+              Writing a reply…
             </span>
           )}
         </div>
         <span
           className={cn(
-            "text-[9px] font-mono block text-right pt-0.5",
+            "text-xs font-mono block text-right pt-0.5",
             isUser ? "text-primary-foreground/75" : "text-muted-foreground"
           )}
         >

@@ -46,7 +46,10 @@ export function useAuthForm({
     e.preventDefault();
     setErrorMessage(null);
 
-    if (!email.trim() || !password) {
+    const fields = new FormData(e.currentTarget as HTMLFormElement);
+    const loginEmail = String(fields.get("email") ?? "").trim();
+    const loginPassword = String(fields.get("password") ?? "");
+    if (!loginEmail || !loginPassword) {
       setErrorMessage("Please enter both email and password.");
       toast.error("Please enter both email and password.");
       return;
@@ -54,7 +57,7 @@ export function useAuthForm({
 
     try {
       setIsSubmitting(true);
-      await login({ email: email.trim(), password }, redirectTarget);
+      await login({ email: loginEmail, password: loginPassword }, redirectTarget);
     } catch (err: unknown) {
       const msg =
         (err as { response?: { message?: string } })?.response?.message ||

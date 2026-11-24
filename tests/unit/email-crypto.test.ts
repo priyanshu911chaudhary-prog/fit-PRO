@@ -33,11 +33,11 @@ describe("Email Payload AES-256-GCM Encryption", () => {
     const [iv, ciphertext, tag] = encrypted.split(":");
 
     // Tamper with ciphertext
-    const tamperedCiphertext = ciphertext.slice(0, -2) + "00";
+    const tamperedCiphertext = (ciphertext[0] === "0" ? "1" : "0") + ciphertext.slice(1);
     expect(() => decryptPayload(`${iv}:${tamperedCiphertext}:${tag}`)).toThrow();
 
     // Tamper with auth tag
-    const tamperedTag = tag.slice(0, -2) + "ff";
+    const tamperedTag = (tag[0] === "0" ? "1" : "0") + tag.slice(1);
     expect(() => decryptPayload(`${iv}:${ciphertext}:${tamperedTag}`)).toThrow();
   });
 

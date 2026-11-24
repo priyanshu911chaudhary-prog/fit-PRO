@@ -469,6 +469,24 @@ describe("Dashboard Endpoint & Redis Caching (Integration Tests)", () => {
     await User.deleteOne({ _id: uC._id });
   });
 
+  it("includes all of today's water and the most recent 30 measurements", async () => {
+    const now = Date.now();
+    const measurements = Array.from({ length: 31 }, (_, index) => ({
+      user: userB.id, weight: 60 + index, height: 165, bmi: 24, category: "normal",
+      date: new Date(now + index * 1000),
+    }));
+    await Bmi.insertMany(measurements);
+    await WaterLog.insertMany(Array.from({ length: 101 }, () => ({
+      user: userB.id, amountMl: 10, date: new Date(now),
+    })));
+    await invalidateDashboardCache(userB.id);
+    const response = await getDashboardHandler(makeDashboardReq(userB.token), {});
+    const { data } = await response.json();
+    expect(data.waterToday.totalMl).toBe(1010);
+    expect(data.charts.weightTrend).toHaveLength(30);
+    expect(data.charts.weightTrend.at(-1).weight).toBe(90);
+  });
+
   it("Redis outage still permits successful database-backed reads", async () => {
     const redis = getRedisClient();
     // Temporarily mock redis.get to reject

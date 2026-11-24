@@ -17,7 +17,7 @@ export function AuthEmailWarning({ isResending, onResend }: AuthEmailWarningProp
         <AlertTriangle className="size-3.5 shrink-0" />
         <span>Verification Email Pending</span>
       </div>
-      <p className="text-[11px] text-muted-foreground leading-relaxed">
+      <p className="text-xs text-muted-foreground leading-relaxed">
         Your account was created, but email dispatch was throttled.
       </p>
       <Button

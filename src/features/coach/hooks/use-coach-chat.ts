@@ -40,13 +40,13 @@ export function useCoachChat() {
 
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
-  const [activeTitle, setActiveTitle] = useState<string>("New Consultation");
+  const [activeTitle, setActiveTitle] = useState<string>("New chat");
   const [messages, setMessages] = useState<ChatMessage[]>([DEFAULT_WELCOME_MESSAGE]);
   const [input, setInput] = useState(initialPrompt);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const accumulatedRef = useRef<string>("");
@@ -124,7 +124,7 @@ export function useCoachChat() {
             await loadConversation(list[0]._id);
           } else {
             setActiveConversationId(null);
-            setActiveTitle("New Consultation");
+            setActiveTitle("New chat");
             setMessages([DEFAULT_WELCOME_MESSAGE]);
           }
         }
@@ -146,7 +146,7 @@ export function useCoachChat() {
   const handleNewChat = () => {
     if (isStreaming) return;
     setActiveConversationId(null);
-    setActiveTitle("New Consultation");
+    setActiveTitle("New chat");
     setMessages([DEFAULT_WELCOME_MESSAGE]);
     if (typeof window !== "undefined") {
       localStorage.removeItem(LOCAL_STORAGE_ACTIVE_CHAT_KEY);
@@ -212,6 +212,7 @@ export function useCoachChat() {
     }));
 
     const clientMessageId = `turn-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    let turnConversationId = activeConversationId;
     let streamStarted = false;
     let streamFailedWithErrorEvent = false;
 
@@ -233,6 +234,7 @@ export function useCoachChat() {
 
       const headerConvId = response.headers.get("X-Conversation-Id");
       if (headerConvId && headerConvId !== activeConversationId) {
+        turnConversationId = headerConvId;
         setActiveConversationId(headerConvId);
         if (typeof window !== "undefined") {
           localStorage.setItem(LOCAL_STORAGE_ACTIVE_CHAT_KEY, headerConvId);
@@ -329,7 +331,7 @@ export function useCoachChat() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               message: prompt,
-              conversationId: activeConversationId,
+              conversationId: turnConversationId,
               clientMessageId,
             }),
           });

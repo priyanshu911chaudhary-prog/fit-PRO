@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 import path from "path";
 import crypto from "crypto";
 import mongoose from "mongoose";
-import { assertSafeTestDatabase } from "../helpers/db-guard";
+import { assertSafeTestDatabase } from "../../helpers/db-guard";
 import { decryptPayload } from "@/lib/email/crypto";
 import { User, IUser } from "@/models/user";
 import { Profile } from "@/models/profile";

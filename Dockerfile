@@ -6,6 +6,9 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
+FROM deps AS runtime-deps
+RUN npm prune --omit=dev --ignore-scripts
+
 # Stage 2: Build the application
 FROM node:24-bookworm-slim AS builder
 WORKDIR /app
@@ -33,6 +36,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/dist ./dist
+
+COPY --from=runtime-deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 
 USER nextjs
 

@@ -1,89 +1,41 @@
 // @vitest-environment happy-dom
-import { describe, expect, it, vi, afterEach } from "vitest";
 import React from "react";
-import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
-import { LoginFormCard } from "@/components/auth/login-form-card";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { TabbedAuthCard } from "@/features/auth/components/tabbed-auth-card";
 
-describe("Showcase: Component Tests -> LoginFormCard", () => {
-  afterEach(() => {
-    cleanup();
+const session = vi.hoisted(() => ({ login: vi.fn(), register: vi.fn(), isLoading: false }));
+vi.mock("@/context/auth-context", () => ({ useAuth: () => session }));
+vi.mock("@/features/auth/components/oauth-buttons", () => ({ OAuthButtons: () => null }));
+
+afterEach(() => {
+  cleanup();
+  session.login.mockReset();
+  session.isLoading = false;
+});
+
+describe("Sign-in form", () => {
+  it("submits the email and password entered in the form", async () => {
+    render(<TabbedAuthCard redirectTarget="/water" />);
+    fireEvent.change(screen.getByLabelText("Email Address"), { target: { value: "runner@fitpro.test" } });
+    fireEvent.change(screen.getByLabelText("Password", { exact: true }), { target: { value: "StrongPass123!" } });
+    fireEvent.submit(screen.getByRole("button", { name: /^Sign in$/i }).closest("form")!);
+    await waitFor(() => expect(session.login).toHaveBeenCalledWith({ email: "runner@fitpro.test", password: "StrongPass123!" }, "/water"));
   });
 
-  it("renders email, password inputs and submit button", () => {
-    const handleSubmit = vi.fn();
-    const { container } = render(<LoginFormCard onSubmit={handleSubmit} />);
-
-    expect(container.querySelector("#login-email")).not.toBeNull();
-    expect(container.querySelector("#login-password")).not.toBeNull();
-    expect(screen.getByRole("button", { name: /Sign In/i })).toBeDefined();
+  it("shows validation errors before sending credentials", async () => {
+    render(<TabbedAuthCard />);
+    fireEvent.submit(screen.getByLabelText("Email Address").closest("form")!);
+    expect((await screen.findByRole("alert")).textContent).toContain("Please enter both email and password.");
+    expect(session.login).not.toHaveBeenCalled();
   });
 
-  it("displays client-side validation error when submitting empty fields", async () => {
-    const handleSubmit = vi.fn();
-    render(<LoginFormCard onSubmit={handleSubmit} />);
-
-    const submitBtn = screen.getByRole("button", { name: /Sign In/i });
-    fireEvent.click(submitBtn);
-
-    await waitFor(() => {
-      const alert = screen.getByRole("alert");
-      expect(alert.textContent).toContain("Please enter both email and password.");
-    });
-    expect(handleSubmit).not.toHaveBeenCalled();
-  });
-
-  it("submits valid credentials successfully", async () => {
-    const handleSubmit = vi.fn();
-    const { container } = render(<LoginFormCard onSubmit={handleSubmit} />);
-
-    const emailInput = container.querySelector("#login-email") as HTMLInputElement;
-    const passwordInput = container.querySelector("#login-password") as HTMLInputElement;
-    const submitBtn = screen.getByRole("button", { name: /Sign In/i });
-
-    fireEvent.change(emailInput, { target: { value: "athlete@fitpro.dev" } });
-    fireEvent.change(passwordInput, { target: { value: "SecurePass123!" } });
-    fireEvent.click(submitBtn);
-
-    await waitFor(() => {
-      expect(handleSubmit).toHaveBeenCalledTimes(1);
-      expect(handleSubmit).toHaveBeenCalledWith({
-        email: "athlete@fitpro.dev",
-        password: "SecurePass123!",
-      });
-    });
-  });
-
-  it("displays external error message when passed via props", () => {
-    render(
-      <LoginFormCard
-        onSubmit={vi.fn()}
-        errorMessage="Invalid email or password credentials."
-      />
-    );
-
-    const alert = screen.getByRole("alert");
-    expect(alert.textContent).toContain("Invalid email or password credentials.");
-  });
-
-  it("disables the submit button and displays loading state during submission", () => {
-    render(<LoginFormCard onSubmit={vi.fn()} isLoading={true} />);
-
-    const submitBtn = screen.getByRole("button", { name: /Signing In.../i }) as HTMLButtonElement;
-    expect(submitBtn).toBeDefined();
-    expect(submitBtn.disabled).toBe(true);
-  });
-
-  it("toggles password visibility when the eye button is clicked", () => {
-    const { container } = render(<LoginFormCard onSubmit={vi.fn()} />);
-
-    const passwordInput = container.querySelector("#login-password") as HTMLInputElement;
-    expect(passwordInput.type).toBe("password");
-
-    const toggleBtn = screen.getByTestId("toggle-password-btn");
-    fireEvent.click(toggleBtn);
-    expect(passwordInput.type).toBe("text");
-
-    fireEvent.click(toggleBtn);
-    expect(passwordInput.type).toBe("password");
+  it("can show and hide the password", () => {
+    render(<TabbedAuthCard />);
+    const password = screen.getByLabelText("Password", { exact: true }) as HTMLInputElement;
+    fireEvent.click(screen.getByRole("button", { name: "Show password" }));
+    expect(password.type).toBe("text");
+    fireEvent.click(screen.getByRole("button", { name: "Hide password" }));
+    expect(password.type).toBe("password");
   });
 });

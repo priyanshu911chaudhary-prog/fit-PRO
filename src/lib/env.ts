@@ -28,12 +28,8 @@ const envSchema = z.object({
   EMAIL_FROM: z.string().default("Fit-PRO <hello@fit-pro.publicvm.com>"),
   EMAIL_PAYLOAD_SECRET: z.string().min(16).optional(),
   ADMIN_API_KEY: z.string().optional(),
-  NEXT_PUBLIC_VAPID_PUBLIC_KEY: z
-    .string()
-    .default("BPKkV4JKJiqgsTNdGFL318UX_TzjvRIV5BFmSdnPtS5IrN9o6u1g5Ea8opRm9n0htPbUhPzXyVnCQevmjSN7CI4"),
-  VAPID_PRIVATE_KEY: z
-    .string()
-    .default("xjmJTDNSlC7ot51P25s8w-EDi0xzrarcJ5SR2xN3rDs"),
+  NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().optional(),
+  VAPID_PRIVATE_KEY: z.string().optional(),
   VAPID_SUBJECT: z.string().default("mailto:support@fitpro.local"),
 });
 
@@ -103,11 +99,8 @@ export function getEnv(): Env {
       EMAIL_FROM: process.env.EMAIL_FROM || "Fit-PRO <hello@fit-pro.publicvm.com>",
       EMAIL_PAYLOAD_SECRET: process.env.EMAIL_PAYLOAD_SECRET,
       ADMIN_API_KEY: process.env.ADMIN_API_KEY,
-      NEXT_PUBLIC_VAPID_PUBLIC_KEY:
-        process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
-        "BPKkV4JKJiqgsTNdGFL318UX_TzjvRIV5BFmSdnPtS5IrN9o6u1g5Ea8opRm9n0htPbUhPzXyVnCQevmjSN7CI4",
-      VAPID_PRIVATE_KEY:
-        process.env.VAPID_PRIVATE_KEY || "xjmJTDNSlC7ot51P25s8w-EDi0xzrarcJ5SR2xN3rDs",
+      NEXT_PUBLIC_VAPID_PUBLIC_KEY: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+      VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY,
       VAPID_SUBJECT: process.env.VAPID_SUBJECT || "mailto:support@fitpro.local",
     };
     return parsedEnv;

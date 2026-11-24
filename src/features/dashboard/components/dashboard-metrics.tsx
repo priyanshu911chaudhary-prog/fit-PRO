@@ -5,7 +5,7 @@ import { Droplet, Scale, Flame, TrendingUp } from "lucide-react";
 import { MetricCard } from "@/components/dashboard/metric-card";
 import { DashboardStats } from "../types";
 
-interface DashboardMetricHudProps {
+interface DashboardMetricsProps {
   water?: DashboardStats["waterToday"];
   metrics?: DashboardStats["metrics"];
   addingWater: boolean;
@@ -13,13 +13,13 @@ interface DashboardMetricHudProps {
   onNavigate: (path: string) => void;
 }
 
-export function DashboardMetricHud({
+export function DashboardMetrics({
   water,
   metrics,
   addingWater,
   onQuickAddWater,
   onNavigate,
-}: DashboardMetricHudProps) {
+}: DashboardMetricsProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {/* Metric 1: Hydration */}
@@ -31,8 +31,8 @@ export function DashboardMetricHud({
         statusText={`${water?.percentage || 0}% TARGET`}
         statusVariant="secondary"
         accent="cyan"
-        subtext="Target: Cellular recovery & muscular hydration"
-        icon={<Droplet className="size-4 text-cyan-400" />}
+        subtext="Water logged today"
+        icon={<Droplet className="size-4 text-cyan-700 dark:text-cyan-400" />}
         actionLabel={addingWater ? "..." : "+250ml"}
         onAction={() => onQuickAddWater(250)}
       />
@@ -42,11 +42,11 @@ export function DashboardMetricHud({
         title="Body Mass Index"
         value={metrics?.bmi || "--"}
         unit={metrics?.weight ? `(${metrics.weight} kg)` : ""}
-        statusText={metrics?.category ? metrics.category.toUpperCase() : "NORMAL"}
+        statusText={metrics?.category ? metrics.category.toUpperCase() : "—"}
         statusVariant="default"
         accent="emerald"
         subtext={`Height: ${metrics?.height || "--"} cm • Weight: ${metrics?.weight || "--"} kg`}
-        icon={<Scale className="size-4 text-emerald-400" />}
+        icon={<Scale className="size-4 text-emerald-700 dark:text-emerald-400" />}
         actionLabel="Log Weigh-In"
         onAction={() => onNavigate("/bmi")}
       />
@@ -56,26 +56,26 @@ export function DashboardMetricHud({
         title="Basal Metabolic Rate"
         value={metrics?.bmr || "--"}
         unit="kcal / day"
-        statusText="RESTING FLOOR"
+        statusText="Resting"
         statusVariant="outline"
         accent="amber"
-        subtext="Mifflin-St Jeor basal caloric baseline"
-        icon={<Flame className="size-4 text-amber-400" />}
-        actionLabel="Recalibrate"
-        onAction={() => onNavigate("/onboarding")}
+        subtext="Estimated energy used at rest"
+        icon={<Flame className="size-4 text-amber-700 dark:text-amber-400" />}
+        actionLabel="Edit profile"
+        onAction={() => onNavigate("/profile")}
       />
 
       {/* Metric 4: Maintenance TDEE */}
       <MetricCard
-        title="Active TDEE Budget"
+        title="Daily energy expenditure"
         value={metrics?.tdee || "--"}
         unit="kcal / day"
-        statusText="EXPENDITURE"
+        statusText="Active"
         statusVariant="outline"
         accent="purple"
-        subtext="Daily caloric maintenance with activity coefficient"
-        icon={<TrendingUp className="size-4 text-purple-400" />}
-        actionLabel="Meal Fuel"
+        subtext="Estimated energy including activity"
+        icon={<TrendingUp className="size-4 text-purple-700 dark:text-purple-400" />}
+        actionLabel="Log meal"
         onAction={() => onNavigate("/meal")}
       />
     </div>

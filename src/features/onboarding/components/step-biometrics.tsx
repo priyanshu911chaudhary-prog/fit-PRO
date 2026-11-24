@@ -33,7 +33,7 @@ export function StepBiometrics({
     <div className="space-y-6">
       <div className="space-y-1">
         <h3 className="text-lg font-bold tracking-tight text-foreground">
-          Calibrate Your Physical Baseline
+          Your measurements
         </h3>
         <p className="text-xs text-muted-foreground">
           Measurements directly drive your Mifflin-St Jeor metabolic calculation.
@@ -53,7 +53,7 @@ export function StepBiometrics({
                 className={cn(
                   "py-2.5 px-3 rounded-xl text-xs font-bold capitalize border transition-all cursor-pointer",
                   gender === g.id
-                    ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300 shadow-xs"
+                    ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 shadow-xs"
                     : "border-border/70 bg-background/50 hover:bg-muted/70 text-muted-foreground"
                 )}
               >
@@ -69,7 +69,7 @@ export function StepBiometrics({
             <Label htmlFor="dob" className="text-xs font-semibold">
               Date of Birth
             </Label>
-            <span className="text-xs font-mono text-emerald-400 font-semibold">
+            <span className="text-xs font-mono text-emerald-700 dark:text-emerald-400 font-semibold">
               {age} years old
             </span>
           </div>
@@ -112,7 +112,7 @@ export function StepBiometrics({
               Weight
             </Label>
             <div className="flex items-center gap-1 font-mono">
-              <span className="text-base font-black text-emerald-400">{weight}</span>
+              <span className="text-base font-black text-emerald-700 dark:text-emerald-400">{weight}</span>
               <span className="text-xs text-muted-foreground">kg</span>
             </div>
           </div>

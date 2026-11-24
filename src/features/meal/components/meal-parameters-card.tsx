@@ -23,10 +23,10 @@ export function MealParametersCard({
   onMealTypeChange,
 }: MealParametersCardProps) {
   return (
-    <Card className="border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl shadow-lg">
+    <Card className="border-border/70 bg-card  shadow-lg">
       <CardHeader className="pb-3 border-b border-border/40">
         <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-          <Zap className="size-4 text-cyan-400" />
+          <Zap className="size-4 text-cyan-700 dark:text-cyan-400" />
           Meal Parameters
         </CardTitle>
         <CardDescription className="text-xs text-muted-foreground">
@@ -66,14 +66,14 @@ export function MealParametersCard({
                   className={cn(
                     "flex items-center gap-2.5 p-2.5 rounded-xl border text-xs capitalize transition-all cursor-pointer font-medium",
                     isSelected
-                      ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-400 font-semibold shadow-xs"
+                      ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 font-semibold shadow-xs"
                       : "border-border/60 bg-muted/20 text-muted-foreground hover:bg-muted/40"
                   )}
                 >
                   <IconComp
                     className={cn(
                       "size-4",
-                      isSelected ? "text-cyan-400" : "text-muted-foreground"
+                      isSelected ? "text-cyan-700 dark:text-cyan-400" : "text-muted-foreground"
                     )}
                   />
                   <span>{type}</span>

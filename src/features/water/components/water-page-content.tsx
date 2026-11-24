@@ -3,7 +3,7 @@
 import React from "react";
 import { useWater } from "../hooks/use-water";
 import { WaterHeader } from "./water-header";
-import { WaterRadialHero } from "./water-radial-hero";
+import { WaterIntakeForm } from "./water-intake-form";
 import { WaterIntakeLog } from "./water-intake-log";
 
 export function WaterPageContent() {
@@ -24,13 +24,9 @@ export function WaterPageContent() {
 
   return (
     <div className="container mx-auto max-w-5xl px-4 py-8 space-y-8">
-      <WaterHeader
-        hasLogs={hasLogs}
-        isSubmitting={isSubmitting}
-        onUndoLast={handleUndoLast}
-      />
+      <WaterHeader />
 
-      <WaterRadialHero
+      <WaterIntakeForm
         stats={stats}
         isSubmitting={isSubmitting}
         hasLogs={hasLogs}

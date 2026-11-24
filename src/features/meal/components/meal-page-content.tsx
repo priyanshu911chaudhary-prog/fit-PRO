@@ -9,7 +9,7 @@ import { useFoodCatalog } from "../hooks/use-food-catalog";
 import { useMealHistory } from "../hooks/use-meal-history";
 import { useMealBuilder } from "../hooks/use-meal-builder";
 import { MealHeader } from "./meal-header";
-import { MealMacroHud } from "./meal-macro-hud";
+import { MealSummary } from "./meal-summary";
 import { MealMacroBar } from "./meal-macro-bar";
 import { MealParametersCard } from "./meal-parameters-card";
 import { FoodCatalogPicker } from "./food-catalog-picker";
@@ -70,21 +70,19 @@ export function MealPageContent() {
       className="container mx-auto max-w-7xl px-4 py-8 space-y-6"
     >
       <MealHeader
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
         historyCount={history.length}
       />
 
       {/* Date Navigation & Context Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3.5 rounded-2xl border border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3.5 rounded-2xl border border-border/70 bg-card ">
         <div className="flex items-center gap-2">
-          <CalendarIcon className="size-4 text-emerald-400" />
-          <span className="text-xs font-semibold text-foreground">Selected Consumption Day:</span>
-          <span className="text-xs font-mono font-bold text-emerald-400">
+          <CalendarIcon className="size-4 text-emerald-700 dark:text-emerald-400" />
+          <span className="text-xs font-semibold text-foreground">Meal date</span>
+          <span className="text-xs font-mono font-bold text-emerald-700 dark:text-emerald-400">
             {isToday ? "Today" : selectedDate}
           </span>
           {isToday && (
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
               LIVE
             </span>
           )}
@@ -135,19 +133,19 @@ export function MealPageContent() {
         </div>
       </div>
 
-      {/* Top Section: Daily Nutrition Ledger Summary */}
+      {/* Top Section: Daily nutrition Summary */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-mono uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
             <span className="size-2 rounded-full bg-emerald-400" />
-            Daily Nutrition Ledger • {isToday ? "Today" : selectedDate}
+            Daily nutrition • {isToday ? "Today" : selectedDate}
           </h3>
           <span className="text-xs font-mono text-muted-foreground">
             {history.length} {history.length === 1 ? "logged meal" : "logged meals"}
           </span>
         </div>
 
-        <MealMacroHud macros={dailyTotals} targets={dailyTargets} isToday={isToday} />
+        <MealSummary macros={dailyTotals} targets={dailyTargets} isToday={isToday} />
         <MealMacroBar macros={dailyTotals} />
       </div>
 

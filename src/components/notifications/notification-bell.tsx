@@ -149,7 +149,7 @@ export function NotificationBell() {
 
       <DropdownMenuContent
         align="end"
-        className="w-80 sm:w-96 p-0 shadow-2xl border-border/80 bg-card/95 backdrop-blur-xl overflow-hidden"
+        className="w-80 max-w-[calc(100vw-1.5rem)] sm:w-96 p-0 shadow-2xl border-border/80 bg-card/95 backdrop-blur-xl overflow-hidden"
       >
         <DropdownMenuLabel className="flex items-center justify-between p-3.5 border-b border-border/60 bg-muted/30">
           <div className="flex items-center gap-2">

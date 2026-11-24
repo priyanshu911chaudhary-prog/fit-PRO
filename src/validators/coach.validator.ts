@@ -8,6 +8,8 @@ export const sendCoachMessageSchema = z.object({
     .trim()
     .min(1, "Message cannot be empty")
     .max(2000, "Message cannot exceed 2000 characters"),
+  history: z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().max(2000) })).max(10).optional(),
+  clientMessageId: z.string().trim().min(1).max(128).optional(),
   conversationId: z
     .string()
     .regex(objectIdRegex, "Invalid conversation ID format")

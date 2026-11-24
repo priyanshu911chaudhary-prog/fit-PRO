@@ -1,9 +1,11 @@
 "use client";
 
+import { afterLogin } from "@/lib/auth/redirect";
+
 import React, { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
-import { TabbedAuthCard } from "@/components/auth/tabbed-auth-card";
+import { TabbedAuthCard } from "@/features/auth/components/tabbed-auth-card";
 
 function LoginContent() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -13,14 +15,7 @@ function LoginContent() {
 
   React.useEffect(() => {
     if (!isLoading && isAuthenticated && user) {
-      const destination =
-        !user.hasProfile
-          ? "/onboarding"
-          : redirectTarget && !redirectTarget.startsWith("/login")
-          ? redirectTarget.startsWith("/")
-            ? redirectTarget
-            : `/${redirectTarget}`
-          : "/dashboard";
+      const destination = afterLogin(Boolean(user.hasProfile), redirectTarget);
       router.replace(destination);
     }
   }, [isLoading, isAuthenticated, user, redirectTarget, router]);

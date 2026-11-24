@@ -116,12 +116,12 @@ export function LeaderboardPageContent() {
                   <p className="leading-relaxed">
                     Score is 0–100, weighted by:
                   </p>
-                  <ul className="list-disc list-inside space-y-0.5 text-[11px]">
+                  <ul className="list-disc list-inside space-y-0.5 text-xs">
                     <li><strong>40%</strong> Workout consistency</li>
                     <li><strong>30%</strong> Daily protein adherence</li>
                     <li><strong>30%</strong> Daily hydration adherence</li>
                   </ul>
-                  <p className="text-[10px] text-muted-foreground/80 mt-1">
+                  <p className="text-xs text-muted-foreground/80 mt-1">
                     Each component is capped at 100%. Missing logs earn 0 points.
                   </p>
                 </div>
@@ -134,7 +134,7 @@ export function LeaderboardPageContent() {
                   <p className="leading-relaxed">
                     A minimum of <strong>4 distinct tracked days</strong> during the week is required for public ranking.
                   </p>
-                  <p className="text-[11px] leading-relaxed">
+                  <p className="text-xs leading-relaxed">
                     Workouts qualify if completed with at least <strong>70% completion</strong> and <strong>15 minutes duration</strong>.
                   </p>
                 </div>
@@ -147,7 +147,7 @@ export function LeaderboardPageContent() {
                   <p className="leading-relaxed">
                     Shared competition ranking (e.g. 1, 1, 3). Co-winners share the top podium.
                   </p>
-                  <p className="text-[11px] leading-relaxed">
+                  <p className="text-xs leading-relaxed">
                     Target adjustments take effect the following Monday (00:00 IST) to prevent mid-week manipulation.
                   </p>
                 </div>

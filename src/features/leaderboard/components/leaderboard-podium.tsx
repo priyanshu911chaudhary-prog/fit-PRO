@@ -33,7 +33,7 @@ export function LeaderboardPodium({ podium }: LeaderboardPodiumProps) {
               {rank2s.map((p) => (
                 <div
                   key={p.userId}
-                  className="relative p-5 rounded-2xl bg-card/70 border border-slate-400/30 backdrop-blur-md shadow-lg flex flex-col items-center text-center group hover:border-slate-300/50 transition-all"
+                  className="relative p-5 rounded-2xl bg-card/70 border border-slate-400/30  shadow-lg flex flex-col items-center text-center group hover:border-slate-300/50 transition-all"
                 >
                   <div className="size-10 rounded-full bg-slate-400/10 border border-slate-400/30 flex items-center justify-center text-slate-300 mb-3 shadow-inner">
                     <Medal className="size-5 text-slate-300" />
@@ -67,15 +67,15 @@ export function LeaderboardPodium({ podium }: LeaderboardPodiumProps) {
               {rank1s.map((p) => (
                 <div
                   key={p.userId}
-                  className="relative p-6 rounded-2xl bg-gradient-to-b from-amber-500/15 via-card/80 to-card/90 border-2 border-amber-500/50 backdrop-blur-xl shadow-2xl flex flex-col items-center text-center transform md:-translate-y-2 group hover:border-amber-400 transition-all"
+                  className="relative p-6 rounded-2xl bg-gradient-to-b from-amber-500/15 via-card/80 to-card/90 border-2 border-amber-500/50  shadow-sm flex flex-col items-center text-center transform md:-translate-y-2 group hover:border-amber-400 transition-all"
                 >
-                  <div className="absolute -top-3 px-3 py-0.5 rounded-full bg-amber-500 text-amber-950 text-[10px] font-bold font-mono tracking-wider uppercase shadow-md flex items-center gap-1">
+                  <div className="absolute -top-3 px-3 py-0.5 rounded-full bg-amber-500 text-amber-950 text-xs font-bold font-mono tracking-wider uppercase shadow-md flex items-center gap-1">
                     <Crown className="size-3 fill-amber-950" />
                     {rank1s.length > 1 ? "Co-Leader" : "Champion"}
                   </div>
 
-                  <div className="size-14 rounded-full bg-amber-500/20 border-2 border-amber-500/40 flex items-center justify-center text-amber-400 mb-3 shadow-lg">
-                    <Crown className="size-7 text-amber-400" />
+                  <div className="size-14 rounded-full bg-amber-500/20 border-2 border-amber-500/40 flex items-center justify-center text-amber-700 dark:text-amber-400 mb-3 shadow-lg">
+                    <Crown className="size-7 text-amber-700 dark:text-amber-400" />
                   </div>
                   <span className="text-xs uppercase tracking-wider font-mono text-amber-400/90 font-bold mb-1">
                     Rank #1 {rank1s.length > 1 ? "(Tied)" : ""}
@@ -84,7 +84,7 @@ export function LeaderboardPodium({ podium }: LeaderboardPodiumProps) {
                     {p.displayName}
                   </h3>
                   <div className="mt-3 inline-flex items-baseline gap-1 px-4 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30">
-                    <span className="text-2xl font-mono font-extrabold text-amber-400">
+                    <span className="text-2xl font-mono font-extrabold text-amber-700 dark:text-amber-400">
                       {p.displayScore.toFixed(2)}
                     </span>
                     <span className="text-xs text-amber-300/80 font-mono">pts</span>
@@ -106,7 +106,7 @@ export function LeaderboardPodium({ podium }: LeaderboardPodiumProps) {
               {rank3s.map((p) => (
                 <div
                   key={p.userId}
-                  className="relative p-5 rounded-2xl bg-card/70 border border-amber-700/30 backdrop-blur-md shadow-lg flex flex-col items-center text-center group hover:border-amber-600/50 transition-all"
+                  className="relative p-5 rounded-2xl bg-card/70 border border-amber-700/30  shadow-lg flex flex-col items-center text-center group hover:border-amber-600/50 transition-all"
                 >
                   <div className="size-10 rounded-full bg-amber-700/10 border border-amber-700/30 flex items-center justify-center text-amber-600 mb-3 shadow-inner">
                     <Award className="size-5 text-amber-600" />

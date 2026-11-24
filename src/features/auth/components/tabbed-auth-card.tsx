@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { AnimatePresence } from "framer-motion";
+import { Card } from "@/components/ui/card";
 import { AlertTriangle } from "lucide-react";
-import { OAuthButtons } from "@/components/auth/oauth-buttons";
+import { OAuthButtons } from "./oauth-buttons";
 import { useAuthForm } from "@/features/auth/hooks/use-auth-form";
 import { AuthCardHeader } from "@/features/auth/components/auth-card-header";
 import { AuthModeTabs } from "@/features/auth/components/auth-mode-tabs";
@@ -42,12 +42,7 @@ export function TabbedAuthCard({
 
   return (
     <div className="w-full max-w-[420px] mx-auto">
-      {/* Main Glassmorphic Card */}
-      <div className="rounded-3xl border border-border/70 bg-card/85 dark:bg-card/75 backdrop-blur-2xl p-6 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden">
-        {/* Subtle Ambient Radial Highlight */}
-        <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-72 h-72 bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none -z-10" />
-
-        {/* Brand Header */}
+      <Card className="gap-5 p-6 sm:p-8">
         <AuthCardHeader mode={mode} />
 
         {/* Segmented Tab Slider */}
@@ -74,7 +69,7 @@ export function TabbedAuthCard({
         )}
 
         {/* Dynamic Mode Forms with Smooth Animation */}
-        <AnimatePresence mode="wait">
+        <fieldset disabled={isLoading} className="min-w-0">
           {mode === "login" ? (
             <AuthLoginForm
               email={email}
@@ -104,13 +99,13 @@ export function TabbedAuthCard({
               onSubmit={handleRegisterSubmit}
             />
           )}
-        </AnimatePresence>
+        </fieldset>
 
         {/* OAuth Buttons Section */}
         <div className="pt-2">
           <OAuthButtons />
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

@@ -1,8 +1,15 @@
 import type {
   WorkoutExerciseEntry,
+  WorkoutExerciseLogItem,
   DailyWorkoutSummary,
   WorkoutLogRecord,
 } from "../types";
+
+export function getLoggedVolume(exercise: WorkoutExerciseLogItem) {
+  const details = exercise.setDetails ?? (Array.isArray(exercise.sets) ? exercise.sets : undefined);
+  if (details) return details.reduce((sum, set) => sum + (set.reps ?? 0) * (set.weight ?? 0), 0);
+  return (Number(exercise.sets) || 1) * (exercise.reps ?? 0) * (exercise.weight ?? 0);
+}
 
 export function formatSafeDate(val?: string | Date): string {
   if (!val) return "Today";
@@ -96,9 +103,8 @@ export function aggregateDailyWorkoutMetrics(
       if (!persistedDailyTotals) {
         const sCount = Array.isArray(ex.sets) ? ex.sets.length : Number(ex.sets) || 1;
         const reps = (Array.isArray(ex.sets) && ex.sets[0] ? ex.sets[0].reps : ex.reps) || 0;
-        const weight = (Array.isArray(ex.sets) && ex.sets[0] ? ex.sets[0].weight : ex.weight) || 0;
         if (reps > 0) {
-          baseVolume += sCount * reps * weight;
+          baseVolume += getLoggedVolume(ex);
           baseSets += sCount;
         }
       }

@@ -13,7 +13,7 @@ import { useExerciseCatalog } from "../hooks/use-exercise-catalog";
 import { useWorkoutBuilder } from "../hooks/use-workout-builder";
 import { useWorkoutHistory } from "../hooks/use-workout-history";
 import { WorkoutHeader } from "./workout-header";
-import { WorkoutTelemetryHud } from "./workout-telemetry-hud";
+import { WorkoutSummary } from "./workout-summary";
 import { WorkoutSessionOverview } from "./workout-session-overview";
 import { ExerciseMovementCatalog } from "./exercise-movement-catalog";
 import { WorkoutSetsBuilder } from "./workout-sets-builder";
@@ -101,15 +101,7 @@ export function WorkoutPageContent() {
           title: workoutType || "Workout Session",
           totalDuration: Number(duration) || 45,
           date: date || selectedDate,
-          exercises: workoutExercises.map((ex) => {
-            const firstSet = ex.sets[0] || { reps: 10, weight: 0 };
-            return {
-              exerciseId: ex.exerciseId,
-              sets: ex.sets.length,
-              reps: Number(firstSet.reps) || 10,
-              weight: Number(firstSet.weight) || 0,
-            };
-          }),
+          exercises: workoutExercises.map((ex) => ({ exerciseId: ex.exerciseId, sets: ex.sets })),
         }),
       });
 
@@ -140,21 +132,19 @@ export function WorkoutPageContent() {
     >
       {/* 1. Header Banner */}
       <WorkoutHeader
-        activeTab={activeTab}
         historyCount={allHistory.length > 0 ? allHistory.length : history.length}
-        onTabChange={setActiveTab}
       />
 
       {/* 2. Date Navigation & Context Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3.5 rounded-2xl border border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3.5 rounded-2xl border border-border/70 bg-card ">
         <div className="flex items-center gap-2">
-          <CalendarIcon className="size-4 text-emerald-400" />
+          <CalendarIcon className="size-4 text-emerald-700 dark:text-emerald-400" />
           <span className="text-xs font-semibold text-foreground">Selected Workout Day:</span>
-          <span className="text-xs font-mono font-bold text-emerald-400">
+          <span className="text-xs font-mono font-bold text-emerald-700 dark:text-emerald-400">
             {isToday ? "Today" : selectedDate}
           </span>
           {isToday && (
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
               LIVE
             </span>
           )}
@@ -205,12 +195,12 @@ export function WorkoutPageContent() {
         </div>
       </div>
 
-      {/* 3. Daily Workout Ledger Summary & Telemetry HUD Strip */}
+      {/* 3. Daily training Summary & Telemetry HUD Strip */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-mono uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
             <span className="size-2 rounded-full bg-emerald-400" />
-            Daily Workout Ledger • {isToday ? "Today" : selectedDate}
+            Daily training • {isToday ? "Today" : selectedDate}
           </h3>
           <span className="text-xs font-mono text-muted-foreground">
             {history.length} {history.length === 1 ? "committed session" : "committed sessions"}
@@ -218,7 +208,7 @@ export function WorkoutPageContent() {
           </span>
         </div>
 
-        <WorkoutTelemetryHud
+        <WorkoutSummary
           totalVolumeTonnage={combinedDailyTotals.totalVolumeTonnage}
           exercisesCount={combinedDailyTotals.exercisesCount}
           totalSetsCount={combinedDailyTotals.totalSetsCount}

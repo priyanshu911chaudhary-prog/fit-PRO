@@ -47,12 +47,12 @@ export function StepEquipment({
               className={cn(
                 "py-2.5 px-2 rounded-xl text-center border transition-all cursor-pointer",
                 experienceLevel === exp.id
-                  ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300 shadow-xs"
+                  ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 shadow-xs"
                   : "border-border/70 bg-background/50 hover:bg-muted/70 text-muted-foreground"
               )}
             >
               <p className="text-xs font-bold">{exp.label}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">{exp.sub}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{exp.sub}</p>
             </button>
           ))}
         </div>
@@ -62,7 +62,7 @@ export function StepEquipment({
       <div className="space-y-1.5">
         <div className="flex justify-between items-center">
           <Label className="text-xs font-semibold">Available Equipment (Multi-Select)</Label>
-          <span className="text-[11px] text-emerald-400 font-mono">
+          <span className="text-xs text-emerald-700 dark:text-emerald-400 font-mono">
             {equipmentAvailable.length} selected
           </span>
         </div>
@@ -77,12 +77,12 @@ export function StepEquipment({
                 className={cn(
                   "p-2.5 rounded-xl text-left border text-xs capitalize transition-all cursor-pointer flex items-center justify-between",
                   isSelected
-                    ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300 font-bold"
+                    ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-bold"
                     : "border-border/60 bg-background/50 hover:bg-muted/70 text-muted-foreground"
                 )}
               >
                 <span className="truncate">{eq.replace(/_/g, " ")}</span>
-                {isSelected && <Check className="size-3.5 text-emerald-400 shrink-0 ml-1" />}
+                {isSelected && <Check className="size-3.5 text-emerald-700 dark:text-emerald-400 shrink-0 ml-1" />}
               </button>
             );
           })}
@@ -101,7 +101,7 @@ export function StepEquipment({
               className={cn(
                 "py-2 px-2.5 rounded-xl text-xs font-semibold capitalize border transition-all cursor-pointer",
                 dietaryPreference === diet
-                  ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-300"
+                  ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
                   : "border-border/60 bg-background/50 hover:bg-muted/70 text-muted-foreground"
               )}
             >

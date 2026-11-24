@@ -44,7 +44,7 @@ export function MetricCard({
       <Card
         data-testid="metric-card-loading"
         className={cn(
-          "relative overflow-hidden border-border/50 bg-[#0B0F0E]/60 backdrop-blur-md animate-pulse",
+          "relative overflow-hidden border-border/50 bg-card  animate-pulse",
           className
         )}
       >
@@ -69,16 +69,16 @@ export function MetricCard({
 
   const accentBadge = {
     emerald: "border-emerald-500/20 text-emerald-400 bg-emerald-500/10",
-    cyan: "border-cyan-500/20 text-cyan-400 bg-cyan-500/10",
-    amber: "border-amber-500/20 text-amber-400 bg-amber-500/10",
-    purple: "border-purple-500/20 text-purple-400 bg-purple-500/10",
+    cyan: "border-cyan-500/20 text-cyan-700 dark:text-cyan-400 bg-cyan-500/10",
+    amber: "border-amber-500/20 text-amber-700 dark:text-amber-400 bg-amber-500/10",
+    purple: "border-purple-500/20 text-purple-700 dark:text-purple-400 bg-purple-500/10",
   }[accent];
 
   return (
     <Card
       data-testid="metric-card"
       className={cn(
-        "group relative overflow-hidden border-border/60 bg-[#0B0F0E]/75 backdrop-blur-md transition-all duration-300 hover:shadow-xl",
+        "group relative overflow-hidden border-border/60 bg-card  transition-all duration-300 hover:shadow-sm",
         accentBorder,
         className
       )}
@@ -98,7 +98,7 @@ export function MetricCard({
         {statusText && (
           <Badge
             variant={statusVariant}
-            className={cn("text-[11px] font-medium tracking-tight px-2 py-0.5", accentBadge)}
+            className={cn("text-xs font-medium tracking-tight px-2 py-0.5", accentBadge)}
           >
             {statusText}
           </Badge>
@@ -130,7 +130,7 @@ export function MetricCard({
         </div>
 
         {subtext && (
-          <p className="text-[11px] text-muted-foreground/80 line-clamp-1">{subtext}</p>
+          <p className="text-xs text-muted-foreground/80 line-clamp-1">{subtext}</p>
         )}
 
         {typeof percentage === "number" && (
@@ -139,7 +139,7 @@ export function MetricCard({
               value={Math.min(100, Math.max(0, percentage))}
               className="h-1.5 bg-muted/40"
             />
-            <div className="flex justify-between text-[11px] font-mono text-muted-foreground">
+            <div className="flex justify-between text-xs font-mono text-muted-foreground">
               <span>Progress</span>
               <span className="font-semibold text-foreground">{Math.round(percentage)}%</span>
             </div>

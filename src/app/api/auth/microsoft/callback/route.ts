@@ -1,3 +1,4 @@
+import { connectDB } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { decodeJwt } from "jose";
 import { setAuthCookies } from "@/lib/auth/cookies";
@@ -144,6 +145,7 @@ export async function GET(req: NextRequest) {
     const uniqueMicrosoftId = tid ? `${tid}:${sub}` : sub;
 
     // Find user by microsoftId or email
+    await connectDB();
     let user = await User.findOne({ microsoftId: uniqueMicrosoftId });
     let isNewUser = false;
 

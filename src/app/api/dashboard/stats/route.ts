@@ -10,28 +10,28 @@ import { getCachedOrFetch, getDashboardVersion } from "@/lib/cache/redis-cache";
 import { Bmi } from "@/models/bmi";
 import { MealLog } from "@/models/mealLog";
 import { Profile } from "@/models/profile";
-import { WaterLog } from "@/models/waterLog";
+import { getWaterToday } from "@/lib/water-today";
 import { WorkoutLog } from "@/models/workoutLog";
 
 const DASHBOARD_CACHE_TTL = 30; // 30 seconds
 
 async function computeDashboardStats(userId: string, timeZone: string) {
   const todayStr = formatInTimezone(new Date(), timeZone);
-  const [profile, initialBmiHistory, allWorkoutLogs, recentWorkouts, recentMeals, recentWaterLogs] =
+  const [profile, initialBmiHistory, allWorkoutLogs, recentWorkouts, recentMeals, waterToday] =
     await Promise.all([
       Profile.findOne({ user: userId }),
-      Bmi.find({ user: userId }).sort({ date: 1 }).limit(30).select("bmi weight date createdAt -_id"),
+      Bmi.find({ user: userId }).sort({ date: -1, _id: -1 }).limit(30).select("bmi weight date createdAt -_id"),
       WorkoutLog.find({ user: userId }).select("date createdAt"),
       WorkoutLog.find({ user: userId }).sort({ createdAt: -1 }).limit(3),
       MealLog.find({ user: userId }).sort({ createdAt: -1 }).limit(3),
-      WaterLog.find({ user: userId }).sort({ createdAt: -1, date: -1 }).limit(100),
+      getWaterToday(userId, timeZone),
     ]);
 
   if (!profile) {
     throw new ApiError(404, "Profile not found. Please complete onboarding.");
   }
 
-  let bmiHistory = initialBmiHistory;
+  let bmiHistory = initialBmiHistory.reverse();
 
   // Auto-seed initial baseline BMI record if none exists yet
   if (bmiHistory.length === 0 && profile.weight && profile.height) {
@@ -84,19 +84,7 @@ async function computeDashboardStats(userId: string, timeZone: string) {
     }
   }
 
-  // Compute live today water intake
-  const todayWaterLogs = recentWaterLogs.filter((log) => {
-    const d = log.date || log.createdAt;
-    return d && formatInTimezone(d, timeZone) === todayStr;
-  });
-  const totalWaterMl = todayWaterLogs.reduce((sum, log) => {
-    const val =
-      log.amountMl ??
-      (log as unknown as { amount?: number }).amount ??
-      0;
-    return sum + Number(val);
-  }, 0);
-  const targetWaterMl = 2500;
+  const { totalMl: totalWaterMl, targetAmount: targetWaterMl } = waterToday;
 
   const effectiveAge = profile.dob ? calculateAge(profile.dob) : profile.age || 25;
   const metrics = getFitnessMetrics({
@@ -133,14 +121,14 @@ async function computeDashboardStats(userId: string, timeZone: string) {
     }),
     recentWorkouts: recentWorkouts.map((w) => ({
       _id: w._id.toString(),
-      date: formatInTimezone(w.createdAt, timeZone),
+      date: w.date || formatInTimezone(w.createdAt, timeZone),
       workoutType: w.title || "Workout",
-      duration: w.totalDuration || 45,
+      duration: w.totalDuration ?? 0,
       exercisesCount: w.exercises?.length || 0,
     })),
     recentMeals: recentMeals.map((m) => ({
       _id: m._id.toString(),
-      date: formatInTimezone(m.createdAt, timeZone),
+      date: m.consumedDate || formatInTimezone(m.createdAt, timeZone),
       mealType: m.title || "Meal",
       totalCalories: m.totalCalories || 0,
     })),

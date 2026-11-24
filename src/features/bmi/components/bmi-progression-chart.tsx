@@ -25,15 +25,15 @@ export function BmiProgressionChart({
   onChartMetricChange,
 }: BmiProgressionChartProps) {
   return (
-    <Card className="border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl shadow-lg">
+    <Card className="border-border/70 bg-card  shadow-lg">
       <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 gap-3 border-b border-border/40">
         <div>
           <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-            <Activity className="size-4 text-emerald-400" />
+            <Activity className="size-4 text-emerald-700 dark:text-emerald-400" />
             Anthropometric Progression Trajectory
           </CardTitle>
           <CardDescription className="text-xs text-muted-foreground">
-            Historical telemetry plotting physiological baseline stability
+            Changes in your recorded measurements
           </CardDescription>
         </div>
 
@@ -94,8 +94,8 @@ export function BmiProgressionChart({
                   content={({ active, payload, label }) => {
                     if (active && payload && payload.length) {
                       return (
-                        <div className="rounded-xl border border-border/80 bg-[#0B0F0E]/95 p-3 shadow-2xl backdrop-blur-md">
-                          <p className="text-[11px] font-mono text-muted-foreground">
+                        <div className="rounded-xl border border-border/80 bg-card p-3 shadow-sm ">
+                          <p className="text-xs font-mono text-muted-foreground">
                             {label}
                           </p>
                           <div className="flex items-center gap-2 mt-1">
@@ -131,7 +131,7 @@ export function BmiProgressionChart({
             </div>
             <div className="space-y-1">
               <p className="font-semibold text-foreground">No historical measurements found</p>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Submit your initial height and weight to plot your anthropometric trajectory.
               </p>
             </div>

@@ -16,7 +16,7 @@ const eslintConfig = defineConfig([
     "legacy_backend/**",
     "tests/**",
     "scripts/**",
-    "qa/**",
+    "scratch/**",
     "**/playwright-report/**",
     "**/playwright-artifacts/**",
     "**/test-results/**",

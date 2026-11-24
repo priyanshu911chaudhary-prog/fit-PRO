@@ -24,7 +24,7 @@ test.describe("Journey 03: Water Tracking and Hydration Lifecycle", () => {
     await page.waitForLoadState("networkidle");
 
     // Initially 0 ml
-    await expect(page.locator("span.font-mono").filter({ hasText: /^0$/ })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByTestId("water-total")).toHaveText("0", { timeout: 10_000 });
 
     // 2. Quick add +250 ml
     const add250Btn = page.getByRole("button", { name: /\+250 ml/i });
@@ -35,7 +35,7 @@ test.describe("Journey 03: Water Tracking and Hydration Lifecycle", () => {
     await expect(page.getByText(/\+250 ml Hydration Logged/i)).toBeVisible({ timeout: 10_000 });
 
     // Verify UI total updates to 250
-    await expect(page.locator("span.font-mono").filter({ hasText: /^250$/ })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByTestId("water-total")).toHaveText("250", { timeout: 10_000 });
 
     // Verify database record created
     const firstLog = await WaterLog.findOne({ user: user._id });
@@ -53,7 +53,7 @@ test.describe("Journey 03: Water Tracking and Hydration Lifecycle", () => {
 
     // Verify toast and new total: 250 + 350 = 600 ml
     await expect(page.getByText(/\+350 ml Hydration Logged/i)).toBeVisible({ timeout: 10_000 });
-    await expect(page.locator("span.font-mono").filter({ hasText: /^600$/ })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByTestId("water-total")).toHaveText("600", { timeout: 10_000 });
 
     const allLogs = await WaterLog.find({ user: user._id });
     expect(allLogs.length).toBe(2);
@@ -62,7 +62,7 @@ test.describe("Journey 03: Water Tracking and Hydration Lifecycle", () => {
     // 4. Persistence check: Reload page and confirm 600 ml remains
     await page.reload();
     await page.waitForLoadState("networkidle");
-    await expect(page.locator("span.font-mono").filter({ hasText: /^600$/ })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByTestId("water-total")).toHaveText("600", { timeout: 10_000 });
 
     // 5. Undo last entry (reverses 350 ml -> back to 250 ml)
     const undoBtn = page.locator("#water-undo-btn");
@@ -70,7 +70,7 @@ test.describe("Journey 03: Water Tracking and Hydration Lifecycle", () => {
     await undoBtn.click();
 
     await expect(page.getByText(/Hydration log removed/i)).toBeVisible({ timeout: 10_000 });
-    await expect(page.locator("span.font-mono").filter({ hasText: /^250$/ })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByTestId("water-total")).toHaveText("250", { timeout: 10_000 });
 
     // 6. Delete remaining entry using the trash icon in the stream list
     const deleteBtn = page.getByRole("button", { name: "Delete water log" }).first();
@@ -78,7 +78,7 @@ test.describe("Journey 03: Water Tracking and Hydration Lifecycle", () => {
     await deleteBtn.click();
 
     await expect(page.getByText(/Hydration log removed/i)).toBeVisible({ timeout: 10_000 });
-    await expect(page.locator("span.font-mono").filter({ hasText: /^0$/ })).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByTestId("water-total")).toHaveText("0", { timeout: 10_000 });
 
     // 7. Verify all water logs for this user were removed
     const remainingLogs = await WaterLog.countDocuments({ user: user._id });

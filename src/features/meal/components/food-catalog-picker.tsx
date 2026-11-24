@@ -30,20 +30,20 @@ export function FoodCatalogPicker({
   onAddFood,
 }: FoodCatalogPickerProps) {
   return (
-    <Card className="border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl shadow-lg">
+    <Card className="border-border/70 bg-card  shadow-lg">
       <CardHeader className="pb-3 border-b border-border/40">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-            <Search className="size-4 text-emerald-400" />
+            <Search className="size-4 text-emerald-700 dark:text-emerald-400" />
             Ingredient & Food Catalog
           </CardTitle>
           <div className="flex items-center gap-2">
             {isLoadingCatalog ? (
-              <Loader2 className="size-3 text-cyan-400 animate-spin" />
+              <Loader2 className="size-3 text-cyan-700 dark:text-cyan-400 animate-spin" />
             ) : null}
             <Badge
               variant="outline"
-              className="text-[10px] font-mono border-border/80 text-muted-foreground"
+              className="text-xs font-mono border-border/80 text-muted-foreground"
             >
               {filteredCatalog.length} available
             </Badge>
@@ -63,7 +63,7 @@ export function FoodCatalogPicker({
           </div>
 
           {/* Category Chips */}
-          <div className="flex gap-1.5 overflow-x-auto pb-1 text-[10px] scrollbar-none">
+          <div className="flex gap-1.5 overflow-x-auto pb-1 text-xs scrollbar-none">
             {CATEGORY_FILTERS.map((cat) => (
               <button
                 key={cat.id}
@@ -72,7 +72,7 @@ export function FoodCatalogPicker({
                 className={cn(
                   "px-2.5 py-1 rounded-md border shrink-0 transition-all cursor-pointer font-medium",
                   categoryFilter === cat.id
-                    ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-400 font-bold shadow-xs"
+                    ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 font-bold shadow-xs"
                     : "border-border/60 bg-muted/20 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                 )}
               >
@@ -89,7 +89,7 @@ export function FoodCatalogPicker({
             <div className="py-12 text-center text-xs text-muted-foreground space-y-2">
               <Sparkles className="size-6 text-muted-foreground/40 mx-auto" />
               <p className="font-semibold text-foreground">No ingredients match your query</p>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Try searching for common staples like &quot;rice&quot;, &quot;egg&quot;, &quot;milk&quot;, or &quot;dal&quot;.
               </p>
             </div>
@@ -121,20 +121,20 @@ export function FoodCatalogPicker({
                 >
                   <div className="space-y-0.5 min-w-0 pr-2">
                     <div className="flex items-center gap-2">
-                      <p className="text-xs font-semibold text-foreground truncate group-hover:text-emerald-400 transition-colors">
+                      <p className="text-xs font-semibold text-foreground truncate group-hover:text-emerald-700 dark:text-emerald-400 transition-colors">
                         {food.name}
                       </p>
-                      <span className="text-[9px] font-mono uppercase px-1.5 py-0.2 rounded bg-muted/40 text-muted-foreground/80 border border-border/50 shrink-0">
+                      <span className="text-xs font-mono uppercase px-1.5 py-0.2 rounded bg-muted/40 text-muted-foreground/80 border border-border/50 shrink-0">
                         {basisLabel}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground">
+                    <div className="flex items-center gap-1.5 text-xs font-mono text-muted-foreground">
                       <span className="text-foreground font-bold">{food.calories} kcal</span>
                       <span>•</span>
-                      <span className="text-cyan-400">P:{food.protein}g</span>
-                      <span className="text-amber-400">C:{food.carbs}g</span>
-                      <span className="text-purple-400">F:{food.fat}g</span>
+                      <span className="text-cyan-700 dark:text-cyan-400">P:{food.protein}g</span>
+                      <span className="text-amber-700 dark:text-amber-400">C:{food.carbs}g</span>
+                      <span className="text-purple-700 dark:text-purple-400">F:{food.fat}g</span>
                     </div>
                   </div>
 
@@ -143,7 +143,7 @@ export function FoodCatalogPicker({
                     size="sm"
                     variant="outline"
                     onClick={() => onAddFood(food)}
-                    className="h-7 px-2.5 text-xs font-medium border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50 cursor-pointer shrink-0"
+                    className="h-7 px-2.5 text-xs font-medium border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50 cursor-pointer shrink-0"
                     aria-label={`Add ${food.name} to plate`}
                   >
                     <Plus className="size-3 mr-1" />

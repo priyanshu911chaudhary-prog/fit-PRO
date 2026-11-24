@@ -93,7 +93,7 @@ function SettingsForm({ preferences, isSaving, onClose, onSave }: SettingsFormPr
           required
           className="text-sm"
         />
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Your email and private identity are never revealed publicly.
         </p>
       </div>
@@ -104,7 +104,7 @@ function SettingsForm({ preferences, isSaving, onClose, onSave }: SettingsFormPr
           <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Competition Target Goals
           </Label>
-          <Badge variant="outline" className="text-[10px] font-normal py-0">
+          <Badge variant="outline" className="text-xs font-normal py-0">
             Fairness Policy
           </Badge>
         </div>
@@ -166,7 +166,7 @@ function SettingsForm({ preferences, isSaving, onClose, onSave }: SettingsFormPr
             <Calendar className="w-3.5 h-3.5 text-amber-500" />
             <span>Scheduled Target Update</span>
           </div>
-          <p className="text-[11px] leading-relaxed">
+          <p className="text-xs leading-relaxed">
             You have pending changes taking effect on{" "}
             <strong>{preferences?.pendingGoalsEffectiveWeekStart}</strong> (Next Monday):
             {preferences?.pendingWeeklyWorkoutGoal !== undefined && (
@@ -188,13 +188,13 @@ function SettingsForm({ preferences, isSaving, onClose, onSave }: SettingsFormPr
           <Info className="w-3.5 h-3.5 text-primary" />
           <span>Monday Boundary Policy</span>
         </div>
-        <p className="text-[11px] leading-relaxed">
+        <p className="text-xs leading-relaxed">
           To prevent mid-week score manipulation, target changes become effective on the upcoming Monday (00:00 IST). Opt-out takes effect immediately.
         </p>
       </div>
 
       <DialogFooter className="pt-2 sm:justify-between flex-row items-center gap-2">
-        <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
           <span>Privacy Protected</span>
         </div>

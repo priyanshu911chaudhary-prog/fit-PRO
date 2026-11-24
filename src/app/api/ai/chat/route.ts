@@ -1,3 +1,5 @@
+import { sendCoachMessageSchema } from "@/validators/coach.validator";
+import { validateBody } from "@/lib/api/with-validation";
 import { NextRequest, NextResponse } from "next/server";
 import {
   AIChatMessage,
@@ -5,7 +7,6 @@ import {
   generateCoachChatJSON,
   HEALTH_DISCLAIMER,
 } from "@/lib/ai/gemini";
-import { ApiError } from "@/lib/api/api-error";
 import { ApiResponse } from "@/lib/api/api-response";
 import { checkRateLimit } from "@/lib/api/rate-limit";
 import { withAuth } from "@/lib/api/with-auth";
@@ -31,19 +32,9 @@ export const POST = withHandler(
       message: "AI Coach rate limit reached. Please wait a moment before sending another message.",
     });
 
-    const body = await req.json().catch(() => ({}));
-    const message = (body.message as string)?.trim();
-    const clientHistory = (body.history as AIChatMessage[]) || [];
-    let conversationId = (body.conversationId as string)?.trim();
-    const clientMessageId = (body.clientMessageId as string)?.trim();
-
-    if (!message) {
-      throw new ApiError(400, "Message is required");
-    }
-
-    if (message.length > 2000) {
-      throw new ApiError(400, "Message is too long (maximum 2000 characters)");
-    }
+    const body = await validateBody(req, sendCoachMessageSchema);
+    const { message, clientMessageId, history: clientHistory = [] } = body;
+    let conversationId = body.conversationId;
 
     const userId = sessionUser.userId;
 

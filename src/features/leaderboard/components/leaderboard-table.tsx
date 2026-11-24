@@ -35,11 +35,11 @@ export function LeaderboardTable({
   }
 
   return (
-    <div className="rounded-2xl bg-card/60 border border-border/80 backdrop-blur-xl shadow-xl overflow-hidden">
+    <div className="rounded-2xl bg-card/60 border border-border/80  shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-border/70 bg-muted/30 text-[11px] font-mono uppercase tracking-wider text-muted-foreground">
+            <tr className="border-b border-border/70 bg-muted/30 text-xs font-mono uppercase tracking-wider text-muted-foreground">
               <th className="py-3.5 px-4 w-16 text-center">Rank</th>
               <th className="py-3.5 px-4">Athlete</th>
               <th className="py-3.5 px-4 text-right">Weekly Fit Score</th>
@@ -51,7 +51,7 @@ export function LeaderboardTable({
               const isCurrentUser = entry.isCurrentUser;
 
               let rankBadgeClass = "bg-muted text-muted-foreground";
-              if (entry.rank === 1) rankBadgeClass = "bg-amber-500/20 text-amber-400 border border-amber-500/40";
+              if (entry.rank === 1) rankBadgeClass = "bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/40";
               else if (entry.rank === 2) rankBadgeClass = "bg-slate-400/20 text-slate-300 border border-slate-400/40";
               else if (entry.rank === 3) rankBadgeClass = "bg-amber-700/20 text-amber-500 border border-amber-700/40";
 
@@ -84,7 +84,7 @@ export function LeaderboardTable({
                           {entry.displayName}
                         </span>
                         {isCurrentUser && (
-                          <span className="text-[10px] uppercase font-mono tracking-wider text-primary font-bold">
+                          <span className="text-xs uppercase font-mono tracking-wider text-primary font-bold">
                             (You)
                           </span>
                         )}
@@ -98,14 +98,14 @@ export function LeaderboardTable({
                       <div className="flex items-baseline gap-1">
                         <span
                           className={`font-mono font-bold text-base ${
-                            isTop3 ? "text-amber-400" : "text-foreground"
+                            isTop3 ? "text-amber-700 dark:text-amber-400" : "text-foreground"
                           }`}
                         >
                           {entry.displayScore.toFixed(2)}
                         </span>
-                        <span className="text-[11px] text-muted-foreground font-mono">pts</span>
+                        <span className="text-xs text-muted-foreground font-mono">pts</span>
                       </div>
-                      <span className="text-[10px] text-muted-foreground font-mono">
+                      <span className="text-xs text-muted-foreground font-mono">
                         {entry.scoreBasisPoints} bps
                       </span>
                     </div>

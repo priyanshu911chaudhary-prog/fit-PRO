@@ -10,7 +10,7 @@ import { TokenPayload } from "@/lib/auth/jwt";
 import { Exercise } from "@/models/exercise";
 import { WorkoutLog } from "@/models/workoutLog";
 import { getUserTimezone, getDayBoundsInTimezone, formatInTimezone } from "@/lib/timezone";
-import { calculateEstimatedCaloriesBurn } from "@/features/workout/lib/calculations";
+import { calculateEstimatedCaloriesBurn, getLoggedVolume } from "@/features/workout/lib/calculations";
 import { invalidateDashboardCache } from "@/lib/cache/redis-cache";
 import { recalculateUserWeeklyScore } from "@/lib/leaderboard/recomputation";
 import { enqueueLeaderboardRecalculation } from "@/lib/queues/jobs";
@@ -152,9 +152,7 @@ export const GET = withHandler(
           distinctExerciseIds.add(exIdStr);
         }
         const sCount = Number(ex.sets) || 1;
-        const reps = Number(ex.reps) || 0;
-        const weight = Number(ex.weight) || 0;
-        totalVolumeTonnage += sCount * reps * weight;
+        totalVolumeTonnage += getLoggedVolume({ sets: sCount, reps: ex.reps, weight: ex.weight, setDetails: ex.setDetails });
         totalSetsCount += sCount;
       }
     }

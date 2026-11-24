@@ -22,7 +22,7 @@ export function WorkoutPlanView({
   if (isLoadingWorkout) {
     return (
       <div className="flex flex-col items-center justify-center p-16 space-y-3">
-        <Loader2 className="size-8 text-emerald-400 animate-spin" />
+        <Loader2 className="size-8 text-emerald-700 dark:text-emerald-400 animate-spin" />
         <p className="text-xs font-mono text-muted-foreground">
           Retrieving active workout split...
         </p>
@@ -32,8 +32,8 @@ export function WorkoutPlanView({
 
   if (!workoutPlan) {
     return (
-      <Card className="border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl text-center p-14 space-y-4">
-        <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+      <Card className="border-border/70 bg-card  text-center p-14 space-y-4">
+        <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
           <Dumbbell className="size-7" />
         </div>
         <div className="space-y-1">
@@ -55,7 +55,7 @@ export function WorkoutPlanView({
           ) : (
             <>
               <Sparkles className="size-4 mr-2" />
-              Formulate Workout Protocol
+              Generate workout plan
             </>
           )}
         </Button>
@@ -68,16 +68,13 @@ export function WorkoutPlanView({
   return (
     <div className="space-y-6">
       {/* Plan Header Card */}
-      <Card className="border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl shadow-lg">
+      <Card className="border-border/70 bg-card  shadow-lg">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 gap-3 border-b border-border/40">
           <div className="space-y-1">
             <div className="flex items-center gap-2.5">
               <CardTitle className="text-xl font-bold text-foreground">
                 {workoutPlan.planName}
               </CardTitle>
-              <Badge variant="outline" className="border-emerald-500/30 text-emerald-400 bg-emerald-500/10 text-[10px] font-mono font-bold">
-                ACTIVE PROTOCOL
-              </Badge>
             </div>
             <CardDescription className="text-xs text-muted-foreground flex items-center gap-3 font-mono">
               <span>{workoutDays.length} Scheduled Days</span>
@@ -102,17 +99,17 @@ export function WorkoutPlanView({
         {workoutDays.map((day) => (
           <Card
             key={day.dayNumber}
-            className="border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl hover:border-emerald-500/40 transition-all flex flex-col shadow-lg"
+            className="border-border/70 bg-card  hover:border-emerald-500/40 transition-all flex flex-col shadow-lg"
           >
             <CardHeader className="pb-3 border-b border-border/40">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-sm text-foreground flex items-center gap-2">
-                  <span className="flex size-7 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-mono font-bold">
+                  <span className="flex size-7 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 text-xs font-mono font-bold">
                     0{day.dayNumber}
                   </span>
                   {day.dayName}
                 </span>
-                <Badge variant="outline" className="text-[10px] font-mono border-border/80 text-muted-foreground">
+                <Badge variant="outline" className="text-xs font-mono border-border/80 text-muted-foreground">
                   {day.focus}
                 </Badge>
               </div>
@@ -126,12 +123,12 @@ export function WorkoutPlanView({
                 >
                   <div className="flex items-center justify-between">
                     <p className="font-semibold text-foreground">{ex.name}</p>
-                    <span className="font-mono text-emerald-400 font-bold text-[11px] shrink-0 ml-2">
+                    <span className="font-mono text-emerald-700 dark:text-emerald-400 font-bold text-xs shrink-0 ml-2">
                       {ex.sets} sets × {ex.reps}
                     </span>
                   </div>
                   {ex.notes && (
-                    <p className="text-[10px] text-muted-foreground/80 leading-relaxed font-sans">
+                    <p className="text-xs text-muted-foreground/80 leading-relaxed font-sans">
                       {ex.notes}
                     </p>
                   )}

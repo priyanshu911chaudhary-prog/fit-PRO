@@ -13,7 +13,7 @@ All runtime environment variables are validated at server startup by `src/lib/en
 | `NODE_ENV` | **Yes** | `development` | Core runtime, next.js, providers | Controls optimization, cookie security (`secure: true`), and failsafe AI provider guards. Allowed values: `development`, `test`, `production`. |
 | `APP_URL` | **Yes** | `http://localhost:3000` | Redirects, cookies, emails | Base canonical URL for OAuth callbacks, email links, and redirect validation. |
 | `MONGODB_URI` | **Yes** | — | `src/lib/db.ts`, Mongoose models | MongoDB connection string (Atlas M0+ or self-hosted). In development, falls back to `mongodb://127.0.0.1:27017/fit-pro` if unset. |
-| `MONGODB_URI_TEST` | **No** (Req in Tests) | — | `quality-tests/helpers/db-guard.ts` | Dedicated test database URI. Refuses to run tests if missing or if the database name does not contain `test`. |
+| `MONGODB_URI_TEST` | **No** (Req in Tests) | — | `tests/helpers/db-guard.ts` | Dedicated test database URI. Refuses to run tests if missing or if the database name does not contain `test`. |
 | `REDIS_URL` | **Yes** (Recommended) | `redis://127.0.0.1:6379` | `src/lib/redis/client.ts`, `src/lib/queues/connection.ts` | Redis connection URL for distributed rate limiting, cache-aside, and BullMQ job queues. If unreachable, caching and rate limiting fail open safely. |
 | `ACCESS_TOKEN_SECRET` | **Yes** | — (min 16 chars, 32+ recommended) | `src/lib/auth/jwt.ts` | Cryptographic secret for signing stateless HS256 access JWTs. |
 | `ACCESS_TOKEN_EXPIRATION` | No | `15m` | `src/lib/auth/jwt.ts` | Lifetime for access tokens (e.g. `15m`, `1h`). |
@@ -30,8 +30,8 @@ All runtime environment variables are validated at server startup by `src/lib/en
 | `MAILTRAP_API_TOKEN` | Required if `EMAIL_PROVIDER=mailtrap` | — | `src/lib/email/mailtrap.ts` | Mailtrap HTTPS API Token (Transactional stream). |
 | `EMAIL_FROM` | No | `Fit-PRO <hello@fit-pro.publicvm.com>` | `src/lib/email/mailtrap.ts` | Verified sender address for outbound transactional emails. |
 | `EMAIL_PAYLOAD_SECRET` | No | Defaults to `ACCESS_TOKEN_SECRET` | `src/lib/email/crypto.ts` | 32-character secret for encrypting outbox tokens/links at rest in MongoDB. |
-| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | **Yes** (Prod Push) | Development fallback key | Browser PushManager | VAPID Public Key for browser web push subscriptions. |
-| `VAPID_PRIVATE_KEY` | **Yes** (Prod Push) | Development fallback key | `src/workers/processors/notification.processor.ts` | VAPID Private Key for web push notification delivery. |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | **Yes** (Prod Push) | — | Browser PushManager | VAPID Public Key for browser web push subscriptions. |
+| `VAPID_PRIVATE_KEY` | **Yes** (Prod Push) | — | `src/workers/processors/notification.processor.ts` | VAPID Private Key for web push notification delivery. |
 | `VAPID_SUBJECT` | No | `mailto:support@fitpro.local` | `src/workers/processors/notification.processor.ts` | VAPID contact URI (email or HTTPS URL). |
 | `ADMIN_API_KEY` | Optional | — | `src/app/api/admin/queues/route.ts` | Shared machine-to-machine header key (`x-admin-key`) for queue monitoring without user session. |
 
@@ -61,10 +61,10 @@ All runtime environment variables are validated at server startup by `src/lib/en
 
 Fit-PRO uses two distinct MongoDB databases to ensure complete test safety:
 - **Application / Development DB (`MONGODB_URI`)**: Holds application accounts, user workout logs, and catalog data.
-- **Isolated Quality Test DB (`MONGODB_URI_TEST`)**: Used exclusively by Vitest suites (`quality-tests/`) and Playwright E2E tests (`quality-tests/e2e`).
-- **Database Safety Guard**: `quality-tests/helpers/db-guard.ts` executes before any quality test or E2E session runs. It checks:
+- **Isolated Quality Test DB (`MONGODB_URI_TEST`)**: Used exclusively by Vitest suites (`tests/`) and Playwright E2E tests (`tests/e2e`).
+- **Database Safety Guard**: `tests/helpers/db-guard.ts` executes before any quality test or E2E session runs. It checks:
   1. `MONGODB_URI_TEST` is explicitly defined.
-  2. The target database name contains `test`.
+  2. The target database name includes a separate `test` segment.
   3. The target database name does **not** match production patterns (e.g. `prod`).
   If any check fails, execution aborts immediately with a `SAFETY ABORT` error.
 
@@ -109,5 +109,5 @@ Fit-PRO uses two distinct MongoDB databases to ensure complete test safety:
 | `SAFETY ABORT: MONGODB_URI_TEST database does not contain "test"` | Test runner pointed at primary or production database. | Set `MONGODB_URI_TEST=mongodb://127.0.0.1:27017/fit-pro-test`. |
 | Redis connection warning in logs | Redis daemon not running or incorrect `REDIS_URL`. | Check `docker ps` for redis container or local redis-server. System automatically falls back to MongoDB for caching and rate limiting. |
 | BullMQ worker does not process jobs | Worker process not started or Redis unavailable. | Run `npm run worker` in a dedicated process alongside `npm run dev`. |
-| Playwright E2E port conflict | Existing process listening on port 3000. | Stop the local `next dev` process before running `npm run test:quality:e2e`. |
+| Playwright E2E port conflict | Existing process listening on port 3100. | Free port 3100 and run `npm run test:e2e`. |
 

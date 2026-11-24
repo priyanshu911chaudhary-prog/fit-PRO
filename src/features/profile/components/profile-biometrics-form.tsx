@@ -69,11 +69,11 @@ export function ProfileBiometricsForm({
 }: ProfileBiometricsFormProps) {
   return (
     <form onSubmit={onSave}>
-      <Card className="border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl shadow-xl">
+      <Card className="border-border/70 bg-card  shadow-sm">
         <CardHeader className="pb-3 border-b border-border/40">
           <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-            <Sliders className="size-4 text-emerald-400" />
-            Biometrics & Calibration Parameters
+            <Sliders className="size-4 text-emerald-700 dark:text-emerald-400" />
+            Measurements and preferences
           </CardTitle>
           <CardDescription className="text-xs text-muted-foreground">
             Adjusting your biometric specifications dynamically re-computes your metabolic expenditure
@@ -86,28 +86,28 @@ export function ProfileBiometricsForm({
           {profile && (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-xl bg-card/40 border border-border/60 text-xs font-mono">
               <div>
-                <span className="text-muted-foreground flex items-center gap-1.5 mb-1 text-[11px]">
-                  <UserIcon className="size-3.5 text-emerald-400" /> Biological Sex
+                <span className="text-muted-foreground flex items-center gap-1.5 mb-1 text-xs">
+                  <UserIcon className="size-3.5 text-emerald-700 dark:text-emerald-400" /> Biological Sex
                 </span>
                 <span className="font-bold text-foreground capitalize">{profile.gender}</span>
               </div>
               <div>
-                <span className="text-muted-foreground flex items-center gap-1.5 mb-1 text-[11px]">
-                  <Calendar className="size-3.5 text-cyan-400" /> Date of Birth
+                <span className="text-muted-foreground flex items-center gap-1.5 mb-1 text-xs">
+                  <Calendar className="size-3.5 text-cyan-700 dark:text-cyan-400" /> Date of Birth
                 </span>
                 <span className="font-bold text-foreground">{formatDob(profile.dob)}</span>
               </div>
               <div>
-                <span className="text-muted-foreground block mb-1 text-[11px]">Calibrated Age</span>
+                <span className="text-muted-foreground block mb-1 text-xs">Calibrated Age</span>
                 <span className="font-bold text-foreground">
                   {profile.age || metrics?.age || "—"} years
                 </span>
               </div>
               <div>
-                <span className="text-muted-foreground flex items-center gap-1.5 mb-1 text-[11px]">
-                  <ShieldCheck className="size-3.5 text-emerald-400" /> Bio-Passport Status
+                <span className="text-muted-foreground flex items-center gap-1.5 mb-1 text-xs">
+                  <ShieldCheck className="size-3.5 text-emerald-700 dark:text-emerald-400" /> Bio-Passport Status
                 </span>
-                <span className="font-bold text-emerald-400 flex items-center gap-1">
+                <span className="font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
                   <span className="size-2 rounded-full bg-emerald-400 inline-block animate-pulse" />
                   Verified
                 </span>
@@ -153,7 +153,7 @@ export function ProfileBiometricsForm({
           {/* Fitness Goal */}
           <div className="space-y-2">
             <Label className="text-xs font-medium text-muted-foreground">
-              Primary Fitness Protocol
+              Fitness goal
             </Label>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
               {(Object.values(UserGoalEnum) as string[]).map((goal) => {
@@ -168,14 +168,14 @@ export function ProfileBiometricsForm({
                     className={cn(
                       "p-3 rounded-xl text-left border text-xs capitalize transition-all cursor-pointer flex flex-col justify-between space-y-2",
                       isSelected
-                        ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400 font-semibold shadow-xs"
+                        ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-semibold shadow-xs"
                         : "border-border/60 bg-card/40 hover:bg-muted/30 text-muted-foreground"
                     )}
                   >
                     <IconComp
                       className={cn(
                         "size-4",
-                        isSelected ? "text-emerald-400" : "text-muted-foreground"
+                        isSelected ? "text-emerald-700 dark:text-emerald-400" : "text-muted-foreground"
                       )}
                     />
                     <span className="leading-tight">{goal.replace(/_/g, " ")}</span>
@@ -201,12 +201,12 @@ export function ProfileBiometricsForm({
                     className={cn(
                       "p-3 rounded-xl text-left border text-xs capitalize transition-all cursor-pointer",
                       isSelected
-                        ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400 font-semibold shadow-xs"
+                        ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-semibold shadow-xs"
                         : "border-border/60 bg-card/40 hover:bg-muted/30 text-muted-foreground"
                     )}
                   >
                     <span className="block font-semibold">{lvl.replace(/_/g, " ")}</span>
-                    <span className="text-[10px] text-muted-foreground font-mono">
+                    <span className="text-xs text-muted-foreground font-mono">
                       {lvl === UserActivityLevelEnum.SEDENTARY && "Desk job, low exercise"}
                       {lvl === UserActivityLevelEnum.LIGHTLY_ACTIVE && "1–3 sessions/wk"}
                       {lvl === UserActivityLevelEnum.MODERATELY_ACTIVE && "3–5 training days/wk"}
@@ -234,7 +234,7 @@ export function ProfileBiometricsForm({
                       className={cn(
                         "p-2.5 rounded-xl text-center border text-xs capitalize transition-all cursor-pointer font-medium",
                         isSelected
-                          ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400 font-semibold shadow-xs"
+                          ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-semibold shadow-xs"
                           : "border-border/60 bg-card/40 hover:bg-muted/30 text-muted-foreground"
                       )}
                     >
@@ -258,7 +258,7 @@ export function ProfileBiometricsForm({
                       className={cn(
                         "p-2.5 rounded-xl text-center border text-xs capitalize transition-all cursor-pointer font-medium",
                         isSelected
-                          ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-400 font-semibold shadow-xs"
+                          ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 font-semibold shadow-xs"
                           : "border-border/60 bg-card/40 hover:bg-muted/30 text-muted-foreground"
                       )}
                     >
@@ -286,7 +286,7 @@ export function ProfileBiometricsForm({
                     className={cn(
                       "p-2.5 rounded-xl text-center border text-xs capitalize transition-all cursor-pointer font-medium",
                       isSelected
-                        ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400 font-semibold shadow-xs"
+                        ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-semibold shadow-xs"
                         : "border-border/60 bg-card/40 hover:bg-muted/30 text-muted-foreground"
                     )}
                   >
@@ -306,7 +306,7 @@ export function ProfileBiometricsForm({
               {isSaving ? (
                 <>
                   <Loader2 className="size-4 mr-2 animate-spin" />
-                  Committing Calibration...
+                  Saving changes…
                 </>
               ) : (
                 <>

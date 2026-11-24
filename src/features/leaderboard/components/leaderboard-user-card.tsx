@@ -20,7 +20,7 @@ export function LeaderboardUserCard({ currentUser, onOpenSettings }: Leaderboard
   const isEligibleForRanking = isEligible && optIn;
 
   return (
-    <div className="p-6 rounded-2xl bg-card/80 border border-primary/20 backdrop-blur-xl shadow-xl relative overflow-hidden">
+    <div className="p-6 rounded-2xl bg-card/80 border border-primary/20  shadow-sm relative overflow-hidden">
       <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -29,12 +29,12 @@ export function LeaderboardUserCard({ currentUser, onOpenSettings }: Leaderboard
           <div className="size-16 rounded-2xl bg-primary/10 border border-primary/20 flex flex-col items-center justify-center text-primary font-mono shadow-inner shrink-0">
             {rank !== null ? (
               <>
-                <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Rank</span>
+                <span className="text-xs uppercase font-bold tracking-wider text-muted-foreground">Rank</span>
                 <span className="text-2xl font-extrabold text-foreground">#{rank}</span>
               </>
             ) : (
               <>
-                <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Rank</span>
+                <span className="text-xs uppercase font-bold tracking-wider text-muted-foreground">Rank</span>
                 <span className="text-sm font-bold text-muted-foreground">—</span>
               </>
             )}
@@ -47,16 +47,16 @@ export function LeaderboardUserCard({ currentUser, onOpenSettings }: Leaderboard
               </span>
               {optIn ? (
                 isEligible ? (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-mono font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
                     <CheckCircle2 className="size-3" /> Officially Ranked
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-mono font-medium bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
                     <AlertCircle className="size-3" /> Incomplete Days ({trackedDays}/4)
                   </span>
                 )
               ) : (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-muted text-muted-foreground border border-border">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-mono font-medium bg-muted text-muted-foreground border border-border">
                   <EyeOff className="size-3" /> Private Mode
                 </span>
               )}
@@ -82,7 +82,7 @@ export function LeaderboardUserCard({ currentUser, onOpenSettings }: Leaderboard
                   />
                 ))}
               </div>
-              <span className="text-[11px] text-muted-foreground font-mono ml-1">
+              <span className="text-xs text-muted-foreground font-mono ml-1">
                 ({trackedDays}/4 min required)
               </span>
             </div>
@@ -92,7 +92,7 @@ export function LeaderboardUserCard({ currentUser, onOpenSettings }: Leaderboard
         {/* Center: Weekly Fit Score */}
         <div className="flex items-center gap-6 px-4 py-3 rounded-xl bg-muted/40 border border-border/60">
           <div>
-            <div className="text-[11px] uppercase font-mono tracking-wider text-muted-foreground">
+            <div className="text-xs uppercase font-mono tracking-wider text-muted-foreground">
               Weekly Fit Score
             </div>
             <div className="flex items-baseline gap-1 mt-0.5">
@@ -114,9 +114,9 @@ export function LeaderboardUserCard({ currentUser, onOpenSettings }: Leaderboard
 
       {/* Ineligibility or Opt-Out Explanatory Banner */}
       {!isEligibleForRanking && (
-        <div className="mt-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-amber-300">
+        <div className="mt-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-amber-700 dark:text-amber-300">
           <div className="flex items-center gap-2">
-            <AlertCircle className="size-4 shrink-0 text-amber-400" />
+            <AlertCircle className="size-4 shrink-0 text-amber-700 dark:text-amber-400" />
             <span>
               {!optIn
                 ? "You are currently in Private Mode. Enable public rankings in Settings to showcase your score."
@@ -126,7 +126,7 @@ export function LeaderboardUserCard({ currentUser, onOpenSettings }: Leaderboard
           {!optIn && (
             <button
               onClick={onOpenSettings}
-              className="text-xs font-semibold text-amber-400 underline underline-offset-4 hover:text-amber-300 text-left"
+              className="text-xs font-semibold text-amber-700 dark:text-amber-400 underline underline-offset-4 hover:text-amber-700 dark:text-amber-300 text-left"
             >
               Configure Opt-In
             </button>
@@ -141,7 +141,7 @@ export function LeaderboardUserCard({ currentUser, onOpenSettings }: Leaderboard
             <TrendingUp className="size-3.5 text-primary" />
             Your Private Component Breakdown
           </span>
-          <span className="text-[11px] text-muted-foreground font-mono">
+          <span className="text-xs text-muted-foreground font-mono">
             Weights: Workouts (40%) + Protein (30%) + Hydration (30%)
           </span>
         </div>
@@ -151,7 +151,7 @@ export function LeaderboardUserCard({ currentUser, onOpenSettings }: Leaderboard
           <div className="p-3.5 rounded-xl bg-background/50 border border-border/60 space-y-2">
             <div className="flex items-center justify-between text-xs">
               <span className="flex items-center gap-1.5 font-medium text-foreground">
-                <Dumbbell className="size-3.5 text-blue-400" />
+                <Dumbbell className="size-3.5 text-blue-700 dark:text-blue-400" />
                 Workouts (40%)
               </span>
               <span className="font-mono font-bold text-foreground">
@@ -164,7 +164,7 @@ export function LeaderboardUserCard({ currentUser, onOpenSettings }: Leaderboard
                 style={{ width: `${Math.min(100, Math.round(breakdown.workoutAttainment * 100))}%` }}
               />
             </div>
-            <div className="flex items-center justify-between text-[11px] text-muted-foreground font-mono">
+            <div className="flex items-center justify-between text-xs text-muted-foreground font-mono">
               <span>{breakdown.qualifyingWorkoutsCount} qualifying logged</span>
               <span>Goal: {breakdown.weeklyWorkoutGoal} sessions</span>
             </div>
@@ -174,7 +174,7 @@ export function LeaderboardUserCard({ currentUser, onOpenSettings }: Leaderboard
           <div className="p-3.5 rounded-xl bg-background/50 border border-border/60 space-y-2">
             <div className="flex items-center justify-between text-xs">
               <span className="flex items-center gap-1.5 font-medium text-foreground">
-                <Utensils className="size-3.5 text-emerald-400" />
+                <Utensils className="size-3.5 text-emerald-700 dark:text-emerald-400" />
                 Protein Adherence (30%)
               </span>
               <span className="font-mono font-bold text-foreground">
@@ -187,7 +187,7 @@ export function LeaderboardUserCard({ currentUser, onOpenSettings }: Leaderboard
                 style={{ width: `${Math.min(100, Math.round(breakdown.proteinAttainment * 100))}%` }}
               />
             </div>
-            <div className="flex items-center justify-between text-[11px] text-muted-foreground font-mono">
+            <div className="flex items-center justify-between text-xs text-muted-foreground font-mono">
               <span>7-day adherence: {Math.round(breakdown.proteinAttainment * 100)}%</span>
               <span>Daily Target: {breakdown.dailyProteinTarget}g</span>
             </div>
@@ -197,7 +197,7 @@ export function LeaderboardUserCard({ currentUser, onOpenSettings }: Leaderboard
           <div className="p-3.5 rounded-xl bg-background/50 border border-border/60 space-y-2">
             <div className="flex items-center justify-between text-xs">
               <span className="flex items-center gap-1.5 font-medium text-foreground">
-                <Droplet className="size-3.5 text-cyan-400" />
+                <Droplet className="size-3.5 text-cyan-700 dark:text-cyan-400" />
                 Hydration Adherence (30%)
               </span>
               <span className="font-mono font-bold text-foreground">
@@ -210,7 +210,7 @@ export function LeaderboardUserCard({ currentUser, onOpenSettings }: Leaderboard
                 style={{ width: `${Math.min(100, Math.round(breakdown.hydrationAttainment * 100))}%` }}
               />
             </div>
-            <div className="flex items-center justify-between text-[11px] text-muted-foreground font-mono">
+            <div className="flex items-center justify-between text-xs text-muted-foreground font-mono">
               <span>7-day adherence: {Math.round(breakdown.hydrationAttainment * 100)}%</span>
               <span>Daily Target: {breakdown.dailyHydrationTarget} ml</span>
             </div>

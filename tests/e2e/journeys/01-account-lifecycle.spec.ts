@@ -103,16 +103,8 @@ test.describe("Journey 01: Account and First-Use Lifecycle", () => {
     await page.waitForURL(/.*\/dashboard/, { timeout: 15_000 });
 
     // 5. Logout
-    const logoutBtn = page.locator('button:has-text("Logout"), button:has-text("Sign Out"), [data-testid="logout-btn"]');
-    if (await logoutBtn.first().isVisible({ timeout: 3000 }).catch(() => false)) {
-      await logoutBtn.first().click();
-    } else {
-      // Trigger logout via API endpoint from browser context
-      await page.evaluate(async () => {
-        await fetch("/api/auth/logout", { method: "POST" });
-      });
-      await page.goto("/login");
-    }
+    await page.getByRole("button", { name: "Open navigation menu" }).click();
+    await page.getByRole("button", { name: "Sign out", exact: true }).click();
 
     await page.waitForURL(/.*\/login/, { timeout: 15_000 });
 

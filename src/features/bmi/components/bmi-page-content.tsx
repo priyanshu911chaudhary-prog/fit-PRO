@@ -28,13 +28,14 @@ export function BmiPageContent() {
   } = useBmi();
 
   return (
-    <div className="container mx-auto max-w-7xl px-4 py-8 space-y-8">
+    <div className="container mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-9 space-y-6">
       {/* 1. Header Banner */}
       <BmiHeader historyDelta={historyDelta} />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column (5 cols): Live Anthropometric Measurement Station */}
         <div className="lg:col-span-5 space-y-6">
+          <fieldset disabled={isLoading} className="min-w-0">
           <BmiMeasurementForm
             height={height}
             onHeightChange={setHeight}
@@ -47,6 +48,7 @@ export function BmiPageContent() {
             isSubmitting={isSubmitting}
             onSubmit={handleSubmit}
           />
+          </fieldset>
         </div>
 
         {/* Right Column (7 cols): Progression Area Curve */}

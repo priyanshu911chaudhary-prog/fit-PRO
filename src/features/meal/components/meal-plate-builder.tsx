@@ -35,11 +35,11 @@ export function MealPlateBuilder({
   const mealLabel = mealType.charAt(0).toUpperCase() + mealType.slice(1);
 
   return (
-    <Card className="border-border/70 bg-[#0B0F0E]/80 backdrop-blur-xl shadow-lg">
+    <Card className="border-border/70 bg-card  shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-border/40">
         <div>
           <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-            <Utensils className="size-4 text-cyan-400" />
+            <Utensils className="size-4 text-cyan-700 dark:text-cyan-400" />
             Current Meal Workspace
           </CardTitle>
           <CardDescription className="text-xs text-muted-foreground">
@@ -62,7 +62,7 @@ export function MealPlateBuilder({
           ) : null}
           <Badge
             variant="outline"
-            className="text-xs font-mono border-cyan-500/30 text-cyan-400 bg-cyan-500/10 uppercase"
+            className="text-xs font-mono border-cyan-500/30 text-cyan-700 dark:text-cyan-400 bg-cyan-500/10 uppercase"
           >
             {mealLabel} ({addedItems.length} items)
           </Badge>
@@ -77,7 +77,7 @@ export function MealPlateBuilder({
             </div>
             <div className="space-y-1">
               <p className="font-semibold text-foreground text-sm">Your plate is currently empty</p>
-              <p className="text-[11px] text-muted-foreground max-w-sm">
+              <p className="text-xs text-muted-foreground max-w-sm">
                 Add ingredients like tomato, eggs, rice, paneer, or cooking oil from the catalog to compose your meal and preview its nutrition.
               </p>
             </div>
@@ -95,16 +95,16 @@ export function MealPlateBuilder({
                 >
                   <div className="space-y-1 min-w-0">
                     <p className="text-sm font-bold text-foreground">{item.name}</p>
-                    <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono text-muted-foreground">
+                    <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-muted-foreground">
                       <span className="font-bold text-foreground">
                         {item.calories} kcal
                       </span>
                       <span>•</span>
-                      <span className="text-cyan-400">P: {item.protein}g</span>
+                      <span className="text-cyan-700 dark:text-cyan-400">P: {item.protein}g</span>
                       <span>•</span>
-                      <span className="text-amber-400">C: {item.carbs}g</span>
+                      <span className="text-amber-700 dark:text-amber-400">C: {item.carbs}g</span>
                       <span>•</span>
-                      <span className="text-purple-400">F: {item.fat}g</span>
+                      <span className="text-purple-700 dark:text-purple-400">F: {item.fat}g</span>
                     </div>
                   </div>
 
@@ -149,7 +149,7 @@ export function MealPlateBuilder({
                       variant="ghost"
                       size="icon"
                       onClick={() => onRemoveItem(item.foodItemId)}
-                      className="size-7 text-muted-foreground hover:text-rose-400 transition-colors cursor-pointer"
+                      className="size-7 text-muted-foreground hover:text-rose-700 dark:text-rose-400 transition-colors cursor-pointer"
                       aria-label={`Remove ${item.name}`}
                     >
                       <Trash2 className="size-3.5" />
@@ -171,19 +171,19 @@ export function MealPlateBuilder({
               </div>
               <div className="grid grid-cols-3 gap-2 text-center text-xs font-mono">
                 <div className="p-1.5 rounded-lg bg-background/50 border border-cyan-500/30">
-                  <span className="text-[10px] text-muted-foreground block">Protein</span>
-                  <span className="text-cyan-400 font-bold">{macros.totalProtein}g</span>
-                  <span className="text-[9px] text-muted-foreground/70 block">({macros.proteinPct}%)</span>
+                  <span className="text-xs text-muted-foreground block">Protein</span>
+                  <span className="text-cyan-700 dark:text-cyan-400 font-bold">{macros.totalProtein}g</span>
+                  <span className="text-xs text-muted-foreground/70 block">({macros.proteinPct}%)</span>
                 </div>
                 <div className="p-1.5 rounded-lg bg-background/50 border border-amber-500/30">
-                  <span className="text-[10px] text-muted-foreground block">Carbs</span>
-                  <span className="text-amber-400 font-bold">{macros.totalCarbs}g</span>
-                  <span className="text-[9px] text-muted-foreground/70 block">({macros.carbsPct}%)</span>
+                  <span className="text-xs text-muted-foreground block">Carbs</span>
+                  <span className="text-amber-700 dark:text-amber-400 font-bold">{macros.totalCarbs}g</span>
+                  <span className="text-xs text-muted-foreground/70 block">({macros.carbsPct}%)</span>
                 </div>
                 <div className="p-1.5 rounded-lg bg-background/50 border border-purple-500/30">
-                  <span className="text-[10px] text-muted-foreground block">Fats</span>
-                  <span className="text-purple-400 font-bold">{macros.totalFat}g</span>
-                  <span className="text-[9px] text-muted-foreground/70 block">({macros.fatPct}%)</span>
+                  <span className="text-xs text-muted-foreground block">Fats</span>
+                  <span className="text-purple-700 dark:text-purple-400 font-bold">{macros.totalFat}g</span>
+                  <span className="text-xs text-muted-foreground/70 block">({macros.fatPct}%)</span>
                 </div>
               </div>
             </div>
@@ -191,7 +191,7 @@ export function MealPlateBuilder({
             {/* Submit Action */}
             <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="text-xs font-mono text-muted-foreground">
-                Composed: <strong className="text-emerald-400 font-bold">{addedItems.length} ingredients</strong>
+                Composed: <strong className="text-emerald-700 dark:text-emerald-400 font-bold">{addedItems.length} ingredients</strong>
               </div>
 
               <Button

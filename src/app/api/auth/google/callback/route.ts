@@ -1,3 +1,4 @@
+import { connectDB } from "@/lib/db";
 import { OAuth2Client } from "google-auth-library";
 import { NextRequest, NextResponse } from "next/server";
 import { setAuthCookies } from "@/lib/auth/cookies";
@@ -72,6 +73,7 @@ export async function GET(req: NextRequest) {
 
     const { email, name, sub: googleId } = payload;
 
+    await connectDB();
     let user = await User.findOne({ email });
     let isNewUser = false;
 

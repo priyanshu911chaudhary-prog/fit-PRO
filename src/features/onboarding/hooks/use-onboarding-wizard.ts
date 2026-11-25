@@ -1,10 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
-import { useAuth } from "@/context/auth-context";
 import {
   calculateBMI,
   calculateBMR,
@@ -20,8 +18,6 @@ import {
 } from "@/constants";
 
 export function useOnboardingWizard() {
-  const { refreshUser } = useAuth();
-  const router = useRouter();
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -97,8 +93,10 @@ export function useOnboardingWizard() {
 
       if (res.success) {
         toast.success("Profile created! Baseline metrics calibrated.");
-        await refreshUser();
-        router.push("/dashboard");
+        // A dashboard prefetch from before profile setup can contain an onboarding redirect.
+        // Start a new document request so the guard sees the updated session cookie.
+        window.location.replace("/dashboard");
+        return;
       }
     } catch (err: unknown) {
       const msg =
@@ -106,9 +104,8 @@ export function useOnboardingWizard() {
         (err as Error).message ||
         "Failed to save baseline profile.";
       toast.error(msg);
-    } finally {
-      setIsSubmitting(false);
     }
+    setIsSubmitting(false);
   };
 
   return {

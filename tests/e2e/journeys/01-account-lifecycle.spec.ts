@@ -66,7 +66,14 @@ test.describe("Journey 01: Account and First-Use Lifecycle", () => {
     await expect(page).toHaveURL(/.*\/onboarding/, { timeout: 15_000 });
 
     // 7. Complete onboarding wizard steps
-    await completeOnboardingViaUI(page);
+    await Promise.all([
+      page.waitForRequest((request) =>
+        request.isNavigationRequest() &&
+        request.frame() === page.mainFrame() &&
+        new URL(request.url()).pathname === "/dashboard"
+      ),
+      completeOnboardingViaUI(page),
+    ]);
 
     // 8. Land on /dashboard with active profile
     await expect(page).toHaveURL(/.*\/dashboard/, { timeout: 15_000 });

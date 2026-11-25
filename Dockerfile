@@ -18,6 +18,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID
+ARG NEXT_PUBLIC_VAPID_PUBLIC_KEY
 RUN npm run build
 
 # Stage 3: Minimal production runtime
@@ -36,6 +38,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/dist ./dist
+COPY --chown=nextjs:nodejs deploy/render-start.mjs ./render-start.mjs
 
 COPY --from=runtime-deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 

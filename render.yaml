@@ -1,0 +1,41 @@
+services:
+  - type: keyvalue
+    name: fit-pro-queues
+    region: singapore
+    plan: free
+    ipAllowList: []
+    maxmemoryPolicy: noeviction
+
+  - type: web
+    name: fit-pro-journal
+    runtime: docker
+    region: singapore
+    plan: free
+    dockerCommand: node render-start.mjs
+    healthCheckPath: /api/health
+    envVars:
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: fit-pro-queues
+          property: connectionString
+      - key: MONGODB_URI
+        sync: false
+      - key: ACCESS_TOKEN_SECRET
+        generateValue: true
+      - key: REFRESH_TOKEN_SECRET
+        generateValue: true
+      - key: EMAIL_PAYLOAD_SECRET
+        generateValue: true
+      - key: EMAIL_PROVIDER
+        value: mailtrap
+      - key: MAILTRAP_API_TOKEN
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: EMAIL_WORKER_CONCURRENCY
+        value: "1"
+      - key: LEADERBOARD_WORKER_CONCURRENCY
+        value: "1"
+      - key: NOTIFICATION_WORKER_CONCURRENCY
+        value: "1"

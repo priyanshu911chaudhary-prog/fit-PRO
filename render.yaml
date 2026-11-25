@@ -13,7 +13,11 @@ services:
     plan: free
     dockerCommand: node render-start.mjs
     healthCheckPath: /api/health
+    domains:
+      - fit-pro.live
     envVars:
+      - key: APP_URL
+        value: https://fit-pro.live
       - key: REDIS_URL
         fromService:
           type: keyvalue
